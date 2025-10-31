@@ -34,7 +34,7 @@ from .config import load_secrets
 
 MessageList = List[Dict[str, Any]]
 
-DEFAULT_DEEP_RESEARCH_MODEL = "o4-mini"
+DEFAULT_DEEP_RESEARCH_MODEL = "o4-mini-deep-research"
 
 
 @dataclass(slots=True)
@@ -121,10 +121,53 @@ class MCPServerConfig:
         if self.allowed_tools:
             data["allowed_tools"] = list(self.allowed_tools)
         if self.require_manual_approval:
-            data["require_approval"] = "always"
+            raise ValueError(
+                "Deep Research requires MCP servers to set require_approval='never'. Disable manual approvals."
+            )
+        data["require_approval"] = "never"
         if self.custom_headers:
             data["headers"] = dict(self.custom_headers)
         return McpToolParam(**data)  # type: ignore[arg-type]
+
+
+@dataclass(slots=True)
+class FileSearchConfig:
+    """
+    Declarative wrapper for the Deep Research file search tool.
+
+    Parameters
+    ----------
+    vector_store_ids:
+        Identifiers of vector stores that should be queryable during the research run.
+        Deep Research models currently support up to two vector stores.
+    """
+
+    vector_store_ids: Sequence[str]
+
+    def to_tool_param(self) -> Dict[str, Any]:
+        """Return the dict structure accepted by the Responses API."""
+        if not self.vector_store_ids:
+            raise ValueError("FileSearchConfig requires at least one vector_store_id.")
+        return {"type": "file_search", "vector_store_ids": list(self.vector_store_ids)}
+
+
+@dataclass(slots=True)
+class CodeInterpreterConfig:
+    """
+    Configuration for attaching the code interpreter tool to a research run.
+
+    Parameters
+    ----------
+    container:
+        Dict mirrored into the ``container`` field of the tool specification. Use
+        ``{'type': 'auto'}`` for the default managed runtime.
+    """
+
+    container: Mapping[str, Any] = field(default_factory=lambda: {"type": "auto"})
+
+    def to_tool_param(self) -> Dict[str, Any]:
+        """Render the code interpreter configuration into a Responses tool entry."""
+        return {"type": "code_interpreter", "container": dict(self.container)}
 
 
 @dataclass(slots=True)
@@ -148,13 +191,28 @@ class DeepResearchConfig:
     enable_background_mode:
         Set ``True`` to request asynchronous, long-running jobs. The caller is surfaced the
         job id and can poll later with :meth:`DeepResearchClient.retrieve`.
+    default_web_search:
+        Controls whether the helper auto-injects the ``web_search_preview`` tool when the
+        caller does not specify another data source.
+    default_file_searches:
+        File search tool definitions that should be attached to every request, typically
+        for organisation-wide vector stores.
+    default_code_interpreter:
+        Optional code interpreter configuration applied to each run unless overridden.
+    max_tool_calls:
+        Optional upper limit for the total number of tool invocations the agent may
+        perform.
     """
 
     model: Optional[str] = None
     max_output_tokens: Optional[int] = None
     temperature: Optional[float] = None
-    default_reasoning_effort: Optional[str] = "high"
+    default_reasoning_effort: Optional[str] = "medium"
     enable_background_mode: bool = False
+    default_web_search: bool = True
+    default_file_searches: Sequence[FileSearchConfig] = field(default_factory=tuple)
+    default_code_interpreter: Optional[CodeInterpreterConfig] = None
+    max_tool_calls: Optional[int] = None
 
 
 class DeepResearchClient:
@@ -211,10 +269,14 @@ class DeepResearchClient:
         metadata: Optional[Mapping[str, Any]] = None,
         tags: Optional[Sequence[str]] = None,
         mcp_servers: Optional[Iterable[MCPServerConfig]] = None,
+        file_searches: Optional[Iterable[FileSearchConfig]] = None,
+        use_web_search: Optional[bool] = None,
+        code_interpreter: bool | CodeInterpreterConfig | None = None,
         tool_choice: ToolChoice | str | None = None,
         stream: bool | None = None,
         include_reasoning: bool = True,
         extra_body: Optional[Dict[str, Any]] = None,
+        max_tool_calls: Optional[int] = None,
     ) -> DeepResearchResult:
         """
         Execute a Deep Research request and synchronously wait for completion.
@@ -233,6 +295,16 @@ class DeepResearchClient:
         mcp_servers:
             Iterable of :class:`MCPServerConfig` instances that should be registered as
             tools. This is the hook for Context MCP connectors.
+        file_searches:
+            Optional collection of :class:`FileSearchConfig` instances describing vector
+            stores that should be queried alongside web research.
+        use_web_search:
+            Override the default behaviour for adding ``web_search_preview`` as a data
+            source. When ``False``, ensure another data source (MCP or file search) is
+            provided.
+        code_interpreter:
+            Pass ``True`` to attach a default :class:`CodeInterpreterConfig`, ``False`` to
+            disable any configured interpreter, or supply an explicit configuration.
         tool_choice:
             Override automatic tool invocation decisions (pass ``"auto"`` to reset).
         stream:
@@ -243,7 +315,16 @@ class DeepResearchClient:
         extra_body:
             Raw dictionary merged into the request body. Enables experimentation with new
             API fields without updating this module.
+        max_tool_calls:
+            Optional ceiling on the number of tool invocations the agent may attempt.
         """
+
+        resolved_use_web_search = self.config.default_web_search if use_web_search is None else use_web_search
+        resolved_file_searches: List[FileSearchConfig] = list(self.config.default_file_searches)
+        if file_searches:
+            resolved_file_searches.extend(file_searches)
+        resolved_code_interpreter = self._resolve_code_interpreter_config(code_interpreter)
+        resolved_max_tool_calls = max_tool_calls if max_tool_calls is not None else self.config.max_tool_calls
 
         body: Dict[str, Any] = self._prepare_request(
             prompt=prompt,
@@ -251,8 +332,12 @@ class DeepResearchClient:
             metadata=metadata,
             tags=tags,
             mcp_servers=mcp_servers,
+            file_searches=resolved_file_searches,
+            use_web_search=resolved_use_web_search,
+            code_interpreter=resolved_code_interpreter,
             tool_choice=tool_choice,
             include_reasoning=include_reasoning,
+            max_tool_calls=resolved_max_tool_calls,
         )
         if stream:
             response = self.responses.stream(**body, extra_body=extra_body)
@@ -270,6 +355,10 @@ class DeepResearchClient:
         metadata: Optional[Mapping[str, Any]] = None,
         tags: Optional[Sequence[str]] = None,
         mcp_servers: Optional[Iterable[MCPServerConfig]] = None,
+        file_searches: Optional[Iterable[FileSearchConfig]] = None,
+        use_web_search: Optional[bool] = None,
+        code_interpreter: bool | CodeInterpreterConfig | None = None,
+        max_tool_calls: Optional[int] = None,
     ) -> Response:
         """
         Submit a Deep Research job using background mode and return immediately.
@@ -279,13 +368,23 @@ class DeepResearchClient:
 
         if not self.config.enable_background_mode:
             raise ValueError("Background mode is disabled. Set config.enable_background_mode=True.")
+        resolved_use_web_search = self.config.default_web_search if use_web_search is None else use_web_search
+        resolved_file_searches: List[FileSearchConfig] = list(self.config.default_file_searches)
+        if file_searches:
+            resolved_file_searches.extend(file_searches)
+        resolved_code_interpreter = self._resolve_code_interpreter_config(code_interpreter)
+        resolved_max_tool_calls = max_tool_calls if max_tool_calls is not None else self.config.max_tool_calls
         body = self._prepare_request(
             prompt=prompt,
             instructions=instructions,
             metadata=metadata,
             tags=tags,
             mcp_servers=mcp_servers,
+            file_searches=resolved_file_searches,
+            use_web_search=resolved_use_web_search,
+            code_interpreter=resolved_code_interpreter,
             include_reasoning=True,
+            max_tool_calls=resolved_max_tool_calls,
         )
         body["background"] = True
         return self.responses.create(**body)
@@ -312,8 +411,12 @@ class DeepResearchClient:
         metadata: Optional[Mapping[str, Any]],
         tags: Optional[Sequence[str]],
         mcp_servers: Optional[Iterable[MCPServerConfig]],
+        file_searches: Sequence[FileSearchConfig],
+        use_web_search: bool,
+        code_interpreter: Optional[CodeInterpreterConfig],
         tool_choice: ToolChoice | str | None = None,
         include_reasoning: bool = True,
+        max_tool_calls: Optional[int] = None,
     ) -> Dict[str, Any]:
         body: Dict[str, Any] = {"model": self.config.model}
 
@@ -325,7 +428,7 @@ class DeepResearchClient:
         messages: MessageList = [
             {
                 "role": "user",
-                "content": [{"type": "text", "text": prompt_text}],
+                "content": [{"type": "input_text", "text": prompt_text}],
             }
         ]
         body["input"] = messages
@@ -347,9 +450,20 @@ class DeepResearchClient:
         if merged_metadata:
             body["metadata"] = merged_metadata
 
-        tools: List[McpToolParam] = []
+        tools: List[Any] = []
         if mcp_servers:
             tools.extend(server.to_tool_param() for server in mcp_servers)
+        for file_search in file_searches:
+            tools.append(file_search.to_tool_param())
+        if use_web_search and not self._has_tool_type(tools, "web_search_preview"):
+            tools.append({"type": "web_search_preview"})
+        if code_interpreter is not None:
+            tools.append(code_interpreter.to_tool_param())
+        if not self._includes_data_source(tools):
+            raise ValueError(
+                "Deep Research requests require at least one data source tool "
+                "(web_search_preview, file_search, or MCP server)."
+            )
         if tools:
             body["tools"] = tools
         if tool_choice:
@@ -359,7 +473,41 @@ class DeepResearchClient:
 
         if not include_reasoning:
             body["response_format"] = {"type": "text"}
+        if max_tool_calls is not None:
+            body["max_tool_calls"] = max_tool_calls
         return body
+
+    def _resolve_code_interpreter_config(
+        self,
+        override: bool | CodeInterpreterConfig | None,
+    ) -> Optional[CodeInterpreterConfig]:
+        if isinstance(override, CodeInterpreterConfig):
+            return override
+        if override is True:
+            return self.config.default_code_interpreter or CodeInterpreterConfig()
+        if override is False:
+            return None
+        if override is None:
+            return self.config.default_code_interpreter
+        raise TypeError("code_interpreter must be bool, None, or CodeInterpreterConfig.")
+
+    @staticmethod
+    def _tool_type(tool: Any) -> Optional[str]:
+        if isinstance(tool, Mapping):
+            return tool.get("type")
+        if hasattr(tool, "type"):
+            return getattr(tool, "type")
+        return None
+
+    def _has_tool_type(self, tools: Sequence[Any], expected_type: str) -> bool:
+        return any(self._tool_type(tool) == expected_type for tool in tools)
+
+    def _includes_data_source(self, tools: Sequence[Any]) -> bool:
+        for tool in tools:
+            tool_type = self._tool_type(tool)
+            if tool_type in {"web_search_preview", "file_search", "mcp"}:
+                return True
+        return False
 
 
 @dataclass(slots=True)
