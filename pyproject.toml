@@ -1,0 +1,40 @@
+[project]
+name = "tiangong-ai-for-sustainability"
+version = "0.1.0"
+description = "Automation tooling foundation for Tiangong AI sustainability workflows."
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = ["black>=25.9.0", "ruff>=0.14.1", "pytest>=8.4.2"]
+
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = true
+
+[tool.uv.sources]
+tiangong-ai-for-sustainability = { path = "src" }
+
+[tool.uv.workspace]
+members = ["."]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tiangong_ai_for_sustainability"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/tiangong_ai_for_sustainability", "README.md", "pyproject.toml"]
+
+[tool.black]
+line-length = 192
+target-version = ["py312"]
+include = "\\.pyi?$"
+
+[tool.ruff]
+line-length = 192
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
