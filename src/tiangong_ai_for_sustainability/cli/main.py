@@ -469,8 +469,8 @@ def research_visuals_verify(ctx: typer.Context) -> None:
         typer.echo(f"Details: {json.dumps(result.details, ensure_ascii=False)}")
     if not result.success:
         typer.echo(
-            "Hint: install Node.js and run `npx -y @antv/mcp-server-chart --transport sse` "
-            "(default endpoint http://127.0.0.1:1122/sse).",
+            "Hint: install Node.js and run `npx -y @antv/mcp-server-chart --transport streamable` "
+            "(default endpoint http://127.0.0.1:1122/mcp).",
             err=True,
         )
         raise typer.Exit(code=1)

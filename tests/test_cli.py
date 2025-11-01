@@ -112,7 +112,7 @@ def test_research_find_code_cli(cli_runner, registry_file):
 def test_research_visuals_verify_cli(cli_runner, registry_file):
     with patch(
         "tiangong_ai_for_sustainability.cli.main.ResearchServices.verify_chart_mcp",
-        return_value=VerificationResult(success=True, message="OK", details={"endpoint": "http://127.0.0.1:1122/sse"}),
+        return_value=VerificationResult(success=True, message="OK", details={"endpoint": "http://127.0.0.1:1122/mcp"}),
     ):
         result = invoke(
             cli_runner,

@@ -17,7 +17,7 @@ import httpx
 
 from ..base import AdapterError, DataSourceAdapter, VerificationResult
 
-DEFAULT_ENDPOINT = "http://127.0.0.1:1122/sse"
+DEFAULT_ENDPOINT = "http://127.0.0.1:1122/mcp"
 
 
 @dataclass(slots=True)
@@ -26,7 +26,7 @@ class ChartMCPAdapter(DataSourceAdapter):
 
     source_id: str = "chart_mcp_server"
     endpoint: str = DEFAULT_ENDPOINT
-    transport: str = "sse"
+    transport: str = "streamable"
 
     def _resolve_endpoint(self) -> str:
         env_override = os.getenv("TIANGONG_CHART_MCP_ENDPOINT")
@@ -48,14 +48,16 @@ class ChartMCPAdapter(DataSourceAdapter):
 
         endpoint = self._resolve_endpoint()
         try:
-            with httpx.Client(timeout=3.0, follow_redirects=True) as client:
-                response = client.get(endpoint)
+            timeout = httpx.Timeout(connect=3.0, read=3.0, write=3.0, pool=None)
+            headers = {"Accept": "application/json"}
+            with httpx.Client(timeout=timeout, follow_redirects=True) as client:
+                response = client.get(endpoint, headers=headers)
         except httpx.RequestError as exc:
             return VerificationResult(
                 success=False,
                 message=(
                     f"Unable to reach MCP chart server at {endpoint}. "
-                    "Start it with `npx -y @antv/mcp-server-chart --transport sse` "
+                    "Start it with `npx -y @antv/mcp-server-chart --transport streamable` "
                     "or configure TIANGONG_CHART_MCP_ENDPOINT."
                 ),
                 details={"error": str(exc), "endpoint": endpoint},
@@ -66,18 +68,18 @@ class ChartMCPAdapter(DataSourceAdapter):
                 success=False,
                 message=(
                     f"MCP chart server responded with HTTP {response.status_code} at {endpoint}. "
-                    "Verify the server is running with SSE transport."
+                    "Verify the server is running with streamable transport."
                 ),
                 details={"status": response.status_code, "endpoint": endpoint},
             )
 
-        content_type = response.headers.get("content-type", "")
-        if "text/event-stream" not in content_type.lower():
+        content_type = (response.headers.get("content-type") or "").lower()
+        if not any(token in content_type for token in ("application/json", "application/stream+json", "application/octet-stream")):
             return VerificationResult(
                 success=False,
                 message=(
-                    f"Endpoint {endpoint} responded but did not expose an SSE stream "
-                    f"(content-type: {content_type}). Ensure the server is running with `--transport sse`."
+                    f"Endpoint {endpoint} responded but returned unexpected content-type "
+                    f"'{content_type}'. Ensure the server is running with `--transport streamable`."
                 ),
                 details={"content_type": content_type, "endpoint": endpoint},
             )

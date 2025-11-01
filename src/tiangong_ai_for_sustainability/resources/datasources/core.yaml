@@ -109,7 +109,7 @@
   status: trial
   capabilities: ["chart-rendering", "visualization"]
   tags: ["visualization", "mcp", "antv"]
-  notes: "Requires Node.js and a running server, e.g. `npx -y @antv/mcp-server-chart --transport sse`."
+  notes: "Requires Node.js and a running server, e.g. `npx -y @antv/mcp-server-chart --transport streamable`."
   references:
     - "https://github.com/antvis/mcp-server-chart"
 

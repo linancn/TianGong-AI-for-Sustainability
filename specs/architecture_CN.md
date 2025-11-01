@@ -36,7 +36,7 @@
 
 1. 数据源元数据需登记在 `resources/datasources/*.yaml`。
 2. HTTP 适配器使用 `httpx` + Tenacity 重试，失败时抛出 `AdapterError`。
-3. CLI 适配器使用子进程调用，应在缺失依赖时给出明确安装指引（如 `grid-intensity`、`mcp-server-chart`）。
+3. CLI 适配器使用子进程调用，应在缺失依赖时给出明确安装指引（如 `grid-intensity`、`mcp-server-chart --transport streamable`）。
 4. 缓存与持久化逻辑保留在服务层，保证适配器无状态。
 
 ## 4. 本体与数据模型

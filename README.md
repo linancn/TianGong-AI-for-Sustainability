@@ -39,7 +39,7 @@ Helpful entry points:
 - `uv run tiangong-research research find-code <topic>` — discover GitHub repositories tagged with a sustainability topic.
 - `uv run tiangong-research research map-sdg <file>` — classify a text or PDF via the OSDG API (requires a working JSON endpoint or token).
 - `uv run tiangong-research research get-carbon-intensity <location>` — fetch grid intensity metrics through the upstream CLI (ensure `grid-intensity` is installed on `PATH`).
-- `uv run tiangong-research research visuals verify` — confirm the AntV MCP chart server is reachable (requires Node.js and `npx -y @antv/mcp-server-chart`).
+- `uv run tiangong-research research visuals verify` — confirm the AntV MCP chart server is reachable (requires Node.js and `npx -y @antv/mcp-server-chart --transport streamable`).
 
 Refer to the AI-oriented specifications in `specs/` for deeper architectural detail.
 
@@ -48,7 +48,7 @@ Refer to the AI-oriented specifications in `specs/` for deeper architectural det
 To render charts via [AntV's MCP chart server](https://github.com/antvis/mcp-server-chart):
 
 1. Install Node.js and the server package (either globally or via `npx`).
-2. Launch the server locally, for example `npx -y @antv/mcp-server-chart --transport sse` (default endpoint `http://127.0.0.1:1122/sse`).
+2. Launch the server locally, for example `npx -y @antv/mcp-server-chart --transport streamable` (default endpoint `http://127.0.0.1:1122/mcp`).
 3. Optionally set `TIANGONG_CHART_MCP_ENDPOINT` or `.secrets` → `[chart_mcp] endpoint` if you use a custom host/port.
 4. Use `uv run tiangong-research research visuals verify` to ensure the CLI can reach the server before triggering visualization workflows.
 

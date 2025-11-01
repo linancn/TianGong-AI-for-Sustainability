@@ -16,6 +16,7 @@ AI operators must follow this document when working on the TianGong AI for Susta
 | Task Graph | `tasks/blueprint.yaml` | Dependency ordering for major features. |
 | Human Handbook | `README.md` | Public-facing usage instructions; mirror but do not override. |
 | Visualization Server | `https://github.com/antvis/mcp-server-chart` | Reference for the AntV MCP chart server integration. |
+| Prompt Templates | `specs/prompts/` | Reusable research prompts (maintain English/Chinese pairs). |
 
 Always consult these sources before planning or executing changes.
 
@@ -33,7 +34,7 @@ Always consult these sources before planning or executing changes.
 2. Write or update tests alongside code modifications.
 3. Keep modules within their designated domains (`core`, `adapters`, `services`, `cli`, etc.).
 4. Surface configuration requirements (API keys, CLI dependencies, MCP endpoints) via the registry and execution context; do not embed secrets.
-5. When visualization features are required, ensure the AntV MCP chart server is running (`npx -y @antv/mcp-server-chart --transport sse`) and record the endpoint in `.secrets` or `TIANGONG_CHART_MCP_ENDPOINT`.
+5. When visualization features are required, ensure the AntV MCP chart server is running (`npx -y @antv/mcp-server-chart --transport streamable`) and record the endpoint in `.secrets` or `TIANGONG_CHART_MCP_ENDPOINT`.
 
 ## Verification Checklist
 

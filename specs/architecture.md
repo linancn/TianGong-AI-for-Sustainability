@@ -36,7 +36,7 @@ Authoritative specification for automation agents working on this repository. It
 
 1. All sources register metadata in `resources/datasources/*.yaml`.
 2. HTTP adapters use `httpx` with Tenacity-backed retry logic; they must emit `AdapterError` on failures.
-3. CLI adapters shell out via subprocess and should provide actionable install guidance when missing (e.g., `grid-intensity`, `mcp-server-chart`).
+3. CLI adapters shell out via subprocess and should provide actionable install guidance when missing (e.g., `grid-intensity`, `mcp-server-chart --transport streamable`).
 4. Caching is deferred to services (e.g., storing SDG goals in DuckDB/Parquet) to keep adapters stateless.
 
 ## 4. Ontology & Data Models
