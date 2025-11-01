@@ -63,25 +63,35 @@ class ChartMCPAdapter(DataSourceAdapter):
                 details={"error": str(exc), "endpoint": endpoint},
             )
 
-        if response.status_code != 200:
+        status = response.status_code
+        if status in (200, 204):
+            content_type = (response.headers.get("content-type") or "").lower()
+            if not any(token in content_type for token in ("application/json", "application/stream+json", "application/octet-stream")):
+                return VerificationResult(
+                    success=False,
+                    message=(
+                        f"Endpoint {endpoint} responded but returned unexpected content-type "
+                        f"'{content_type}'. Ensure the server is running with `--transport streamable`."
+                    ),
+                    details={"content_type": content_type, "endpoint": endpoint},
+                )
+        elif status in (400, 404, 405):
+            return VerificationResult(
+                success=True,
+                message=(
+                    f"MCP chart server reachable at {endpoint} (HTTP {status}). "
+                    "Streamable transport expects POST requests; this status is acceptable for connectivity checks."
+                ),
+                details={"endpoint": endpoint, "transport": self.transport, "status": status},
+            )
+        else:
             return VerificationResult(
                 success=False,
                 message=(
-                    f"MCP chart server responded with HTTP {response.status_code} at {endpoint}. "
+                    f"MCP chart server responded with HTTP {status} at {endpoint}. "
                     "Verify the server is running with streamable transport."
                 ),
-                details={"status": response.status_code, "endpoint": endpoint},
-            )
-
-        content_type = (response.headers.get("content-type") or "").lower()
-        if not any(token in content_type for token in ("application/json", "application/stream+json", "application/octet-stream")):
-            return VerificationResult(
-                success=False,
-                message=(
-                    f"Endpoint {endpoint} responded but returned unexpected content-type "
-                    f"'{content_type}'. Ensure the server is running with `--transport streamable`."
-                ),
-                details={"content_type": content_type, "endpoint": endpoint},
+                details={"status": status, "endpoint": endpoint},
             )
 
         return VerificationResult(
