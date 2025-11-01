@@ -405,7 +405,7 @@ def research_map_sdg(
 @research_app.command("find-code")
 def research_find_code(
     ctx: typer.Context,
-    topic: str = typer.Argument(..., help="GitHub topic to search for (e.g. 'green-software')."),
+    topic: str = typer.Argument(..., help="GitHub topic to search for (e.g. 'life-cycle-assessment')."),
     limit: int = typer.Option(10, "--limit", "-n", min=1, max=100, help="Number of repositories to return."),
     output_json: bool = typer.Option(False, "--json", help="Emit raw JSON results."),
 ) -> None:

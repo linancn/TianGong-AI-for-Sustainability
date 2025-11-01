@@ -36,7 +36,7 @@ Helpful entry points:
 
 - `uv run tiangong-research sources list` — inspect the data source catalogue.
 - `uv run tiangong-research sources verify <id>` — check connectivity or configuration for a specific source.
-- `uv run tiangong-research research find-code <topic>` — discover GitHub repositories tagged with a sustainability topic.
+- `uv run tiangong-research research find-code life-cycle-assessment --limit 5 --json` — discover GitHub repositories tagged with life cycle assessment topics.
 - `uv run tiangong-research research map-sdg <file>` — classify a text or PDF via the OSDG API (requires a working JSON endpoint or token).
 - `uv run tiangong-research research get-carbon-intensity <location>` — fetch grid intensity metrics through the upstream CLI (ensure `grid-intensity` is installed on `PATH`).
 - `uv run tiangong-research research visuals verify` — confirm the AntV MCP chart server is reachable (requires Node.js and `npx -y @antv/mcp-server-chart --transport streamable`).

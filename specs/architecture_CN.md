@@ -16,7 +16,7 @@
 | `adapters.api` / `adapters.environment` / `adapters.storage` | 提供确定性 API、CLI、存储访问层，返回结构化结果与验证信息。 |
 | `services.research` | 在执行上下文内组合适配器（缓存、令牌查找、dry-run 处理）。 |
 | `cli` | 基于 Typer 的命令行入口，与规格中的路线图保持一致。 |
-| `domain.*`（规划中） | 存放 GRI/SDG/GHG/SCI 等本体模型。 |
+| `domain.*`（规划中） | 存放 GRI/SDG/GHG/LCA 等本体模型。 |
 
 > **实施提示**：扩展功能时先更新注册表和适配器，再开放服务与 CLI。这有助于保持自动化流程可预测。
 
@@ -29,7 +29,7 @@
 | **P1** | UN SDG API、Semantic Scholar、GitHub Topics、Wikidata、grid-intensity CLI | 已实现 | 构成本体与检索基础。 |
 | **P1（批量）** | arXiv S3 / Kaggle | 规划中 | 待解决存储成本后引入全文索引。 |
 | **P2** | Scopus、Web of Science、WattTime（通过 grid-intensity）、AntV MCP 图表服务器 | 视凭据/环境启用 | 需提供密钥或运行时依赖（Node.js）。 |
-| **P3** | GRI taxonomy、GHG 工作簿、Open Sustainable Tech CSV、Awesome Green Software | 持续接入 | 通过统一的文件解析框架处理。 |
+| **P3** | GRI taxonomy、GHG 工作簿、Open Sustainable Tech CSV、生命周期评估清单（如 openLCA 数据集） | 持续接入 | 通过统一的文件解析框架处理。 |
 | **P4** | Google Scholar、ACM Digital Library | 禁用 | 强制使用替代方案（如 Semantic Scholar、Crossref）。 |
 
 ### 3.2 适配器规则
@@ -46,7 +46,7 @@
 - **GRI**：`GRIStandard`、`GRIDisclosure`、`GRIIndicator`
 - **SDG**：`SDGGoal`、`SDGTarget`、`SDGIndicator`
 - **GHG Protocol**：`GHGScope`、`EmissionFactor`、`CalculationLogic`
-- **Green Software (SCI)**：`SCIMetric`、`SCIParameter`
+- **生命周期评估 (LCA)**：`LCAScenario`、`LCAImpactCategory`
 - **顶层分类**：`SoftwareSustainability_Longevity`、`SoftwareSustainability_Environmental`
 
 服务层应支持将这些实体同步到图结构（NetworkX、RDF 等）以供综合分析。

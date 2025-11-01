@@ -30,11 +30,11 @@ tasks:
       - ontology.ghg
     phase: 2
 
-  ontology.sciparse:
-    summary: "Ingest SCI specification and extract core formula components."
+  ontology.lcaparse:
+    summary: "Ingest life cycle assessment inventories and extract impact/flow metadata."
     requires: []
     provides:
-      - ontology.sci
+      - ontology.lca
     phase: 1
 
   corpus.arxiv_index:
@@ -63,7 +63,7 @@ tasks:
     phase: 1
 
   corpus.seed_lists:
-    summary: "Parse Awesome Green Software markdown and Open Sustainable Tech CSV."
+    summary: "Parse life cycle assessment reference lists and Open Sustainable Tech CSV."
     requires:
       - storage.cache
     provides:
@@ -145,7 +145,7 @@ tasks:
     summary: "Implement research map-gri command using local ontology and LLM assistance."
     requires:
       - ontology.gri
-      - ontology.sci
+      - ontology.lca
     provides:
       - cli.command.map_gri
     phase: 2

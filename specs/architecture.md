@@ -16,7 +16,7 @@ Authoritative specification for automation agents working on this repository. It
 | `adapters.api`, `adapters.environment`, `adapters.storage` | Deterministic access to APIs, CLIs, and storage. Each adapter returns structured results and verification metadata. |
 | `services.research` | Composes adapters with execution context logic (caching, token lookups, dry-run handling). |
 | `cli` | Typer application providing human- and agent-facing commands that mirror the spec roadmap. |
-| `domain.*` (future) | Ontology models for GRI/SDG/GHG/SCI once ingestion tasks are complete. |
+| `domain.*` (future) | Ontology models for GRI/SDG/GHG/LCA once ingestion tasks are complete. |
 
 > **Guidance** — add new features by extending the registry and adapters first, then expose services and CLI commands. This keeps automation predictable.
 
@@ -29,7 +29,7 @@ Authoritative specification for automation agents working on this repository. It
 | **P1** | UN SDG API, Semantic Scholar, GitHub Topics, Wikidata, grid-intensity CLI | Implemented | Provide core ontology and retrieval. |
 | **P1 (bulk)** | arXiv S3 / Kaggle dumps | Planned | Download + vector indexing once storage constraints are resolved. |
 | **P2** | Scopus, Web of Science, WattTime (via grid-intensity), AntV MCP chart server | Conditional | Enable only when credentials or runtime dependencies (Node.js) are available. |
-| **P3** | GRI taxonomy XLSX/XBRL, GHG protocol workbooks, Open Sustainable Tech CSV, Awesome Green Software list | Rolling | Parse via shared file ingestion layer. |
+| **P3** | GRI taxonomy XLSX/XBRL, GHG protocol workbooks, Open Sustainable Tech CSV, life cycle assessment inventories (e.g., openLCA datasets) | Rolling | Parse via shared file ingestion layer. |
 | **P4** | Google Scholar, ACM Digital Library | Blocked | Enforce alternatives (Semantic Scholar, Crossref). |
 
 ### 3.2 Adapter Rules
@@ -46,7 +46,7 @@ Target entities (to be represented via Pydantic or SQLAlchemy models once parser
 - **GRI** — `GRIStandard`, `GRIDisclosure`, `GRIIndicator`.
 - **SDG** — `SDGGoal`, `SDGTarget`, `SDGIndicator`.
 - **GHG Protocol** — `GHGScope`, `EmissionFactor`, `CalculationLogic`.
-- **Green Software (SCI)** — `SCIMetric`, `SCIParameter`.
+- **Life Cycle Assessment (LCA)** — `LCAScenario`, `LCAImpactCategory`.
 - **Top-level categories** — `SoftwareSustainability_Longevity`, `SoftwareSustainability_Environmental`.
 
 Services should normalise these entities into graph-friendly structures (NetworkX, RDF) for future synthesis.

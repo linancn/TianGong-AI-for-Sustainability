@@ -36,7 +36,7 @@ uv run tiangong-research --help
 
 - `uv run tiangong-research sources list` — 查看数据源目录。
 - `uv run tiangong-research sources verify <id>` — 检查指定数据源的连通性或配置。
-- `uv run tiangong-research research find-code <topic>` — 基于 GitHub Topics 搜索可持续性相关代码仓库。
+- `uv run tiangong-research research find-code life-cycle-assessment --limit 5 --json` — 基于 GitHub Topics 搜索生命周期评估相关的可持续性代码仓库。
 - `uv run tiangong-research research map-sdg <file>` — 调用 OSDG API 将文本或 PDF 映射到 SDG（需可返回 JSON 的 OSDG 端点或令牌）。
 - `uv run tiangong-research research get-carbon-intensity <location>` — 通过 `grid-intensity` CLI 查询指定地区的碳强度（需确保该 CLI 已安装在 `PATH` 中）。
 - `uv run tiangong-research research visuals verify` — 检查 AntV MCP 图表服务器是否可达（需安装 Node.js 并运行 `npx -y @antv/mcp-server-chart --transport streamable`）。

@@ -87,10 +87,10 @@ def test_research_find_code_cli(cli_runner, registry_file):
             "total_count": 1,
             "items": [
                 {
-                    "full_name": "demo/green-tool",
+                    "full_name": "demo/lca-toolkit",
                     "stargazers_count": 42,
-                    "html_url": "https://github.com/demo/green-tool",
-                    "description": "Green software utility.",
+                    "html_url": "https://github.com/demo/lca-toolkit",
+                    "description": "Life cycle assessment toolkit.",
                 }
             ],
         }
@@ -102,11 +102,11 @@ def test_research_find_code_cli(cli_runner, registry_file):
     ):
         result = invoke(
             cli_runner,
-            ["--registry", str(registry_file), "research", "find-code", "green-software", "--limit", "1"],
+            ["--registry", str(registry_file), "research", "find-code", "life-cycle-assessment", "--limit", "1"],
         )
 
     assert result.exit_code == 0
-    assert "demo/green-tool" in result.stdout
+    assert "demo/lca-toolkit" in result.stdout
 
 
 def test_research_visuals_verify_cli(cli_runner, registry_file):
