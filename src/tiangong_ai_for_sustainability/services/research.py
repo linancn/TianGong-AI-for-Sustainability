@@ -130,7 +130,12 @@ class ResearchServices:
 
     def openalex_client(self) -> OpenAlexClient:
         if self._openalex_client is None:
-            self._openalex_client = OpenAlexClient()
+            mailto = (
+                self._get_secret("openalex", "mailto")
+                or os.getenv("TIANGONG_OPENALEX_MAILTO")
+                or "tiangong-cli@localhost"
+            )
+            self._openalex_client = OpenAlexClient(mailto=mailto)
         return self._openalex_client
 
     def github_topics_client(self) -> GitHubTopicsClient:

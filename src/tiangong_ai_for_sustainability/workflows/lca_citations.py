@@ -224,10 +224,10 @@ def _collect_openalex_papers(
     client = services.openalex_client()
 
     filters = {
-        "concepts.id": LCA_CONCEPT_ID,
+        "concepts.id": f"https://openalex.org/{LCA_CONCEPT_ID}",
         "from_publication_date": f"{start_year}-01-01",
         "to_publication_date": f"{end_year}-12-31",
-        "type": "journal-article",
+        "type": "article",
     }
 
     select_fields = [
@@ -243,14 +243,14 @@ def _collect_openalex_papers(
         "concepts",
         "abstract_inverted_index",
         "primary_location",
-        "host_venue",
+        "sources",
     ]
 
     records: List[PaperRecord] = []
     seen_ids: set[str] = set()
 
     for item in client.iterate_works(
-        search='life cycle assessment sustainability "planetary boundaries" "sustainable development goals"',
+        search="life cycle assessment sustainability",
         filters=filters,
         sort="cited_by_count:desc",
         select=select_fields,
@@ -297,17 +297,25 @@ def _paper_from_openalex(payload: Mapping[str, Any], keywords: List[str]) -> Opt
 
     primary_location = payload.get("primary_location") or {}
     url = None
+    journal = None
     if isinstance(primary_location, Mapping):
         url_candidate = primary_location.get("landing_page_url") or primary_location.get("pdf_url")
         if isinstance(url_candidate, str):
             url = url_candidate
+        source = primary_location.get("source")
+        if isinstance(source, Mapping):
+            display_name = source.get("display_name")
+            if isinstance(display_name, str):
+                journal = display_name
 
-    host_venue = payload.get("host_venue")
-    journal = None
-    if isinstance(host_venue, Mapping):
-        journal_val = host_venue.get("display_name") or host_venue.get("host_org")
-        if isinstance(journal_val, str):
-            journal = journal_val
+    if not journal:
+        sources_field = payload.get("sources")
+        if isinstance(sources_field, list) and sources_field:
+            first_source = sources_field[0]
+            if isinstance(first_source, Mapping):
+                display_name = first_source.get("display_name")
+                if isinstance(display_name, str):
+                    journal = display_name
 
     authors = []
     authorships = payload.get("authorships") or []

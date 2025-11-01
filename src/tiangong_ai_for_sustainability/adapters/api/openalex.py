@@ -24,11 +24,13 @@ class OpenAlexClient(BaseAPIClient):
         base_url: str = DEFAULT_BASE_URL,
         timeout: float = 20.0,
         default_headers: Optional[MutableMapping[str, str]] = None,
+        mailto: Optional[str] = None,
     ) -> None:
         headers = {"User-Agent": "tiangong-ai-sustainability-cli"}
         if default_headers:
             headers.update(default_headers)
         super().__init__(base_url=base_url, timeout=timeout, default_headers=headers)
+        self.mailto = mailto
 
     def search_works(
         self,
@@ -49,6 +51,8 @@ class OpenAlexClient(BaseAPIClient):
             params["sort"] = sort
         if select:
             params["select"] = ",".join(select)
+        if self.mailto:
+            params.setdefault("mailto", self.mailto)
         payload = self._get_json("/works", params=params)
         if not isinstance(payload, dict):
             raise APIError("Unexpected payload from OpenAlex works search.")
@@ -96,7 +100,9 @@ class OpenAlexClient(BaseAPIClient):
             cursor = str(next_cursor)
 
     def get_work(self, work_id: str, *, select: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        params = {"select": ",".join(select)} if select else None
+        params = {"select": ",".join(select)} if select else {}
+        if self.mailto:
+            params.setdefault("mailto", self.mailto)
         payload = self._get_json(f"/works/{work_id}", params=params)
         if not isinstance(payload, dict):
             raise APIError("Unexpected payload from OpenAlex work lookup.")
