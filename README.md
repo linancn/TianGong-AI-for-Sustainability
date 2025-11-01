@@ -17,6 +17,9 @@ The repository delivers a spec-driven command line interface that investigates s
 - Python 3.12 or later
 - [uv](https://docs.astral.sh/uv/) for environment and packaging management
 - Node.js 22+ (only required when using the AntV MCP chart server for visualization)
+- Optional (for exporting reports as PDF/DOCX via workflows):
+  - [Pandoc](https://pandoc.org/) 3.0+
+  - A LaTeX engine such as TeX Live when PDF output is desired
 
 ### Installation
 

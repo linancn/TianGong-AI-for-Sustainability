@@ -17,6 +17,9 @@
 - Python 3.12 或更高版本
 - 用于环境与依赖管理的 [uv](https://docs.astral.sh/uv/)
 - Node.js 22+（仅在使用 AntV MCP 图表服务器时需要）
+- 可选依赖（用于工作流自动导出 PDF/DOCX 报告）：
+  - [Pandoc](https://pandoc.org/) 3.0+
+  - 若需生成 PDF，还需安装 TeX Live 等 LaTeX 引擎
 
 ### 安装
 

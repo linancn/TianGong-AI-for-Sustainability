@@ -6,6 +6,8 @@ OpenAI Deep Research synthesis to produce a rich Markdown report.
 from __future__ import annotations
 
 import json
+import shutil
+import subprocess
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -33,6 +35,8 @@ class DeepLCAWorkflowArtifacts:
     raw_data_path: Optional[Path]
     deep_research_summary: Optional[str]
     deep_research_response_path: Optional[Path]
+    doc_variants: List[Path]
+    conversion_warnings: List[str]
     lca_artifacts: LCACitationWorkflowArtifacts
 
 
@@ -126,6 +130,11 @@ def run_deep_lca_report(
         encoding="utf-8",
     )
 
+    doc_variants, conversion_warnings = _generate_document_variants(
+        markdown_path=final_report_path,
+        output_dir=output_dir,
+    )
+
     return DeepLCAWorkflowArtifacts(
         final_report_path=final_report_path,
         citation_report_path=lca_artifacts.report_path,
@@ -134,6 +143,8 @@ def run_deep_lca_report(
         raw_data_path=lca_artifacts.raw_data_path,
         deep_research_summary=deep_summary,
         deep_research_response_path=deep_response_path,
+        doc_variants=doc_variants,
+        conversion_warnings=conversion_warnings,
         lca_artifacts=lca_artifacts,
     )
 
@@ -274,6 +285,46 @@ def _render_final_report(
     lines.append("")
 
     return "\n".join(lines)
+
+
+def _generate_document_variants(
+    *,
+    markdown_path: Path,
+    output_dir: Path,
+) -> tuple[List[Path], List[str]]:
+    """Convert the Markdown report into additional formats using Pandoc when available."""
+
+    pandoc_path = shutil.which("pandoc")
+    outputs: List[Path] = []
+    warnings: List[str] = []
+
+    if pandoc_path is None:
+        warnings.append(
+            "Pandoc not found on PATH; skipped generating PDF/DOCX variants. "
+            "Install pandoc (and a TeX engine for PDF) to enable automatic conversions."
+        )
+        return outputs, warnings
+
+    resource_path = f"{markdown_path.parent.resolve()}:{output_dir.resolve()}"
+    conversions = {
+        "pdf": ["--from=gfm", f"--resource-path={resource_path}", "-o"],
+        "docx": ["--from=gfm", f"--resource-path={resource_path}", "-o"],
+    }
+
+    for extension, base_args in conversions.items():
+        target = output_dir / f"{markdown_path.stem}.{extension}"
+        cmd = [pandoc_path, str(markdown_path), *base_args, str(target)]
+        try:
+            subprocess.run(cmd, check=True, capture_output=True)
+        except subprocess.CalledProcessError as exc:
+            log = exc.stderr.decode("utf-8", "ignore") if exc.stderr else ""
+            warnings.append(
+                f"Failed to generate {extension.upper()} via pandoc: {exc}. Output: {log.strip()}"
+            )
+            continue
+        outputs.append(target)
+
+    return outputs, warnings
 
 
 def _render_question_table(questions: Iterable[CitationQuestion]) -> List[str]:

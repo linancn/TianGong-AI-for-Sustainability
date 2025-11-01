@@ -193,7 +193,7 @@ def test_run_lca_citation_workflow(tmp_path, monkeypatch, dummy_services):
     assert artifacts.trending_topics or artifacts.chart_caption == "Top LCA questions by citation count"
 
 
-def test_run_deep_lca_report(tmp_path, dummy_services):
+def test_run_deep_lca_report(tmp_path, dummy_services, monkeypatch):
     output_dir = tmp_path / "output"
 
     def fake_runner(
@@ -266,6 +266,13 @@ def test_run_deep_lca_report(tmp_path, dummy_services):
             papers=[paper],
         )
 
+    import tiangong_ai_for_sustainability.workflows.deep_lca as deep_lca_module
+
+    def fake_generate_variants(markdown_path, output_dir):
+        return [], ["Pandoc not found"]
+
+    monkeypatch.setattr(deep_lca_module, "_generate_document_variants", fake_generate_variants)
+
     artifacts = run_deep_lca_report(
         dummy_services,
         output_dir=output_dir,
@@ -280,3 +287,5 @@ def test_run_deep_lca_report(tmp_path, dummy_services):
     assert "Plant-based plastics" in report_text
     assert "lca_trends.png" in report_text
     assert artifacts.citation_report_path.parent == output_dir
+    assert not artifacts.doc_variants
+    assert artifacts.conversion_warnings

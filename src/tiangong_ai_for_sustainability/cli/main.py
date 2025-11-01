@@ -571,6 +571,10 @@ def research_workflow_lca_deep_report(
         typer.echo(f"Deep Research response saved to {artifacts.deep_research_response_path}")
     elif artifacts.deep_research_summary and artifacts.deep_research_summary.startswith("Deep Research unavailable"):
         typer.echo(artifacts.deep_research_summary)
+    for path in artifacts.doc_variants:
+        typer.echo(f"Additional export created: {path}")
+    for note in artifacts.conversion_warnings:
+        typer.echo(f"Notice: {note}")
 
 
 @workflow_app.command("lca-citations")
