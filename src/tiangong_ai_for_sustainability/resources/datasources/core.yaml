@@ -1,0 +1,114 @@
+- id: un_sdg_api
+  name: "UN Sustainable Development Goals API"
+  category: standard
+  priority: P1
+  description: "Official UNSD v5 REST API providing machine-readable SDG goals, targets, and indicators."
+  protocols: ["REST"]
+  base_urls:
+    - "https://unstats.un.org/sdgs/UNSDGAPIV5/"
+  authentication: "none"
+  requires_credentials: false
+  status: active
+  capabilities: ["list-goals", "list-targets", "list-indicators"]
+  tags: ["sdg", "standard", "p1"]
+  references:
+    - "design.md §2.1.2"
+
+- id: semantic_scholar
+  name: "Semantic Scholar API"
+  category: academic
+  priority: P1
+  description: "Free scholarly search and citation network API maintained by AI2."
+  protocols: ["REST"]
+  base_urls:
+    - "https://api.semanticscholar.org/"
+  authentication: "optional-api-key"
+  requires_credentials: false
+  status: active
+  capabilities: ["paper-search", "citations", "references", "author-metadata"]
+  tags: ["literature", "citations", "p1"]
+  references:
+    - "design.md §2.2.2"
+
+- id: wikidata
+  name: "Wikidata SPARQL"
+  category: knowledge-graph
+  priority: P1
+  description: "Collaborative knowledge graph with SPARQL endpoint suitable for semantic linking."
+  protocols: ["SPARQL", "REST"]
+  base_urls:
+    - "https://query.wikidata.org/sparql"
+  authentication: "none"
+  requires_credentials: false
+  status: active
+  capabilities: ["sparql-query", "entity-lookup"]
+  tags: ["knowledge-graph", "semantic", "p1"]
+  references:
+    - "design.md §2.3.1"
+
+- id: github_topics
+  name: "GitHub Topics API"
+  category: code
+  priority: P1
+  description: "Curated tagging system for discovering sustainability-related repositories."
+  protocols: ["REST"]
+  base_urls:
+    - "https://api.github.com/"
+  authentication: "oauth-or-token"
+  requires_credentials: false
+  status: active
+  capabilities: ["search-repositories", "list-topics"]
+  tags: ["code", "repository", "p1"]
+  notes: "GitHub recommends authenticated requests to increase rate limits."
+  references:
+    - "design.md §2.A.1"
+
+- id: grid_intensity_cli
+  name: "Grid Intensity CLI"
+  category: environment
+  priority: P1
+  description: "Wrapper CLI that proxies WattTime and other carbon intensity providers."
+  protocols: ["CLI"]
+  base_urls: []
+  authentication: "external-cli"
+  requires_credentials: false
+  status: active
+  capabilities: ["carbon-intensity"]
+  tags: ["realtime", "carbon", "p1"]
+  notes: "Requires grid-intensity to be installed on PATH."
+  references:
+    - "design.md §2.5.2"
+
+- id: scopus
+  name: "Scopus API"
+  category: academic
+  priority: P2
+  description: "Elsevier subscription API with curated SDG mapping queries."
+  protocols: ["REST"]
+  base_urls:
+    - "https://api.elsevier.com/"
+  authentication: "api-key"
+  requires_credentials: true
+  status: trial
+  capabilities: ["paper-search", "sdg-mapping", "citations"]
+  tags: ["literature", "sdg", "p2"]
+  notes: "Enable when Elsevier API keys are available; integrates with Elsevier SDG mapping queries."
+  references:
+    - "design.md §2.2.4"
+
+- id: google_scholar
+  name: "Google Scholar"
+  category: academic
+  priority: P4
+  description: "Consumer search portal without an official API; scraping violates terms of service."
+  protocols: ["HTML"]
+  base_urls:
+    - "https://scholar.google.com/"
+  authentication: "none"
+  requires_credentials: false
+  status: blocked
+  blocked_reason: "No public API. Automated access is prohibited; use Semantic Scholar or Crossref instead."
+  capabilities: []
+  tags: ["restricted", "p4"]
+  references:
+    - "design.md §2.2.6"

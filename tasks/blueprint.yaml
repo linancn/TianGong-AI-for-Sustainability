@@ -1,0 +1,142 @@
+version: "0.1"
+description: >
+  Declarative task graph describing high-level command dependencies. Codex can
+  read this file to determine prerequisite steps before executing research
+  workflows. The graph aligns with the architecture plan and will evolve as new
+  adapters are implemented.
+
+tasks:
+  ontology.griparse:
+    summary: "Parse GRI taxonomy XLSX into structured models."
+    requires:
+      - config.secrets
+    provides:
+      - ontology.gri
+    phase: 2
+
+  ontology.sdgfetch:
+    summary: "Fetch SDG goals/targets/indicators from UNSD API and cache locally."
+    requires:
+      - net.un_sdg_api
+    provides:
+      - ontology.sdg
+    phase: 1
+
+  ontology.ghgparse:
+    summary: "Parse GHG stationary/mobile combustion spreadsheets into emission factor models."
+    requires:
+      - storage.cache
+    provides:
+      - ontology.ghg
+    phase: 2
+
+  ontology.sciparse:
+    summary: "Ingest SCI specification and extract core formula components."
+    requires: []
+    provides:
+      - ontology.sci
+    phase: 1
+
+  corpus.arxiv_index:
+    summary: "Download arXiv bulk data (Requester Pays) and build vector index."
+    requires:
+      - net.arxiv_s3
+      - storage.large
+    provides:
+      - corpus.arxiv
+    phase: 2
+
+  corpus.semantic_scholar_client:
+    summary: "Configure Semantic Scholar REST client with rate limiting."
+    requires:
+      - net.semantic_scholar
+    provides:
+      - corpus.semantic_scholar
+    phase: 1
+
+  corpus.github_topics_client:
+    summary: "Configure GitHub Topics client for repository discovery."
+    requires:
+      - net.github
+    provides:
+      - corpus.github_topics
+    phase: 1
+
+  corpus.seed_lists:
+    summary: "Parse Awesome Green Software markdown and Open Sustainable Tech CSV."
+    requires:
+      - storage.cache
+    provides:
+      - corpus.seed_code
+    phase: 1
+
+  realtime.grid_intensity:
+    summary: "Validate grid-intensity CLI availability and parse JSON output."
+    requires:
+      - cli.grid_intensity
+    provides:
+      - realtime.grid_intensity
+    phase: 1
+
+  cli.map_sdg:
+    summary: "Implement research map-sdg command."
+    requires:
+      - ontology.sdg
+      - corpus.osdg_api_client
+    provides:
+      - cli.command.map_sdg
+    phase: 1
+
+  cli.find_code:
+    summary: "Implement research find-code command."
+    requires:
+      - corpus.github_topics
+      - corpus.seed_code
+    provides:
+      - cli.command.find_code
+    phase: 1
+
+  cli.get_carbon_intensity:
+    summary: "Implement research get-carbon-intensity command."
+    requires:
+      - realtime.grid_intensity
+    provides:
+      - cli.command.get_carbon_intensity
+    phase: 1
+
+  cli.find_papers:
+    summary: "Implement research find-papers command with optional citation graph."
+    requires:
+      - corpus.arxiv
+      - corpus.semantic_scholar
+    provides:
+      - cli.command.find_papers
+    phase: 2
+
+  cli.map_gri:
+    summary: "Implement research map-gri command using local ontology and LLM assistance."
+    requires:
+      - ontology.gri
+      - ontology.sci
+    provides:
+      - cli.command.map_gri
+    phase: 2
+
+  cli.synthesize:
+    summary: "Implement research synthesize orchestration command."
+    requires:
+      - cli.command.map_sdg
+      - cli.command.find_code
+      - cli.command.find_papers
+      - cli.command.get_carbon_intensity
+    provides:
+      - cli.command.synthesize
+    phase: 3
+
+  corpus.osdg_api_client:
+    summary: "Integrate osdg.ai API for SDG mapping."
+    requires:
+      - net.osdg_api
+    provides:
+      - corpus.osdg_api_client
+    phase: 1
