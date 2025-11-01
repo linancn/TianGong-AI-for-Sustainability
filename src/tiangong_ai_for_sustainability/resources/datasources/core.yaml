@@ -96,6 +96,23 @@
   references:
     - "design.md §2.5.2"
 
+- id: chart_mcp_server
+  name: "AntV MCP Chart Server"
+  category: visualization
+  priority: P2
+  description: "AntV Model Context Protocol server for chart rendering and data visualization."
+  protocols: ["MCP", "SSE", "HTTP"]
+  base_urls:
+    - "https://github.com/antvis/mcp-server-chart"
+  authentication: "none"
+  requires_credentials: false
+  status: trial
+  capabilities: ["chart-rendering", "visualization"]
+  tags: ["visualization", "mcp", "antv"]
+  notes: "Requires Node.js and a running server, e.g. `npx -y @antv/mcp-server-chart --transport sse`."
+  references:
+    - "https://github.com/antvis/mcp-server-chart"
+
 - id: scopus
   name: "Scopus API"
   category: academic

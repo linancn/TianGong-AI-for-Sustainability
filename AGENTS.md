@@ -15,6 +15,7 @@ AI operators must follow this document when working on the TianGong AI for Susta
 | Architecture Spec | `specs/architecture.md` | Ontology, data-source priorities, CLI roadmap, execution strategy. |
 | Task Graph | `tasks/blueprint.yaml` | Dependency ordering for major features. |
 | Human Handbook | `README.md` | Public-facing usage instructions; mirror but do not override. |
+| Visualization Server | `https://github.com/antvis/mcp-server-chart` | Reference for the AntV MCP chart server integration. |
 
 Always consult these sources before planning or executing changes.
 
@@ -24,13 +25,15 @@ Always consult these sources before planning or executing changes.
 2. **Deterministic Pipelines** — prefer rule-based adapters for data acquisition and reserve LLM prompting for synthesis as described in the spec.
 3. **Reversibility** — avoid destructive commands (`git reset --hard`, force pushes, etc.) unless explicitly authorised.
 4. **Bilingual Docs** — whenever `README*.md`, `AGENTS*.md`, or `specs/architecture*.md` are modified, update both English and Chinese versions in the same change set.
+5. **Tooling Dependencies** — chart-related tasks require Node.js and the AntV MCP chart server. Check for `node`/`npx` availability and surface installation guidance if missing.
 
 ## Development Workflow
 
 1. Synchronise dependencies with `uv sync` when the lock file changes.
 2. Write or update tests alongside code modifications.
 3. Keep modules within their designated domains (`core`, `adapters`, `services`, `cli`, etc.).
-4. Surface configuration requirements (API keys, CLI dependencies) via the registry and execution context; do not embed secrets.
+4. Surface configuration requirements (API keys, CLI dependencies, MCP endpoints) via the registry and execution context; do not embed secrets.
+5. When visualization features are required, ensure the AntV MCP chart server is running (`npx -y @antv/mcp-server-chart --transport sse`) and record the endpoint in `.secrets` or `TIANGONG_CHART_MCP_ENDPOINT`.
 
 ## Verification Checklist
 

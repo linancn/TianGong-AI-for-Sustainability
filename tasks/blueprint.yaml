@@ -78,6 +78,14 @@ tasks:
       - realtime.grid_intensity
     phase: 1
 
+  tools.chart_mcp_setup:
+    summary: "Install Node.js tooling and verify AntV MCP chart server connectivity."
+    requires:
+      - runtime.nodejs
+    provides:
+      - tools.chart_mcp_server
+    phase: 2
+
   cli.map_sdg:
     summary: "Implement research map-sdg command."
     requires:
@@ -103,6 +111,14 @@ tasks:
     provides:
       - cli.command.get_carbon_intensity
     phase: 1
+
+  cli.visuals_verify:
+    summary: "Implement research visuals verify command for MCP chart server."
+    requires:
+      - tools.chart_mcp_server
+    provides:
+      - cli.command.visuals_verify
+    phase: 2
 
   cli.find_papers:
     summary: "Implement research find-papers command with optional citation graph."

@@ -9,10 +9,11 @@ start with lightweight registry-aware utilities.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
 
-from ..adapters import AdapterError, DataSourceAdapter, VerificationResult
+from ..adapters import AdapterError, DataSourceAdapter, VerificationResult, ChartMCPAdapter
 from ..adapters.api import GitHubTopicsClient, OSDGClient, SemanticScholarClient, UNSDGClient
 from ..adapters.environment import GridIntensityCLIAdapter
 from ..core import DataSourceDescriptor, DataSourceRegistry, DataSourceStatus, ExecutionContext
@@ -158,3 +159,17 @@ class ResearchServices:
             }
         client = self.osdg_client()
         return client.classify_text(text, language=language)
+
+    def chart_mcp_endpoint(self) -> str:
+        secret_endpoint = self._get_secret("chart_mcp", "endpoint")
+        if secret_endpoint:
+            return secret_endpoint
+        env_endpoint = os.getenv("TIANGONG_CHART_MCP_ENDPOINT")
+        if env_endpoint:
+            return env_endpoint
+        return ChartMCPAdapter().endpoint
+
+    def verify_chart_mcp(self) -> VerificationResult:
+        endpoint = self.chart_mcp_endpoint()
+        adapter = ChartMCPAdapter(endpoint=endpoint)
+        return adapter.verify()

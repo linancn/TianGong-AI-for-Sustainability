@@ -28,7 +28,7 @@ Authoritative specification for automation agents working on this repository. It
 |----------|----------|--------|-------|
 | **P1** | UN SDG API, Semantic Scholar, GitHub Topics, Wikidata, grid-intensity CLI | Implemented | Provide core ontology and retrieval. |
 | **P1 (bulk)** | arXiv S3 / Kaggle dumps | Planned | Download + vector indexing once storage constraints are resolved. |
-| **P2** | Scopus, Web of Science, WattTime (via grid-intensity) | Conditional | Enable only when credentials are supplied. |
+| **P2** | Scopus, Web of Science, WattTime (via grid-intensity), AntV MCP chart server | Conditional | Enable only when credentials or runtime dependencies (Node.js) are available. |
 | **P3** | GRI taxonomy XLSX/XBRL, GHG protocol workbooks, Open Sustainable Tech CSV, Awesome Green Software list | Rolling | Parse via shared file ingestion layer. |
 | **P4** | Google Scholar, ACM Digital Library | Blocked | Enforce alternatives (Semantic Scholar, Crossref). |
 
@@ -36,7 +36,7 @@ Authoritative specification for automation agents working on this repository. It
 
 1. All sources register metadata in `resources/datasources/*.yaml`.
 2. HTTP adapters use `httpx` with Tenacity-backed retry logic; they must emit `AdapterError` on failures.
-3. CLI adapters shell out via subprocess and should provide actionable install guidance when missing.
+3. CLI adapters shell out via subprocess and should provide actionable install guidance when missing (e.g., `grid-intensity`, `mcp-server-chart`).
 4. Caching is deferred to services (e.g., storing SDG goals in DuckDB/Parquet) to keep adapters stateless.
 
 ## 4. Ontology & Data Models
@@ -62,6 +62,7 @@ Services should normalise these entities into graph-friendly structures (Network
 | `research find-papers` | Phase 1 | Planned aggregator across Semantic Scholar, arXiv index (when available), Scopus fallback. |
 | `research map-gri` | Phase 2 | Parse reports with PDF extractors, align against GRI ontology, optionally delegate to LLM scoring. |
 | `research synthesize` | Phase 3 | LLM controller orchestrating other commands according to user prompts. |
+| `research visuals verify` | Phase 2 | Confirms AntV MCP chart server availability prior to visualization workflows. **Implemented**. |
 
 Phase progression must honour dependencies encoded in `tasks/blueprint.yaml`.
 
@@ -70,7 +71,7 @@ Phase progression must honour dependencies encoded in `tasks/blueprint.yaml`.
 1. **Execution Context** — use `ExecutionContext.build_default()` to obtain cache paths, enabled sources, and secrets. Respect `dry_run` and `background_tasks`.
 2. **Task Graph** — before implementing a feature, consult `tasks/blueprint.yaml` to ensure prerequisites are met (e.g., ontology ingestion before map-gri).
 3. **Dry-Run Support** — services and CLI commands should surface dry-run plans rather than performing side effects when `context.options.dry_run` is true.
-4. **Missing Dependencies** — if a command depends on external binaries or credentials (e.g., OSDG token, grid-intensity CLI), surface clear instructions rather than failing silently.
+4. **Missing Dependencies** — if a command depends on external binaries or credentials (e.g., OSDG token, `grid-intensity` CLI, Node.js for the chart server), surface clear instructions rather than failing silently.
 
 ## 7. Testing Strategy
 

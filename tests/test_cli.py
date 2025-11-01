@@ -107,3 +107,17 @@ def test_research_find_code_cli(cli_runner, registry_file):
 
     assert result.exit_code == 0
     assert "demo/green-tool" in result.stdout
+
+
+def test_research_visuals_verify_cli(cli_runner, registry_file):
+    with patch(
+        "tiangong_ai_for_sustainability.cli.main.ResearchServices.verify_chart_mcp",
+        return_value=VerificationResult(success=True, message="OK", details={"endpoint": "http://127.0.0.1:1122/sse"}),
+    ):
+        result = invoke(
+            cli_runner,
+            ["--registry", str(registry_file), "research", "visuals", "verify"],
+        )
+
+    assert result.exit_code == 0
+    assert "OK" in result.stdout

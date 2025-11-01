@@ -34,6 +34,8 @@ sources_app = typer.Typer(help="Inspect and validate external data source integr
 app.add_typer(sources_app, name="sources")
 research_app = typer.Typer(help="Execute research workflows.")
 app.add_typer(research_app, name="research")
+visuals_app = typer.Typer(help="Visualization tooling")
+research_app.add_typer(visuals_app, name="visuals")
 
 
 def _load_registry(registry_file: Optional[Path]) -> DataSourceRegistry:
@@ -451,6 +453,27 @@ def research_find_code(
         typer.echo(line)
         if isinstance(description, str) and description.strip():
             typer.echo(f"  {description.strip()}")
+
+
+@visuals_app.command("verify")
+def research_visuals_verify(ctx: typer.Context) -> None:
+    """Verify connectivity to the AntV MCP chart server."""
+
+    registry = _require_registry(ctx)
+    context = _require_context(ctx)
+    services = ResearchServices(registry=registry, context=context)
+
+    result = services.verify_chart_mcp()
+    typer.echo(result.message)
+    if result.details:
+        typer.echo(f"Details: {json.dumps(result.details, ensure_ascii=False)}")
+    if not result.success:
+        typer.echo(
+            "Hint: install Node.js and run `npx -y @antv/mcp-server-chart --transport sse` "
+            "(default endpoint http://127.0.0.1:1122/sse).",
+            err=True,
+        )
+        raise typer.Exit(code=1)
 
 
 @research_app.command("get-carbon-intensity")

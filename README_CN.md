@@ -16,6 +16,7 @@
 
 - Python 3.12 或更高版本
 - 用于环境与依赖管理的 [uv](https://docs.astral.sh/uv/)
+- Node.js 22+（仅在使用 AntV MCP 图表服务器时需要）
 
 ### 安装
 
@@ -38,6 +39,7 @@ uv run tiangong-research --help
 - `uv run tiangong-research research find-code <topic>` — 基于 GitHub Topics 搜索可持续性相关代码仓库。
 - `uv run tiangong-research research map-sdg <file>` — 调用 OSDG API 将文本或 PDF 映射到 SDG（需可返回 JSON 的 OSDG 端点或令牌）。
 - `uv run tiangong-research research get-carbon-intensity <location>` — 通过 `grid-intensity` CLI 查询指定地区的碳强度（需确保该 CLI 已安装在 `PATH` 中）。
+- `uv run tiangong-research research visuals verify` — 检查 AntV MCP 图表服务器是否可达（需安装 Node.js 并运行 `npx -y @antv/mcp-server-chart`）。
 
 更深入的技术架构请参阅 `specs/` 目录下的 AI 规格文档。
 
@@ -68,3 +70,12 @@ uv run pytest
 uv run ruff check
 uv run black .
 ```
+
+## 图表可视化支持
+
+若需通过 [AntV MCP 图表服务器](https://github.com/antvis/mcp-server-chart) 生成图形：
+
+1. 安装 Node.js，并通过 `npm` 或 `npx` 获取服务器包。
+2. 启动服务器，例如执行 `npx -y @antv/mcp-server-chart --transport sse`（默认端点 `http://127.0.0.1:1122/sse`）。
+3. 如使用自定义地址，可设置环境变量 `TIANGONG_CHART_MCP_ENDPOINT` 或在 `.secrets` 文件的 `[chart_mcp] endpoint` 中配置。
+4. 在执行可视化流程前使用 `uv run tiangong-research research visuals verify` 确认 CLI 已连通该服务器。

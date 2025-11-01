@@ -28,7 +28,7 @@
 |--------|------|------|------|
 | **P1** | UN SDG API、Semantic Scholar、GitHub Topics、Wikidata、grid-intensity CLI | 已实现 | 构成本体与检索基础。 |
 | **P1（批量）** | arXiv S3 / Kaggle | 规划中 | 待解决存储成本后引入全文索引。 |
-| **P2** | Scopus、Web of Science、WattTime（通过 grid-intensity） | 视凭据启用 | 仅在提供密钥时加载。 |
+| **P2** | Scopus、Web of Science、WattTime（通过 grid-intensity）、AntV MCP 图表服务器 | 视凭据/环境启用 | 需提供密钥或运行时依赖（Node.js）。 |
 | **P3** | GRI taxonomy、GHG 工作簿、Open Sustainable Tech CSV、Awesome Green Software | 持续接入 | 通过统一的文件解析框架处理。 |
 | **P4** | Google Scholar、ACM Digital Library | 禁用 | 强制使用替代方案（如 Semantic Scholar、Crossref）。 |
 
@@ -36,7 +36,7 @@
 
 1. 数据源元数据需登记在 `resources/datasources/*.yaml`。
 2. HTTP 适配器使用 `httpx` + Tenacity 重试，失败时抛出 `AdapterError`。
-3. CLI 适配器使用子进程调用，应在缺失依赖时给出明确安装指引。
+3. CLI 适配器使用子进程调用，应在缺失依赖时给出明确安装指引（如 `grid-intensity`、`mcp-server-chart`）。
 4. 缓存与持久化逻辑保留在服务层，保证适配器无状态。
 
 ## 4. 本体与数据模型
@@ -62,6 +62,7 @@
 | `research find-papers` | Phase 1 | 计划聚合 Semantic Scholar、arXiv、本地索引与 Scopus。 |
 | `research map-gri` | Phase 2 | 解析报告、比对 GRI 本体，可结合 LLM 进行评分。 |
 | `research synthesize` | Phase 3 | LLM 控制器按用户需求协调其它命令。 |
+| `research visuals verify` | Phase 2 | 检查 AntV MCP 图表服务器可用性。**已实现**。 |
 
 必须遵循 `tasks/blueprint.yaml` 中的依赖顺序推进功能。
 
@@ -70,7 +71,7 @@
 1. **执行上下文**：使用 `ExecutionContext.build_default()` 获取缓存路径、启用数据源、秘密信息；尊重 `dry_run` 与 `background_tasks` 选项。
 2. **任务图**：实现功能前先对照 `tasks/blueprint.yaml`，确认所需前置任务已完成。
 3. **Dry-Run 支持**：服务与 CLI 在 `dry_run` 模式下应返回执行计划而非真正操作。
-4. **前置依赖提示**：缺少外部工具或凭据时（如 OSDG 令牌、`grid-intensity` CLI）需输出明确指导，不得默默失败。
+4. **前置依赖提示**：缺少外部工具或凭据时（如 OSDG 令牌、`grid-intensity` CLI、Node.js + MCP 图表服务器）需输出明确指导，不得默默失败。
 
 ## 7. 测试策略
 
