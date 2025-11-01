@@ -63,6 +63,7 @@ Services should normalise these entities into graph-friendly structures (Network
 | `research map-gri` | Phase 2 | Parse reports with PDF extractors, align against GRI ontology, optionally delegate to LLM scoring. |
 | `research synthesize` | Phase 3 | LLM controller orchestrating other commands according to user prompts. |
 | `research visuals verify` | Phase 2 | Confirms AntV MCP chart server availability prior to visualization workflows. **Implemented**. |
+| `research workflow simple` | Phase 2 | Automates a compact multi-source study (SDG matches, repos, papers, carbon snapshot, AntV chart). **Implemented**. |
 
 Phase progression must honour dependencies encoded in `tasks/blueprint.yaml`.
 

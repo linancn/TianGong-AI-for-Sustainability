@@ -97,3 +97,11 @@
 - 面向人类的总结（Markdown 或结构化文本）。
 - 生成的图表文件路径与说明。
 - 后续建议或待办事项。
+
+### CLI 快捷方式
+
+若需一次性触发完整流程，可执行：
+
+```bash
+uv run tiangong-research research workflow simple --topic "<主题>" --report-output reports/snapshot.md --chart-output visuals/snapshot.png
+```

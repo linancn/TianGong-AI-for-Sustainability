@@ -17,6 +17,7 @@
 | 人类手册 | `README.md` | 面向终端用户的使用说明，需保持行为一致。 |
 | 可视化服务 | `https://github.com/antvis/mcp-server-chart` | AntV MCP 图表服务器的使用说明与配置。 |
 | 提示模板 | `specs/prompts/` | 可复用的研究提示模板（需维护中英双语版本）。 |
+| 工作流脚本 | `tiangong_ai_for_sustainability/workflows/` | 自动化多源研究的 Python 工作流（如 `run_simple_workflow`）。 |
 
 > **更新要求**：凡涉及上述文档内容变更，必须同时更新对应的中文与英文版本，确保双语文档一致。
 
@@ -35,6 +36,7 @@
 3. 按模块划分提交内容（`core`、`adapters`、`services`、`cli` 等）。
 4. 使用注册表与执行上下文暴露配置需求（包括 MCP 端点），严禁硬编码秘密信息。
 5. 执行可视化任务前，需启动 `npx -y @antv/mcp-server-chart --transport streamable` 并在 `.secrets` 的 `[chart_mcp] endpoint` 或环境变量 `TIANGONG_CHART_MCP_ENDPOINT` 中记录端点。
+6. 扩展自动化流程时，可复用或扩展 `workflows/simple.py`，并同步更新测试用例。
 
 ## 验证清单
 

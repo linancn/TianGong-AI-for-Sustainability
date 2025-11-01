@@ -159,3 +159,6 @@ uv.lock
 # Project temporary files
 /temp/
 /test.md
+
+/node_modules
+package-lock.json

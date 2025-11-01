@@ -97,3 +97,11 @@ Synthesize the findings in a structured note:
 - Human-readable synthesis (Markdown or structured text).
 - Generated chart file path and description.
 - Follow-up recommendations or next steps.
+
+### CLI Shortcut
+
+When automation should handle the entire flow end-to-end, run:
+
+```bash
+uv run tiangong-research research workflow simple --topic "<query>" --report-output reports/snapshot.md --chart-output visuals/snapshot.png
+```

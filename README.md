@@ -40,6 +40,7 @@ Helpful entry points:
 - `uv run tiangong-research research map-sdg <file>` — classify a text or PDF via the OSDG API (requires a working JSON endpoint or token).
 - `uv run tiangong-research research get-carbon-intensity <location>` — fetch grid intensity metrics through the upstream CLI (ensure `grid-intensity` is installed on `PATH`).
 - `uv run tiangong-research research visuals verify` — confirm the AntV MCP chart server is reachable (requires Node.js and `npx -y @antv/mcp-server-chart --transport streamable`).
+- `uv run tiangong-research research workflow simple --topic "<query>" --report-output reports/snapshot.md --chart-output visuals/snapshot.png` — run the end-to-end workflow that gathers data, writes a Markdown report, and renders an AntV chart.
 
 Refer to the AI-oriented specifications in `specs/` for deeper architectural detail.
 

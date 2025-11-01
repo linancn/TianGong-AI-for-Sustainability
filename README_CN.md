@@ -40,6 +40,7 @@ uv run tiangong-research --help
 - `uv run tiangong-research research map-sdg <file>` — 调用 OSDG API 将文本或 PDF 映射到 SDG（需可返回 JSON 的 OSDG 端点或令牌）。
 - `uv run tiangong-research research get-carbon-intensity <location>` — 通过 `grid-intensity` CLI 查询指定地区的碳强度（需确保该 CLI 已安装在 `PATH` 中）。
 - `uv run tiangong-research research visuals verify` — 检查 AntV MCP 图表服务器是否可达（需安装 Node.js 并运行 `npx -y @antv/mcp-server-chart --transport streamable`）。
+- `uv run tiangong-research research workflow simple --topic "<主题>" --report-output reports/snapshot.md --chart-output visuals/snapshot.png` — 运行端到端工作流，汇总数据并生成报告与 AntV 图表。
 
 更深入的技术架构请参阅 `specs/` 目录下的 AI 规格文档。
 

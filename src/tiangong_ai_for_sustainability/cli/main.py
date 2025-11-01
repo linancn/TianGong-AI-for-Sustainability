@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional
 
 import typer
 
-from ..adapters import AdapterError, DataSourceAdapter
+from ..adapters import AdapterError, DataSourceAdapter, ChartMCPAdapter
 from ..adapters.api import (
     GitHubTopicsAdapter,
     GitHubTopicsClient,
@@ -28,6 +28,7 @@ from ..adapters.api import (
 from ..adapters.environment import GridIntensityCLIAdapter
 from ..core import DataSourceDescriptor, DataSourceRegistry, DataSourceStatus, ExecutionContext, ExecutionOptions, RegistryLoadError
 from ..services import ResearchServices
+from ..workflows import run_simple_workflow
 
 app = typer.Typer(no_args_is_help=True, add_completion=False, help="TianGong sustainability research CLI.")
 sources_app = typer.Typer(help="Inspect and validate external data source integrations.")
@@ -36,6 +37,8 @@ research_app = typer.Typer(help="Execute research workflows.")
 app.add_typer(research_app, name="research")
 visuals_app = typer.Typer(help="Visualization tooling")
 research_app.add_typer(visuals_app, name="visuals")
+workflow_app = typer.Typer(help="Predefined multi-step research workflows")
+research_app.add_typer(workflow_app, name="workflow")
 
 
 def _load_registry(registry_file: Optional[Path]) -> DataSourceRegistry:
@@ -227,6 +230,7 @@ def _resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[Data
         SemanticScholarAdapter(client=SemanticScholarClient(api_key=semantic_key)),
         GitHubTopicsAdapter(client=GitHubTopicsClient(token=github_token)),
         OSDGAdapter(client=OSDGClient(api_token=osdg_token)),
+        ChartMCPAdapter(),
     )
     for adapter in adapters:
         if source_id == adapter.source_id:
@@ -474,6 +478,43 @@ def research_visuals_verify(ctx: typer.Context) -> None:
             err=True,
         )
         raise typer.Exit(code=1)
+
+
+@workflow_app.command("simple")
+def research_workflow_simple(
+    ctx: typer.Context,
+    topic: str = typer.Argument(..., help="Research topic or query phrase."),
+    report_output: Path = typer.Option(Path("reports") / "snapshot.md", "--report-output", help="Path for the generated Markdown report."),
+    chart_output: Path = typer.Option(
+        Path(".cache") / "tiangong" / "visuals" / "snapshot.png",
+        "--chart-output",
+        help="Path for the generated chart PNG.",
+    ),
+    github_limit: int = typer.Option(5, help="Maximum number of GitHub repositories to include."),
+    paper_limit: int = typer.Option(5, help="Maximum number of papers to include."),
+    carbon_location: str = typer.Option("CAISO_NORTH", help="Grid intensity location identifier."),
+) -> None:
+    """Run the simple sustainability workflow and emit a report plus chart."""
+
+    registry = _require_registry(ctx)
+    context = _require_context(ctx)
+    services = ResearchServices(registry=registry, context=context)
+
+    artifacts = run_simple_workflow(
+        services,
+        topic=topic,
+        report_path=report_output,
+        chart_path=chart_output,
+        github_limit=github_limit,
+        paper_limit=paper_limit,
+        carbon_location=carbon_location,
+    )
+
+    typer.echo(f"Report written to {artifacts.report_path}")
+    if artifacts.chart_path:
+        typer.echo(f"Chart saved to {artifacts.chart_path}")
+    else:
+        typer.echo("Chart generation skipped or failed; see report for details.")
 
 
 @research_app.command("get-carbon-intensity")

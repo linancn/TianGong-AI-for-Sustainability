@@ -120,6 +120,18 @@ tasks:
       - cli.command.visuals_verify
     phase: 2
 
+  workflow.simple:
+    summary: "Create simple workflow combining SDG matching, repo/paper discovery, carbon snapshot, and AntV chart generation."
+    requires:
+      - cli.command.find_code
+      - cli.command.map_sdg
+      - cli.command.get_carbon_intensity
+      - cli.command.visuals_verify
+    provides:
+      - workflow.simple
+      - docs.workflow.simple
+    phase: 2
+
   cli.find_papers:
     summary: "Implement research find-papers command with optional citation graph."
     requires:

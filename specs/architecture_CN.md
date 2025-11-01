@@ -63,6 +63,7 @@
 | `research map-gri` | Phase 2 | 解析报告、比对 GRI 本体，可结合 LLM 进行评分。 |
 | `research synthesize` | Phase 3 | LLM 控制器按用户需求协调其它命令。 |
 | `research visuals verify` | Phase 2 | 检查 AntV MCP 图表服务器可用性。**已实现**。 |
+| `research workflow simple` | Phase 2 | 自动化执行 SDG 匹配、代码/文献检索、碳强度采集与 AntV 图表生成。**已实现**。 |
 
 必须遵循 `tasks/blueprint.yaml` 中的依赖顺序推进功能。
 
