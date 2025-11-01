@@ -11,11 +11,20 @@ from __future__ import annotations
 import json
 from importlib import resources
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 import typer
 
-from ..adapters import AdapterError
+from ..adapters import AdapterError, DataSourceAdapter
+from ..adapters.api import (
+    GitHubTopicsAdapter,
+    GitHubTopicsClient,
+    OSDGAdapter,
+    OSDGClient,
+    SemanticScholarAdapter,
+    SemanticScholarClient,
+    UNSDGAdapter,
+)
 from ..adapters.environment import GridIntensityCLIAdapter
 from ..core import DataSourceDescriptor, DataSourceRegistry, DataSourceStatus, ExecutionContext, ExecutionOptions, RegistryLoadError
 from ..services import ResearchServices
@@ -54,6 +63,69 @@ def _render_descriptor(descriptor: DataSourceDescriptor) -> str:
         "references": list(descriptor.references),
     }
     return json.dumps(payload, ensure_ascii=False, indent=2)
+
+
+def _read_text_file(path: Path) -> str:
+    if not path.is_file():
+        raise typer.BadParameter(f"File '{path}' does not exist.")
+
+    suffix = path.suffix.lower()
+    if suffix == ".pdf":
+        try:
+            from pdfminer.high_level import extract_text  # type: ignore[import]
+        except ImportError as exc:
+            raise typer.BadParameter(
+                "PDF support requires pdfminer.six. Install it with 'uv add pdfminer.six' or provide a text file."
+            ) from exc
+        return extract_text(str(path))
+
+    try:
+        return path.read_text(encoding="utf-8")
+    except UnicodeDecodeError as exc:
+        raise typer.BadParameter(f"Failed to decode file '{path}': {exc}") from exc
+
+
+def _normalise_osdg_results(payload: Dict[str, Any], goal_map: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
+    entries: List[Dict[str, Any]] = []
+    data_candidates = []
+    for key in ("classification", "classifications", "data", "results"):
+        value = payload.get(key)
+        if isinstance(value, list):
+            data_candidates = value
+            break
+
+    if not data_candidates and isinstance(payload.get("classification"), dict):
+        data_candidates = [payload["classification"]]
+
+    for item in data_candidates:
+        if not isinstance(item, dict):
+            continue
+        goal_code: Optional[str] = None
+        goal_title: Optional[str] = None
+        score: Optional[float] = None
+
+        goal_field = item.get("goal") or item.get("sdg") or item.get("target")
+        if isinstance(goal_field, dict):
+            code_val = goal_field.get("code") or goal_field.get("id") or goal_field.get("goal")
+            if isinstance(code_val, (int, str)):
+                goal_code = str(code_val)
+            title_val = goal_field.get("title") or goal_field.get("name")
+            if isinstance(title_val, str):
+                goal_title = title_val
+        elif isinstance(goal_field, (int, str)):
+            goal_code = str(goal_field)
+
+        score_val = item.get("score") or item.get("confidence") or item.get("probability")
+        if isinstance(score_val, (int, float)):
+            score = float(score_val)
+
+        if goal_code and goal_code in goal_map:
+            goal_title = goal_title or goal_map[goal_code].get("title")  # type: ignore[index]
+
+        if goal_code:
+            entries.append({"code": goal_code, "title": goal_title, "score": score, "raw": item})
+
+    return entries
 
 
 def _parse_status(status: Optional[str]) -> Optional[DataSourceStatus]:
@@ -125,10 +197,40 @@ def _require_context(ctx: typer.Context) -> ExecutionContext:
     return context
 
 
-def _resolve_adapter(source_id: str) -> Optional[GridIntensityCLIAdapter]:
-    adapter = GridIntensityCLIAdapter()
-    if source_id == adapter.source_id:
-        return adapter
+def _resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataSourceAdapter]:
+    secrets = context.secrets.data
+
+    semantic_key: Optional[str] = None
+    semantic_section = secrets.get("semantic_scholar")
+    if isinstance(semantic_section, dict):
+        value = semantic_section.get("api_key")
+        if isinstance(value, str) and value:
+            semantic_key = value
+
+    github_token: Optional[str] = None
+    github_section = secrets.get("github")
+    if isinstance(github_section, dict):
+        value = github_section.get("token")
+        if isinstance(value, str) and value:
+            github_token = value
+
+    osdg_token: Optional[str] = None
+    osdg_section = secrets.get("osdg")
+    if isinstance(osdg_section, dict):
+        value = osdg_section.get("api_token")
+        if isinstance(value, str) and value:
+            osdg_token = value
+
+    adapters = (
+        GridIntensityCLIAdapter(),
+        UNSDGAdapter(),
+        SemanticScholarAdapter(client=SemanticScholarClient(api_key=semantic_key)),
+        GitHubTopicsAdapter(client=GitHubTopicsClient(token=github_token)),
+        OSDGAdapter(client=OSDGClient(api_token=osdg_token)),
+    )
+    for adapter in adapters:
+        if source_id == adapter.source_id:
+            return adapter
     return None
 
 
@@ -227,7 +329,7 @@ def sources_verify(
         raise typer.Exit(code=1)
 
     services = ResearchServices(registry=registry, context=context)
-    adapter = _resolve_adapter(source_id)
+    adapter = _resolve_adapter(source_id, context)
     try:
         result = services.verify_source(source_id, adapter)
     except AdapterError as exc:
@@ -239,6 +341,118 @@ def sources_verify(
         typer.echo(f"Details: {json.dumps(result.details, ensure_ascii=False)}")
     if not result.success:
         raise typer.Exit(code=1)
+
+
+@research_app.command("map-sdg")
+def research_map_sdg(
+    ctx: typer.Context,
+    file_path: Path = typer.Argument(..., exists=True, resolve_path=True, help="Path to a text or PDF file."),
+    language: Optional[str] = typer.Option(None, "--language", "-l", help="Optional language hint for the classifier."),
+    output_json: bool = typer.Option(False, "--json", help="Emit raw JSON results."),
+) -> None:
+    """Classify a document and map its content to SDG goals via OSDG."""
+
+    registry = _require_registry(ctx)
+    context = _require_context(ctx)
+    services = ResearchServices(registry=registry, context=context)
+
+    text = _read_text_file(file_path).strip()
+    if not text:
+        typer.echo("Input file is empty after stripping whitespace.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        payload = services.classify_text_with_osdg(text, language=language)
+    except AdapterError as exc:
+        typer.echo(f"Failed to classify text with OSDG API: {exc}", err=True)
+        raise typer.Exit(code=1)
+
+    if output_json:
+        typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+
+    if isinstance(payload, dict) and payload.get("note"):
+        typer.echo(payload["note"])
+        return
+
+    if not isinstance(payload, dict):
+        typer.echo("Unexpected response from OSDG API.")
+        typer.echo(str(payload))
+        raise typer.Exit(code=1)
+
+    goal_map = services.sdg_goal_map()
+    matches = _normalise_osdg_results(payload, goal_map)
+
+    if not matches:
+        typer.echo("No SDG matches were returned by the OSDG API.")
+        typer.echo("Raw response:")
+        typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        raise typer.Exit(code=1)
+
+    typer.echo(f"OSDG returned {len(matches)} SDG match(es):")
+    for entry in matches:
+        code = entry.get("code")
+        title = entry.get("title") or goal_map.get(code, {}).get("title") if code else None
+        score = entry.get("score")
+        score_str = f" (score {score:.2f})" if isinstance(score, float) else ""
+        typer.echo(f"- SDG {code}: {title}{score_str}")
+
+
+@research_app.command("find-code")
+def research_find_code(
+    ctx: typer.Context,
+    topic: str = typer.Argument(..., help="GitHub topic to search for (e.g. 'green-software')."),
+    limit: int = typer.Option(10, "--limit", "-n", min=1, max=100, help="Number of repositories to return."),
+    output_json: bool = typer.Option(False, "--json", help="Emit raw JSON results."),
+) -> None:
+    """Discover code repositories linked to sustainability topics via GitHub Topics."""
+
+    registry = _require_registry(ctx)
+    context = _require_context(ctx)
+    services = ResearchServices(registry=registry, context=context)
+
+    if context.options.dry_run:
+        typer.echo(f"Dry-run: would search GitHub for topic '{topic}' (limit={limit}).")
+        return
+
+    client = services.github_topics_client()
+    try:
+        payload = client.search_repositories(topic, per_page=limit)
+    except AdapterError as exc:
+        typer.echo(f"GitHub Topics search failed: {exc}", err=True)
+        raise typer.Exit(code=1)
+
+    items = payload.get("items") if isinstance(payload, dict) else None
+    if not isinstance(items, list):
+        typer.echo("Unexpected response from GitHub API.", err=True)
+        raise typer.Exit(code=1)
+
+    if output_json:
+        typer.echo(json.dumps(items, ensure_ascii=False, indent=2))
+        return
+
+    if not items:
+        typer.echo("No repositories matched the requested topic.")
+        return
+
+    total = payload.get("total_count")
+    if isinstance(total, int):
+        typer.echo(f"GitHub returned {total} matching repositories (showing up to {len(items)}).")
+
+    for repo in items:
+        if not isinstance(repo, dict):
+            continue
+        name = repo.get("full_name", "unknown")
+        stars = repo.get("stargazers_count")
+        url = repo.get("html_url", "")
+        description = repo.get("description")
+        stars_str = f" ⭐{stars}" if isinstance(stars, int) else ""
+        line = f"- {name}{stars_str}"
+        if url:
+            line += f" → {url}"
+        typer.echo(line)
+        if isinstance(description, str) and description.strip():
+            typer.echo(f"  {description.strip()}")
 
 
 @research_app.command("get-carbon-intensity")

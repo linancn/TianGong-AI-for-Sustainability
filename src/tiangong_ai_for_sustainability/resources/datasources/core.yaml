@@ -63,6 +63,23 @@
   references:
     - "design.md §2.A.1"
 
+- id: osdg_api
+  name: "OSDG SDG Classification API"
+  category: tooling
+  priority: P2
+  description: "Text-to-SDG classification service maintained by the OSDG initiative."
+  protocols: ["REST"]
+  base_urls:
+    - "https://osdg.ai/api/"
+  authentication: "api-key"
+  requires_credentials: true
+  status: trial
+  capabilities: ["sdg-classification"]
+  tags: ["sdg", "classification", "p2"]
+  notes: "Public endpoint may enforce rate limits or require an API token."
+  references:
+    - "design.md §2.A.2"
+
 - id: grid_intensity_cli
   name: "Grid Intensity CLI"
   category: environment

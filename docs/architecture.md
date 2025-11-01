@@ -80,7 +80,7 @@
 
 > **权衡**：先保障 Phase 1 命令的端到端闭环，满足核心用例；Phase 2 执行复杂解析（GRI/GHG）；Phase 3 引入跨命令编排与报告生成功能。
 
-> **当前进展**：已实现数据源注册/验证框架，并交付 `research get-carbon-intensity` Phase 1 命令；缺失的 CLI 工具会给出安装指引。
+> **当前进展**：已实现数据源注册/验证框架，并交付 Phase 1 命令：`research get-carbon-intensity`、`research find-code`、`research map-sdg`（需可用的 OSDG API）。缺失的 CLI 工具或 API 凭据会给出安装/配置提示。
 
 ## 6. Codex 自主执行策略
 

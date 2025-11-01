@@ -9,10 +9,11 @@ start with lightweight registry-aware utilities.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
 
 from ..adapters import AdapterError, DataSourceAdapter, VerificationResult
+from ..adapters.api import GitHubTopicsClient, OSDGClient, SemanticScholarClient, UNSDGClient
 from ..adapters.environment import GridIntensityCLIAdapter
 from ..core import DataSourceDescriptor, DataSourceRegistry, DataSourceStatus, ExecutionContext
 
@@ -23,6 +24,11 @@ class ResearchServices:
 
     registry: DataSourceRegistry
     context: ExecutionContext
+    _un_sdg_client: Optional[UNSDGClient] = field(default=None, init=False, repr=False)
+    _semantic_scholar_client: Optional[SemanticScholarClient] = field(default=None, init=False, repr=False)
+    _github_topics_client: Optional[GitHubTopicsClient] = field(default=None, init=False, repr=False)
+    _osdg_client: Optional[OSDGClient] = field(default=None, init=False, repr=False)
+    _sdg_goal_cache: Optional[Dict[str, Dict[str, Any]]] = field(default=None, init=False, repr=False)
 
     def list_enabled_sources(self) -> list[DataSourceDescriptor]:
         """Return descriptors for sources enabled in the execution context."""
@@ -98,3 +104,57 @@ class ResearchServices:
         result.setdefault("provider", provider)
         result.setdefault("location", location)
         return result
+
+    # -- Client factories -------------------------------------------------
+
+    def _get_secret(self, section: str, key: str) -> Optional[str]:
+        section_data = self.context.secrets.data.get(section)
+        if isinstance(section_data, dict):
+            value = section_data.get(key)
+            if isinstance(value, str) and value:
+                return value
+        return None
+
+    def un_sdg_client(self) -> UNSDGClient:
+        if self._un_sdg_client is None:
+            self._un_sdg_client = UNSDGClient()
+        return self._un_sdg_client
+
+    def semantic_scholar_client(self) -> SemanticScholarClient:
+        if self._semantic_scholar_client is None:
+            api_key = self._get_secret("semantic_scholar", "api_key")
+            self._semantic_scholar_client = SemanticScholarClient(api_key=api_key)
+        return self._semantic_scholar_client
+
+    def github_topics_client(self) -> GitHubTopicsClient:
+        if self._github_topics_client is None:
+            token = self._get_secret("github", "token")
+            self._github_topics_client = GitHubTopicsClient(token=token)
+        return self._github_topics_client
+
+    def osdg_client(self) -> OSDGClient:
+        if self._osdg_client is None:
+            api_token = self._get_secret("osdg", "api_token")
+            self._osdg_client = OSDGClient(api_token=api_token)
+        return self._osdg_client
+
+    def sdg_goal_map(self) -> Dict[str, Dict[str, Any]]:
+        if self._sdg_goal_cache is None:
+            goals = self.un_sdg_client().list_goals()
+            goal_map: Dict[str, Dict[str, Any]] = {}
+            for goal in goals:
+                code = str(goal.get("code")) if isinstance(goal, dict) else None
+                if code:
+                    goal_map[code] = goal  # type: ignore[assignment]
+            self._sdg_goal_cache = goal_map
+        return self._sdg_goal_cache
+
+    def classify_text_with_osdg(self, text: str, *, language: Optional[str] = None) -> Dict[str, Any]:
+        if self.context.options.dry_run:
+            return {
+                "note": "Dry-run mode enabled; skipped OSDG classification.",
+                "language": language,
+                "length": len(text),
+            }
+        client = self.osdg_client()
+        return client.classify_text(text, language=language)
