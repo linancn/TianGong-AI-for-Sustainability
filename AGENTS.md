@@ -1,11 +1,55 @@
-# TianGong AI for Sustainability
+# TianGong Automation Playbook
 
-This repository follows the Tiangong LCA Spec Coding project configuration pattern while providing a clean slate for new automation workflows. Install dependencies with `uv sync` and run development tooling via `uv run` when adding new code.
+AI operators must follow this document when working on the TianGong AI for Sustainability repository.
 
-## 质量保障与自检
-- 如果某次的修改涉及 Python 源代码，需在结束后按序执行：
-  ```bash
-  uv run black .
-  uv run ruff check
-  uv run python -m compileall src scripts
-  uv run pytest
+## Mission Brief
+
+- Deliver a spec-driven sustainability research CLI according to the architecture captured in `specs/`.
+- Keep behaviour aligned with the human-facing README while prioritising deterministic, reproducible workflows.
+- Treat `specs/architecture.md` and `tasks/blueprint.yaml` as authoritative references for scope, module boundaries, and implementation order.
+
+## Required References
+
+| Artifact | Path | Purpose |
+|----------|------|---------|
+| Architecture Spec | `specs/architecture.md` | Ontology, data-source priorities, CLI roadmap, execution strategy. |
+| Task Graph | `tasks/blueprint.yaml` | Dependency ordering for major features. |
+| Human Handbook | `README.md` | Public-facing usage instructions; mirror but do not override. |
+
+Always consult these sources before planning or executing changes.
+
+## Operating Principles
+
+1. **Spec-First Execution** — verify that requested work aligns with `specs/architecture.md`. Escalate conflicts instead of improvising.
+2. **Deterministic Pipelines** — prefer rule-based adapters for data acquisition and reserve LLM prompting for synthesis as described in the spec.
+3. **Reversibility** — avoid destructive commands (`git reset --hard`, force pushes, etc.) unless explicitly authorised.
+4. **English Only** — author comments and documentation in English to maintain consistency.
+
+## Development Workflow
+
+1. Synchronise dependencies with `uv sync` when the lock file changes.
+2. Write or update tests alongside code modifications.
+3. Keep modules within their designated domains (`core`, `adapters`, `services`, `cli`, etc.).
+4. Surface configuration requirements (API keys, CLI dependencies) via the registry and execution context; do not embed secrets.
+
+## Verification Checklist
+
+Run the following before handing work back to a human or chaining additional agents:
+
+```bash
+uv run black .
+uv run ruff check
+uv run pytest
+```
+
+If Python modules were added or modified, also ensure they compile cleanly:
+
+```bash
+uv run python -m compileall src scripts
+```
+
+## Communication Rules
+
+- Summarise changes with file references and line numbers where possible.
+- Highlight residual risks (e.g., external APIs requiring credentials, sandbox limitations).
+- When blocking on missing tools (e.g., `grid-intensity` CLI or OSDG API token), document the exact prerequisite so humans can resolve it quickly.
