@@ -540,6 +540,19 @@ class DeepResearchResult:
         for item in self.final_response.output or []:
             if item.type == "output_text":
                 chunks.append(item.text)
+            elif item.type == "message":
+                contents = getattr(item, "content", None)
+                if contents is None and isinstance(item, Mapping):  # type: ignore[arg-type]
+                    contents = item.get("content")
+                if contents:
+                    for entry in contents:
+                        text = None
+                        if isinstance(entry, Mapping):
+                            text = entry.get("text")
+                        else:
+                            text = getattr(entry, "text", None)
+                        if text:
+                            chunks.append(text)
         return "\n\n".join(chunk.strip() for chunk in chunks if chunk)
 
     def to_dict(self) -> Dict[str, Any]:

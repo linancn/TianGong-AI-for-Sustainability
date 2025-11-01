@@ -6,7 +6,15 @@ from types import SimpleNamespace
 
 import pytest
 
-from tiangong_ai_for_sustainability.workflows.lca_citations import run_lca_citation_workflow
+from tiangong_ai_for_sustainability.workflows.deep_lca import run_deep_lca_report
+from tiangong_ai_for_sustainability.workflows.lca_citations import (
+    LCACitationWorkflowArtifacts,
+    CitationQuestion,
+    PaperRecord,
+    ResearchGap,
+    TrendingTopic,
+    run_lca_citation_workflow,
+)
 from tiangong_ai_for_sustainability.workflows.simple import run_simple_workflow
 
 
@@ -183,3 +191,92 @@ def test_run_lca_citation_workflow(tmp_path, monkeypatch, dummy_services):
     assert len(payload["papers"]) == 3
     assert artifacts.questions
     assert artifacts.trending_topics or artifacts.chart_caption == "Top LCA questions by citation count"
+
+
+def test_run_deep_lca_report(tmp_path, dummy_services):
+    output_dir = tmp_path / "output"
+
+    def fake_runner(
+        services,
+        *,
+        report_path,
+        chart_path,
+        raw_data_path=None,
+        years=5,
+        keyword_overrides=None,
+        max_records=200,
+    ) -> LCACitationWorkflowArtifacts:
+        report_path.write_text("Sample citation report", encoding="utf-8")
+        chart_path.write_bytes(b"fake-chart")
+        if raw_data_path:
+            raw_data_path.write_text("{}", encoding="utf-8")
+
+        question = CitationQuestion(
+            question="What is the impact of sample research on sustainability outcomes?",
+            citation_count=120,
+            publication_year=2022,
+            paper_title="Sample Research Paper",
+            journal="Journal of LCA",
+            doi="10.1234/example",
+            url="https://example.com/paper",
+            authors=["Researcher A"],
+            keyword_hits={"life cycle assessment": 2},
+        )
+        topic = TrendingTopic(
+            topic="Circular systems",
+            trend_score=1.5,
+            citation_growth=12.0,
+            recent_share=0.42,
+            coverage_years=(2019, 2023),
+            top_papers=["Sample Research Paper"],
+        )
+        gap = ResearchGap(
+            topic="Plant-based plastics",
+            paper_count=2,
+            avg_citations=95.0,
+            recent_papers=0,
+            representative_title="Sample Research Paper",
+            supporting_doi="10.1234/example",
+            rationale="Only two studies but high average citations, indicating demand for deeper exploration.",
+        )
+        paper = PaperRecord(
+            source_id="openalex",
+            work_id="https://openalex.org/W1",
+            title="Sample Research Paper",
+            year=2022,
+            citation_count=120,
+            doi="10.1234/example",
+            url="https://example.com/paper",
+            journal="Journal of LCA",
+            authors=["Researcher A"],
+            abstract="Sample abstract",
+            concepts=[],
+            keyword_hits={"life cycle assessment": 2},
+            extra={},
+        )
+
+        return LCACitationWorkflowArtifacts(
+            report_path=report_path,
+            chart_path=chart_path,
+            chart_caption="Top LCA questions by citation count",
+            raw_data_path=raw_data_path,
+            questions=[question],
+            trending_topics=[topic],
+            research_gaps=[gap],
+            papers=[paper],
+        )
+
+    artifacts = run_deep_lca_report(
+        dummy_services,
+        output_dir=output_dir,
+        deep_research=False,
+        lca_runner=fake_runner,
+    )
+
+    assert artifacts.final_report_path.exists()
+    report_text = artifacts.final_report_path.read_text("utf-8")
+    assert "Top Citation Questions" in report_text
+    assert "Circular systems" in report_text
+    assert "Plant-based plastics" in report_text
+    assert "lca_trends.png" in report_text
+    assert artifacts.citation_report_path.parent == output_dir

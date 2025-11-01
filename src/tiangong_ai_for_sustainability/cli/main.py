@@ -28,7 +28,7 @@ from ..adapters.api import (
 from ..adapters.environment import GridIntensityCLIAdapter
 from ..core import DataSourceDescriptor, DataSourceRegistry, DataSourceStatus, ExecutionContext, ExecutionOptions, RegistryLoadError
 from ..services import ResearchServices
-from ..workflows import run_lca_citation_workflow, run_simple_workflow
+from ..workflows import run_deep_lca_report, run_lca_citation_workflow, run_simple_workflow
 
 app = typer.Typer(no_args_is_help=True, add_completion=False, help="TianGong sustainability research CLI.")
 sources_app = typer.Typer(help="Inspect and validate external data source integrations.")
@@ -514,6 +514,63 @@ def research_workflow_simple(
         typer.echo(f"Chart saved to {artifacts.chart_path}")
     else:
         typer.echo("Chart generation skipped or failed; see report for details.")
+
+
+@workflow_app.command("lca-deep-report")
+def research_workflow_lca_deep_report(
+    ctx: typer.Context,
+    output_dir: Path = typer.Option(Path("output"), "--output-dir", help="Directory to store all generated artefacts."),
+    years: int = typer.Option(5, "--years", help="Number of years to include in the lookback window."),
+    max_records: int = typer.Option(200, "--max-records", help="Maximum number of OpenAlex papers to ingest."),
+    keyword: Optional[List[str]] = typer.Option(
+        None,
+        "--keyword",
+        "-k",
+        help="Additional keyword filters (can be repeated).",
+    ),
+    skip_deep_research: bool = typer.Option(
+        False,
+        "--skip-deep-research",
+        help="Disable the OpenAI Deep Research step and rely on deterministic outputs only.",
+    ),
+    deep_prompt: Optional[str] = typer.Option(
+        None,
+        "--deep-prompt",
+        help="Override the default Deep Research question.",
+    ),
+    deep_instructions: Optional[str] = typer.Option(
+        None,
+        "--deep-instructions",
+        help="Override the system instructions supplied to Deep Research.",
+    ),
+) -> None:
+    """Run the composite LCA + Deep Research workflow and save assets under output_dir."""
+
+    registry = _require_registry(ctx)
+    context = _require_context(ctx)
+    services = ResearchServices(registry=registry, context=context)
+
+    artifacts = run_deep_lca_report(
+        services,
+        output_dir=output_dir,
+        years=years,
+        max_records=max_records,
+        keywords=keyword,
+        deep_research=not skip_deep_research,
+        deep_research_prompt=deep_prompt,
+        deep_research_instructions=deep_instructions,
+    )
+
+    typer.echo(f"Final report written to {artifacts.final_report_path}")
+    typer.echo(f"Citation scan stored at {artifacts.citation_report_path}")
+    if artifacts.chart_path:
+        typer.echo(f"Chart saved to {artifacts.chart_path}")
+    if artifacts.raw_data_path:
+        typer.echo(f"Citation dataset cached at {artifacts.raw_data_path}")
+    if artifacts.deep_research_response_path:
+        typer.echo(f"Deep Research response saved to {artifacts.deep_research_response_path}")
+    elif artifacts.deep_research_summary and artifacts.deep_research_summary.startswith("Deep Research unavailable"):
+        typer.echo(artifacts.deep_research_summary)
 
 
 @workflow_app.command("lca-citations")

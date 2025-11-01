@@ -70,6 +70,14 @@ tasks:
       - corpus.github_topics
     phase: 1
 
+  deep_research.client:
+    summary: "Configure OpenAI Deep Research client with credentials."
+    requires:
+      - secrets.openai
+    provides:
+      - deep_research.client
+    phase: 3
+
   corpus.seed_lists:
     summary: "Parse life cycle assessment reference lists and Open Sustainable Tech CSV."
     requires:
@@ -149,6 +157,17 @@ tasks:
       - workflow.lca_citations
       - docs.workflow.lca_citations
     phase: 2
+
+  workflow.lca_deep_report:
+    summary: "Combine deterministic LCA citations with Deep Research synthesis and final reporting."
+    requires:
+      - workflow.lca_citations
+      - cli.command.visuals_verify
+      - deep_research.client
+    provides:
+      - workflow.lca_deep_report
+      - docs.workflow.lca_deep_report
+    phase: 3
 
   cli.find_papers:
     summary: "Implement research find-papers command with optional citation graph."
