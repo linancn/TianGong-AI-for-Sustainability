@@ -121,9 +121,7 @@ class MCPServerConfig:
         if self.allowed_tools:
             data["allowed_tools"] = list(self.allowed_tools)
         if self.require_manual_approval:
-            raise ValueError(
-                "Deep Research requires MCP servers to set require_approval='never'. Disable manual approvals."
-            )
+            raise ValueError("Deep Research requires MCP servers to set require_approval='never'. Disable manual approvals.")
         data["require_approval"] = "never"
         if self.custom_headers:
             data["headers"] = dict(self.custom_headers)
@@ -460,10 +458,7 @@ class DeepResearchClient:
         if code_interpreter is not None:
             tools.append(code_interpreter.to_tool_param())
         if not self._includes_data_source(tools):
-            raise ValueError(
-                "Deep Research requests require at least one data source tool "
-                "(web_search_preview, file_search, or MCP server)."
-            )
+            raise ValueError("Deep Research requests require at least one data source tool " "(web_search_preview, file_search, or MCP server).")
         if tools:
             body["tools"] = tools
         if tool_choice:

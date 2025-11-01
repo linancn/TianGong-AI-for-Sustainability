@@ -15,19 +15,16 @@ from typing import Optional
 
 import typer
 
-from ..core import (
-    DataSourceDescriptor,
-    DataSourcePriority,
-    DataSourceRegistry,
-    DataSourceStatus,
-    ExecutionContext,
-    ExecutionOptions,
-    RegistryLoadError,
-)
+from ..adapters import AdapterError
+from ..adapters.environment import GridIntensityCLIAdapter
+from ..core import DataSourceDescriptor, DataSourceRegistry, DataSourceStatus, ExecutionContext, ExecutionOptions, RegistryLoadError
+from ..services import ResearchServices
 
 app = typer.Typer(no_args_is_help=True, add_completion=False, help="TianGong sustainability research CLI.")
 sources_app = typer.Typer(help="Inspect and validate external data source integrations.")
 app.add_typer(sources_app, name="sources")
+research_app = typer.Typer(help="Execute research workflows.")
+app.add_typer(research_app, name="research")
 
 
 def _load_registry(registry_file: Optional[Path]) -> DataSourceRegistry:
@@ -65,8 +62,7 @@ def _parse_status(status: Optional[str]) -> Optional[DataSourceStatus]:
     try:
         return DataSourceStatus(status.lower())
     except ValueError:
-        raise typer.BadParameter(f"Unknown status '{status}'. Expected one of: "
-                                 f"{', '.join(item.value for item in DataSourceStatus)}.") from None
+        raise typer.BadParameter(f"Unknown status '{status}'. Expected one of: " f"{', '.join(item.value for item in DataSourceStatus)}.") from None
 
 
 @app.callback(invoke_without_command=False)
@@ -127,6 +123,13 @@ def _require_context(ctx: typer.Context) -> ExecutionContext:
     if not isinstance(context, ExecutionContext):
         raise typer.Exit(code=2)
     return context
+
+
+def _resolve_adapter(source_id: str) -> Optional[GridIntensityCLIAdapter]:
+    adapter = GridIntensityCLIAdapter()
+    if source_id == adapter.source_id:
+        return adapter
+    return None
 
 
 @sources_app.command("list")
@@ -223,10 +226,54 @@ def sources_verify(
         )
         raise typer.Exit(code=1)
 
-    typer.echo(f"Source '{source_id}' is registered with priority {descriptor.priority.value} and status {descriptor.status.value}.")
-    typer.echo(
-        "Detailed connectivity tests are not yet implemented. This command currently validates registry metadata only."
-    )
+    services = ResearchServices(registry=registry, context=context)
+    adapter = _resolve_adapter(source_id)
+    try:
+        result = services.verify_source(source_id, adapter)
+    except AdapterError as exc:
+        typer.echo(f"Verification failed: {exc}", err=True)
+        raise typer.Exit(code=1)
+
+    typer.echo(result.message)
+    if result.details:
+        typer.echo(f"Details: {json.dumps(result.details, ensure_ascii=False)}")
+    if not result.success:
+        raise typer.Exit(code=1)
+
+
+@research_app.command("get-carbon-intensity")
+def research_get_carbon_intensity(
+    ctx: typer.Context,
+    location: str = typer.Argument(..., help="Provider-specific location identifier, e.g. CAISO_NORTH."),
+    provider: str = typer.Option("WattTime", "--provider", "-p", help="grid-intensity provider to use."),
+    output_json: bool = typer.Option(False, "--json", help="Emit raw JSON instead of a formatted message."),
+) -> None:
+    """Fetch carbon intensity metrics via the grid-intensity CLI."""
+
+    registry = _require_registry(ctx)
+    context = _require_context(ctx)
+    services = ResearchServices(registry=registry, context=context)
+
+    try:
+        payload = services.get_carbon_intensity(location=location, provider=provider)
+    except AdapterError as exc:
+        typer.echo(f"Failed to retrieve carbon intensity: {exc}", err=True)
+        raise typer.Exit(code=1)
+
+    if output_json:
+        typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+
+    intensity = payload.get("carbon_intensity") or payload.get("co2e")
+    units = payload.get("units") or payload.get("unit")
+    summary = f"Provider {payload.get('provider', provider)} reports carbon intensity for {payload.get('location', location)}"
+    if intensity is not None:
+        summary += f": {intensity}"
+        if units:
+            summary += f" {units}"
+    typer.echo(summary)
+    if "datetime" in payload:
+        typer.echo(f"Timestamp: {payload['datetime']}")
 
 
 if __name__ == "__main__":  # pragma: no cover

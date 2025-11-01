@@ -109,13 +109,9 @@ class DataSourceDescriptor:
         """Validate internal consistency of the descriptor."""
 
         if self.status == DataSourceStatus.BLOCKED and not self.blocked_reason:
-            raise RegistryLoadError(
-                f"Data source '{self.source_id}' is blocked but missing a blocked_reason."
-            )
+            raise RegistryLoadError(f"Data source '{self.source_id}' is blocked but missing a blocked_reason.")
         if not self.source_id or not self.source_id.isidentifier():
-            raise RegistryLoadError(
-                f"Data source '{self.source_id}' must be a valid identifier (letters, digits, underscore)."
-            )
+            raise RegistryLoadError(f"Data source '{self.source_id}' must be a valid identifier (letters, digits, underscore).")
 
     def to_json(self) -> str:
         """Return a JSON representation useful for CLI output."""

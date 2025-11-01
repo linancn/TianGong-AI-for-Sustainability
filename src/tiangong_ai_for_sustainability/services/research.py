@@ -10,9 +10,10 @@ start with lightweight registry-aware utilities.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from ..adapters import AdapterError, DataSourceAdapter, VerificationResult
+from ..adapters.environment import GridIntensityCLIAdapter
 from ..core import DataSourceDescriptor, DataSourceRegistry, DataSourceStatus, ExecutionContext
 
 
@@ -42,9 +43,7 @@ class ResearchServices:
             raise AdapterError(f"Data source '{source_id}' is disabled in the current execution context.")
         return descriptor
 
-    def verify_source(
-        self, source_id: str, adapter: Optional[DataSourceAdapter] = None
-    ) -> VerificationResult:
+    def verify_source(self, source_id: str, adapter: Optional[DataSourceAdapter] = None) -> VerificationResult:
         """
         Run verification for a source.
 
@@ -75,3 +74,27 @@ class ResearchServices:
             message=f"Source '{source_id}' is registered with priority {descriptor.priority.value} (metadata only).",
             details={"status": descriptor.status.value},
         )
+
+    def get_carbon_intensity(self, location: str, provider: str = "WattTime") -> Dict[str, Any]:
+        """
+        Query the grid-intensity CLI for carbon intensity metrics.
+
+        Respects the execution context's dry-run option by emitting a plan
+        instead of invoking the CLI.
+        """
+
+        adapter = GridIntensityCLIAdapter()
+        if not self.context.is_enabled(adapter.source_id):
+            raise AdapterError(f"Data source '{adapter.source_id}' is disabled in the current execution context.")
+
+        if self.context.options.dry_run:
+            return {
+                "provider": provider,
+                "location": location,
+                "note": "Dry-run mode enabled; grid-intensity CLI was not executed.",
+            }
+
+        result = adapter.query(location=location, provider=provider)
+        result.setdefault("provider", provider)
+        result.setdefault("location", location)
+        return result

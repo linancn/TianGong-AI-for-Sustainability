@@ -80,6 +80,8 @@
 
 > **权衡**：先保障 Phase 1 命令的端到端闭环，满足核心用例；Phase 2 执行复杂解析（GRI/GHG）；Phase 3 引入跨命令编排与报告生成功能。
 
+> **当前进展**：已实现数据源注册/验证框架，并交付 `research get-carbon-intensity` Phase 1 命令；缺失的 CLI 工具会给出安装指引。
+
 ## 6. Codex 自主执行策略
 
 1. **任务图 (`tasks/blueprint.yaml`)**：列出命令依赖（如 `map-gri` 依赖 `ontology.gri`、`pdf.extractor`），Codex 可通过读取任务图决定先执行哪些准备步骤。
@@ -111,4 +113,3 @@
 4. **Phase 3**：实现跨命令综合（synthesize）、Graph 导出、LLM 自主任务图执行，扩展实时数据与政府数据源客户端。
 
 该路线兼顾规范严谨性与实现成本，确保在任一阶段都可直接为 Codex 自主调研提供可靠工具链。
-
