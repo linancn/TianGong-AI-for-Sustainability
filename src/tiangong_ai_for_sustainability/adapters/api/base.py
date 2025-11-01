@@ -55,9 +55,7 @@ class BaseAPIClient:
         try:
             response.raise_for_status()
         except httpx.HTTPStatusError as exc:  # pragma: no cover - library-provided
-            raise APIError(
-                f"HTTP {exc.response.status_code} error for {exc.request.method} {exc.request.url}: {exc.response.text}"
-            ) from exc
+            raise APIError(f"HTTP {exc.response.status_code} error for {exc.request.method} {exc.request.url}: {exc.response.text}") from exc
 
     def _request(self, method: str, url: str, **kwargs: Any) -> httpx.Response:
         @retry(

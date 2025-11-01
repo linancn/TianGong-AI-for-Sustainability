@@ -23,7 +23,7 @@ Always consult these sources before planning or executing changes.
 1. **Spec-First Execution** — verify that requested work aligns with `specs/architecture.md`. Escalate conflicts instead of improvising.
 2. **Deterministic Pipelines** — prefer rule-based adapters for data acquisition and reserve LLM prompting for synthesis as described in the spec.
 3. **Reversibility** — avoid destructive commands (`git reset --hard`, force pushes, etc.) unless explicitly authorised.
-4. **English Only** — author comments and documentation in English to maintain consistency.
+4. **Bilingual Docs** — whenever `README*.md`, `AGENTS*.md`, or `specs/architecture*.md` are modified, update both English and Chinese versions in the same change set.
 
 ## Development Workflow
 

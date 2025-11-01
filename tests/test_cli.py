@@ -21,12 +21,15 @@ def test_sources_list(cli_runner, registry_file):
 
 
 def test_sources_verify_uses_stub(cli_runner, registry_file):
-    with patch(
-        "tiangong_ai_for_sustainability.cli.main._resolve_adapter",
-        return_value=None,
-    ), patch(
-        "tiangong_ai_for_sustainability.cli.main.ResearchServices.verify_source",
-        return_value=VerificationResult(success=True, message="OK", details={"status": "active"}),
+    with (
+        patch(
+            "tiangong_ai_for_sustainability.cli.main._resolve_adapter",
+            return_value=None,
+        ),
+        patch(
+            "tiangong_ai_for_sustainability.cli.main.ResearchServices.verify_source",
+            return_value=VerificationResult(success=True, message="OK", details={"status": "active"}),
+        ),
     ):
         result = invoke(
             cli_runner,
@@ -59,12 +62,15 @@ def test_research_map_sdg_cli(cli_runner, registry_file, tmp_path):
         ]
     }
 
-    with patch(
-        "tiangong_ai_for_sustainability.cli.main.ResearchServices.classify_text_with_osdg",
-        return_value=sample_payload,
-    ), patch(
-        "tiangong_ai_for_sustainability.cli.main.ResearchServices.sdg_goal_map",
-        return_value={"13": {"title": "Climate Action"}},
+    with (
+        patch(
+            "tiangong_ai_for_sustainability.cli.main.ResearchServices.classify_text_with_osdg",
+            return_value=sample_payload,
+        ),
+        patch(
+            "tiangong_ai_for_sustainability.cli.main.ResearchServices.sdg_goal_map",
+            return_value={"13": {"title": "Climate Action"}},
+        ),
     ):
         result = invoke(
             cli_runner,

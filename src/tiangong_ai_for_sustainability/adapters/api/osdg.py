@@ -51,8 +51,7 @@ class OSDGAdapter(DataSourceAdapter):
     client: OSDGClient = field(default_factory=OSDGClient)
 
     SAMPLE_TEXT: str = (
-        "Sustainable development requires coordinated economic, social, and environmental policies to "
-        "tackle climate change while protecting vulnerable populations and biodiversity."
+        "Sustainable development requires coordinated economic, social, and environmental policies to " "tackle climate change while protecting vulnerable populations and biodiversity."
     )
 
     def verify(self) -> VerificationResult:

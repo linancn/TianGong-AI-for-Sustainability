@@ -72,10 +72,7 @@ class GridIntensityCLIAdapter(DataSourceAdapter):
         """
 
         if shutil.which(self.executable) is None:
-            raise AdapterError(
-                "grid-intensity CLI is required but not installed. "
-                "Install it via 'pip install grid-intensity-cli' or follow the upstream documentation."
-            )
+            raise AdapterError("grid-intensity CLI is required but not installed. " "Install it via 'pip install grid-intensity-cli' or follow the upstream documentation.")
 
         command = [self.executable, "--provider", provider, "--location", location, "--json"]
         if extra_args:
@@ -94,9 +91,7 @@ class GridIntensityCLIAdapter(DataSourceAdapter):
             raise AdapterError(f"Failed to execute '{self.executable}': {exc}") from exc
 
         if completed.returncode != 0:
-            raise AdapterError(
-                f"{self.executable} exited with status {completed.returncode}: {completed.stderr.strip() or completed.stdout.strip()}"
-            )
+            raise AdapterError(f"{self.executable} exited with status {completed.returncode}: {completed.stderr.strip() or completed.stdout.strip()}")
 
         try:
             return json.loads(completed.stdout)

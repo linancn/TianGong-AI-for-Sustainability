@@ -74,9 +74,7 @@ def _read_text_file(path: Path) -> str:
         try:
             from pdfminer.high_level import extract_text  # type: ignore[import]
         except ImportError as exc:
-            raise typer.BadParameter(
-                "PDF support requires pdfminer.six. Install it with 'uv add pdfminer.six' or provide a text file."
-            ) from exc
+            raise typer.BadParameter("PDF support requires pdfminer.six. Install it with 'uv add pdfminer.six' or provide a text file.") from exc
         return extract_text(str(path))
 
     try:
