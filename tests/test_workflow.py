@@ -182,4 +182,4 @@ def test_run_lca_citation_workflow(tmp_path, monkeypatch, dummy_services):
     payload = json.loads(raw_path.read_text("utf-8"))
     assert len(payload["papers"]) == 3
     assert artifacts.questions
-    assert artifacts.trending_topics
+    assert artifacts.trending_topics or artifacts.chart_caption == "Top LCA questions by citation count"

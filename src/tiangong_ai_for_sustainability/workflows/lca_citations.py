@@ -92,6 +92,7 @@ class LCACitationWorkflowArtifacts:
 
     report_path: Path
     chart_path: Optional[Path]
+    chart_caption: Optional[str]
     raw_data_path: Optional[Path]
     questions: List[CitationQuestion]
     trending_topics: List[TrendingTopic]
@@ -161,9 +162,14 @@ def run_lca_citation_workflow(
     if raw_data_path:
         _serialise_raw_dataset(raw_data_path, papers, questions, trending_topics, research_gaps)
 
+    chart_caption: Optional[str] = None
     chart_generated = False
     if trending_topics:
+        chart_caption = "Emerging LCA topics by citation momentum"
         chart_generated = _render_trend_chart(services, trending_topics, chart_path)
+    elif questions:
+        chart_caption = "Top LCA questions by citation count"
+        chart_generated = _render_question_chart(services, questions, chart_path)
 
     if not chart_generated:
         chart_path = None
@@ -178,12 +184,14 @@ def run_lca_citation_workflow(
         start_year=start_year,
         end_year=end_year,
         chart_path=chart_path,
+        chart_caption=chart_caption,
         raw_data_path=raw_data_path,
     )
 
     return LCACitationWorkflowArtifacts(
         report_path=report_path,
         chart_path=chart_path,
+        chart_caption=chart_caption,
         raw_data_path=raw_data_path,
         questions=questions,
         trending_topics=trending_topics,
@@ -664,6 +672,22 @@ def _render_trend_chart(services: ResearchServices, topics: List[TrendingTopic],
     return ensure_chart_image(endpoint, tool_name="generate_bar_chart", arguments=arguments, destination=chart_path)
 
 
+def _render_question_chart(services: ResearchServices, questions: List[CitationQuestion], chart_path: Path) -> bool:
+    endpoint = services.chart_mcp_endpoint()
+    data = [
+        {"category": item.question[:60], "value": int(item.citation_count)}
+        for item in sorted(questions, key=lambda x: x.citation_count, reverse=True)[:8]
+    ]
+    arguments = {
+        "data": data,
+        "title": "Top LCA questions by citation count",
+        "width": 900,
+        "height": 520,
+        "format": "png",
+    }
+    return ensure_chart_image(endpoint, tool_name="generate_bar_chart", arguments=arguments, destination=chart_path)
+
+
 def _serialise_raw_dataset(
     path: Path,
     papers: List[PaperRecord],
@@ -691,6 +715,7 @@ def _write_report(
     start_year: int,
     end_year: int,
     chart_path: Optional[Path],
+    chart_caption: Optional[str],
     raw_data_path: Optional[Path],
 ) -> None:
     lines: List[str] = []
@@ -748,7 +773,8 @@ def _write_report(
     lines.append("## Visualization\n")
     if chart_path and chart_path.exists():
         rel_path = chart_path.as_posix()
-        lines.append(f"![Emerging LCA topics]({rel_path})\n")
+        caption = chart_caption or "LCA citation chart"
+        lines.append(f"![{caption}]({rel_path})\n")
     else:
         lines.append("- Chart generation unavailable. Ensure the AntV MCP chart server is reachable.\n")
 
