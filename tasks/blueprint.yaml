@@ -54,6 +54,14 @@ tasks:
       - corpus.semantic_scholar
     phase: 1
 
+  corpus.openalex_client:
+    summary: "Configure OpenAlex works API client for bibliometric analysis."
+    requires:
+      - net.openalex
+    provides:
+      - corpus.openalex
+    phase: 1
+
   corpus.github_topics_client:
     summary: "Configure GitHub Topics client for repository discovery."
     requires:
@@ -130,6 +138,16 @@ tasks:
     provides:
       - workflow.simple
       - docs.workflow.simple
+    phase: 2
+
+  workflow.lca_citations:
+    summary: "Automate LCA citation intelligence covering planetary boundaries and SDGs."
+    requires:
+      - corpus.openalex
+      - cli.command.visuals_verify
+    provides:
+      - workflow.lca_citations
+      - docs.workflow.lca_citations
     phase: 2
 
   cli.find_papers:

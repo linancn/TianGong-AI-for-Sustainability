@@ -28,7 +28,7 @@ from ..adapters.api import (
 from ..adapters.environment import GridIntensityCLIAdapter
 from ..core import DataSourceDescriptor, DataSourceRegistry, DataSourceStatus, ExecutionContext, ExecutionOptions, RegistryLoadError
 from ..services import ResearchServices
-from ..workflows import run_simple_workflow
+from ..workflows import run_lca_citation_workflow, run_simple_workflow
 
 app = typer.Typer(no_args_is_help=True, add_completion=False, help="TianGong sustainability research CLI.")
 sources_app = typer.Typer(help="Inspect and validate external data source integrations.")
@@ -473,8 +473,7 @@ def research_visuals_verify(ctx: typer.Context) -> None:
         typer.echo(f"Details: {json.dumps(result.details, ensure_ascii=False)}")
     if not result.success:
         typer.echo(
-            "Hint: install Node.js and run `npx -y @antv/mcp-server-chart --transport streamable` "
-            "(default endpoint http://127.0.0.1:1122/mcp).",
+            "Hint: install Node.js and run `npx -y @antv/mcp-server-chart --transport streamable` " "(default endpoint http://127.0.0.1:1122/mcp).",
             err=True,
         )
         raise typer.Exit(code=1)
@@ -515,6 +514,54 @@ def research_workflow_simple(
         typer.echo(f"Chart saved to {artifacts.chart_path}")
     else:
         typer.echo("Chart generation skipped or failed; see report for details.")
+
+
+@workflow_app.command("lca-citations")
+def research_workflow_lca_citations(
+    ctx: typer.Context,
+    report_output: Path = typer.Option(Path("reports") / "lca_citations.md", "--report-output", help="Markdown report destination."),
+    chart_output: Path = typer.Option(
+        Path(".cache") / "tiangong" / "visuals" / "lca_citations.png",
+        "--chart-output",
+        help="Path for the generated trend chart PNG.",
+    ),
+    raw_output: Optional[Path] = typer.Option(
+        Path(".cache") / "tiangong" / "data" / "lca_citations.json",
+        "--raw-output",
+        help="Optional path to persist the raw dataset as JSON.",
+    ),
+    years: int = typer.Option(5, "--years", help="Number of years to include in the lookback window."),
+    max_records: int = typer.Option(300, "--max-records", help="Maximum number of papers to ingest from OpenAlex."),
+    keyword: Optional[List[str]] = typer.Option(
+        None,
+        "--keyword",
+        "-k",
+        help="Additional keyword filters (can be repeated).",
+    ),
+) -> None:
+    """Run the LCA citation intelligence workflow."""
+
+    registry = _require_registry(ctx)
+    context = _require_context(ctx)
+    services = ResearchServices(registry=registry, context=context)
+
+    artifacts = run_lca_citation_workflow(
+        services,
+        report_path=report_output,
+        chart_path=chart_output,
+        raw_data_path=raw_output,
+        years=years,
+        keyword_overrides=keyword,
+        max_records=max_records,
+    )
+
+    typer.echo(f"Report written to {artifacts.report_path}")
+    if artifacts.chart_path:
+        typer.echo(f"Chart saved to {artifacts.chart_path}")
+    else:
+        typer.echo("Chart generation skipped or failed; review the report for details.")
+    if artifacts.raw_data_path:
+        typer.echo(f"Raw dataset cached at {artifacts.raw_data_path}")
 
 
 @research_app.command("get-carbon-intensity")

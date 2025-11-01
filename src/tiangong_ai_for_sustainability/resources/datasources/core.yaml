@@ -30,6 +30,23 @@
   references:
     - "design.md §2.2.2"
 
+- id: openalex
+  name: "OpenAlex Works API"
+  category: academic
+  priority: P1
+  description: "Open bibliometric graph with citation and concept metadata."
+  protocols: ["REST"]
+  base_urls:
+    - "https://api.openalex.org/"
+  authentication: "none"
+  requires_credentials: false
+  status: active
+  capabilities: ["work-search", "citations", "concepts"]
+  tags: ["literature", "citations", "p1"]
+  notes: "Deterministic fallback for scholarly queries when Semantic Scholar is rate limited."
+  references:
+    - "https://docs.openalex.org/"
+
 - id: wikidata
   name: "Wikidata SPARQL"
   category: knowledge-graph

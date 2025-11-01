@@ -10,6 +10,7 @@ Each submodule exposes two layers:
 
 from .base import APIError, BaseAPIClient
 from .github_topics import GitHubTopicsAdapter, GitHubTopicsClient
+from .openalex import OpenAlexAdapter, OpenAlexClient
 from .osdg import OSDGAdapter, OSDGClient
 from .semantic_scholar import SemanticScholarAdapter, SemanticScholarClient
 from .un_sdg import UNSDGAdapter, UNSDGClient
@@ -19,6 +20,8 @@ __all__ = [
     "BaseAPIClient",
     "GitHubTopicsAdapter",
     "GitHubTopicsClient",
+    "OpenAlexAdapter",
+    "OpenAlexClient",
     "OSDGAdapter",
     "OSDGClient",
     "SemanticScholarAdapter",

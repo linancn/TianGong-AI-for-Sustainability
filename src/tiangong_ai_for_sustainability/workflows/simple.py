@@ -6,14 +6,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
-import httpx
-import shutil
-import subprocess
-import time
-
 from ..adapters import AdapterError
 from ..adapters.api.base import APIError
 from ..services import ResearchServices
+from .charting import ensure_chart_image
 
 
 @dataclass(slots=True)
@@ -256,114 +252,14 @@ def _render_repository_chart(
         return False
 
     endpoint = services.chart_mcp_endpoint()
-    launcher_proc: Optional[subprocess.Popen[str]] = None
-    try:
-        image_url = _call_chart_tool(endpoint, chart_data, topic)
-    except (httpx.HTTPError, ValueError) as exc:
-        if "Connection refused" in str(exc) or isinstance(exc, httpx.ConnectError):
-            launcher_proc = _launch_chart_server()
-            if launcher_proc is not None:
-                time.sleep(5)
-                try:
-                    image_url = _call_chart_tool(endpoint, chart_data, topic)
-                except Exception:
-                    chart_path.write_text(f"Chart generation failed: {exc}\n", encoding="utf-8")
-                    return False
-            else:
-                chart_path.write_text(f"Chart generation failed: {exc}\n", encoding="utf-8")
-                return False
-        else:
-            chart_path.write_text(f"Chart generation failed: {exc}\n", encoding="utf-8")
-            return False
-
-    if image_url is None:
-        chart_path.write_text("Chart generation returned no image URL.\n", encoding="utf-8")
-        return False
-
-    try:
-        with httpx.Client(timeout=30.0) as client:
-            response = client.get(image_url)
-            response.raise_for_status()
-            chart_path.write_bytes(response.content)
-    except httpx.HTTPError as exc:
-        chart_path.write_text(f"Failed to download chart image: {exc}\n", encoding="utf-8")
-        return False
-    finally:
-        if launcher_proc is not None:
-            launcher_proc.terminate()
-            try:
-                launcher_proc.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                launcher_proc.kill()
-
-    return True
-
-
-def _call_chart_tool(endpoint: str, chart_data: List[Dict[str, Any]], topic: str) -> Optional[str]:
-    headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/json, text/event-stream",
+    arguments = {
+        "data": chart_data,
+        "title": f"Top repositories for {topic}",
+        "width": 800,
+        "height": 500,
+        "format": "png",
     }
-    with httpx.Client(timeout=30.0) as client:
-        init_payload = {
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "initialize",
-            "params": {
-                "protocolVersion": "2025-03-26",
-                "clientInfo": {"name": "tiangong-workflow", "version": "0.1.0"},
-                "capabilities": {},
-            },
-        }
-        client.post(endpoint, headers=headers, json=init_payload)
-
-        call_payload = {
-            "jsonrpc": "2.0",
-            "id": 2,
-            "method": "tools/call",
-            "params": {
-                "name": "generate_bar_chart",
-                "arguments": {
-                    "data": chart_data,
-                    "title": f"Top repositories for {topic}",
-                    "width": 800,
-                    "height": 500,
-                    "format": "png",
-                },
-            },
-        }
-        response = client.post(endpoint, headers=headers, json=call_payload)
-        response.raise_for_status()
-        payload = response.json()
-        result = payload.get("result", {})
-        content = result.get("content", [])
-        for item in content:
-            if not isinstance(item, dict):
-                continue
-            if item.get("type") == "image" and "data" in item:
-                data = item["data"]
-                if isinstance(data, str) and data.startswith("http"):
-                    return data
-            if item.get("type") == "text":
-                text = item.get("text")
-                if isinstance(text, str) and text.startswith("http"):
-                    return text
-        return None
-
-
-def _launch_chart_server() -> Optional[subprocess.Popen[str]]:
-    if shutil.which("npx") is None:
-        return None
-    try:
-        proc = subprocess.Popen(
-            ["npx", "-y", "@antv/mcp-server-chart", "--transport", "streamable"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            text=True,
-        )
-        return proc
-    except OSError:
-        return None
+    return ensure_chart_image(endpoint, tool_name="generate_bar_chart", arguments=arguments, destination=chart_path)
 
 
 # ---------------------------------------------------------------------------

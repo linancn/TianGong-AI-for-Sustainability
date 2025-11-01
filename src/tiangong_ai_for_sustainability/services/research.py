@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
 
 from ..adapters import AdapterError, DataSourceAdapter, VerificationResult, ChartMCPAdapter
-from ..adapters.api import GitHubTopicsClient, OSDGClient, SemanticScholarClient, UNSDGClient
+from ..adapters.api import GitHubTopicsClient, OSDGClient, OpenAlexClient, SemanticScholarClient, UNSDGClient
 from ..adapters.environment import GridIntensityCLIAdapter
 from ..core import DataSourceDescriptor, DataSourceRegistry, DataSourceStatus, ExecutionContext
 
@@ -27,6 +27,7 @@ class ResearchServices:
     context: ExecutionContext
     _un_sdg_client: Optional[UNSDGClient] = field(default=None, init=False, repr=False)
     _semantic_scholar_client: Optional[SemanticScholarClient] = field(default=None, init=False, repr=False)
+    _openalex_client: Optional[OpenAlexClient] = field(default=None, init=False, repr=False)
     _github_topics_client: Optional[GitHubTopicsClient] = field(default=None, init=False, repr=False)
     _osdg_client: Optional[OSDGClient] = field(default=None, init=False, repr=False)
     _sdg_goal_cache: Optional[Dict[str, Dict[str, Any]]] = field(default=None, init=False, repr=False)
@@ -126,6 +127,11 @@ class ResearchServices:
             api_key = self._get_secret("semantic_scholar", "api_key")
             self._semantic_scholar_client = SemanticScholarClient(api_key=api_key)
         return self._semantic_scholar_client
+
+    def openalex_client(self) -> OpenAlexClient:
+        if self._openalex_client is None:
+            self._openalex_client = OpenAlexClient()
+        return self._openalex_client
 
     def github_topics_client(self) -> GitHubTopicsClient:
         if self._github_topics_client is None:

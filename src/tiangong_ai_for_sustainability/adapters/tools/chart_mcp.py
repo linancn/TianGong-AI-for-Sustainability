@@ -39,10 +39,7 @@ class ChartMCPAdapter(DataSourceAdapter):
         if not node_exists:
             return VerificationResult(
                 success=False,
-                message=(
-                    "Node.js (with npx) is not installed or not on PATH. Install Node.js "
-                    "to run the AntV MCP chart server. See https://nodejs.org/"
-                ),
+                message=("Node.js (with npx) is not installed or not on PATH. Install Node.js " "to run the AntV MCP chart server. See https://nodejs.org/"),
                 details={"requirement": "nodejs"},
             )
 
@@ -56,9 +53,7 @@ class ChartMCPAdapter(DataSourceAdapter):
             return VerificationResult(
                 success=False,
                 message=(
-                    f"Unable to reach MCP chart server at {endpoint}. "
-                    "Start it with `npx -y @antv/mcp-server-chart --transport streamable` "
-                    "or configure TIANGONG_CHART_MCP_ENDPOINT."
+                    f"Unable to reach MCP chart server at {endpoint}. " "Start it with `npx -y @antv/mcp-server-chart --transport streamable` " "or configure TIANGONG_CHART_MCP_ENDPOINT."
                 ),
                 details={"error": str(exc), "endpoint": endpoint},
             )
@@ -69,28 +64,19 @@ class ChartMCPAdapter(DataSourceAdapter):
             if not any(token in content_type for token in ("application/json", "application/stream+json", "application/octet-stream")):
                 return VerificationResult(
                     success=False,
-                    message=(
-                        f"Endpoint {endpoint} responded but returned unexpected content-type "
-                        f"'{content_type}'. Ensure the server is running with `--transport streamable`."
-                    ),
+                    message=(f"Endpoint {endpoint} responded but returned unexpected content-type " f"'{content_type}'. Ensure the server is running with `--transport streamable`."),
                     details={"content_type": content_type, "endpoint": endpoint},
                 )
         elif status in (400, 404, 405):
             return VerificationResult(
                 success=True,
-                message=(
-                    f"MCP chart server reachable at {endpoint} (HTTP {status}). "
-                    "Streamable transport expects POST requests; this status is acceptable for connectivity checks."
-                ),
+                message=(f"MCP chart server reachable at {endpoint} (HTTP {status}). " "Streamable transport expects POST requests; this status is acceptable for connectivity checks."),
                 details={"endpoint": endpoint, "transport": self.transport, "status": status},
             )
         else:
             return VerificationResult(
                 success=False,
-                message=(
-                    f"MCP chart server responded with HTTP {status} at {endpoint}. "
-                    "Verify the server is running with streamable transport."
-                ),
+                message=(f"MCP chart server responded with HTTP {status} at {endpoint}. " "Verify the server is running with streamable transport."),
                 details={"status": status, "endpoint": endpoint},
             )
 
