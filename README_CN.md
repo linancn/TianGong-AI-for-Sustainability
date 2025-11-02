@@ -56,7 +56,7 @@ uv run tiangong-research research workflow simple --topic "生命周期评估"
 
 - 图表：`node --version`，以及 `npx -y @antv/mcp-server-chart --transport streamable --version`
 - PDF 导出：`pandoc --version`，`pdflatex --version`
-- 碳强度：`grid-intensity --help`
+- 碳强度：`uv run grid-intensity --help`
 
 如缺少任何命令，可携带对应 `--with-*` 选项重新运行安装脚本，或参考脚本输出的指引手动安装。
 
@@ -80,7 +80,7 @@ macOS 与 Ubuntu 的详细排障说明见 `SETUP_GUIDE_CN.md`（中文）与 `SE
 - `uv run tiangong-research sources verify <id>` — 检查特定数据源的连通性与配置。
 - `uv run tiangong-research research find-code "<主题>" --limit 5 --json` — 搜索可持续性相关的开源代码仓库。
 - `uv run tiangong-research research map-sdg <文件>` — 调用 OSDG API 将文本映射到 SDG 目标（需配置可用的 OSDG 端点或令牌）。
-- `uv run tiangong-research research get-carbon-intensity <地区>` — 通过 `grid-intensity` CLI 获取碳强度指标。
+- `uv run tiangong-research research get-carbon-intensity <地区>` — 通过 `uv sync --group 3rd` 安装的 `grid-intensity` CLI 获取碳强度指标。
 - `uv run tiangong-research research visuals verify` — 检查 AntV MCP 图表服务器是否可连通。
 
 ## 获取更多帮助

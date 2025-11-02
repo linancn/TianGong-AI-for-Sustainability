@@ -56,7 +56,7 @@ Need charts? Start the AntV MCP chart server first, then rerun the workflow with
 
 - Charts: `node --version` and `npx -y @antv/mcp-server-chart --transport streamable --version`
 - PDF export: `pandoc --version` and `pdflatex --version`
-- Carbon metrics: `grid-intensity --help`
+- Carbon metrics: `uv run grid-intensity --help`
 
 If any command is missing, rerun the installer with the matching `--with-*` flag or follow the guidance printed by the script.
 
@@ -80,7 +80,7 @@ Detailed troubleshooting for macOS and Ubuntu is documented in `SETUP_GUIDE.md` 
 - `uv run tiangong-research sources verify <id>` — confirm connectivity/config for a specific source.
 - `uv run tiangong-research research find-code "<topic>" --limit 5 --json` — discover sustainability repositories.
 - `uv run tiangong-research research map-sdg <file>` — map a document to SDG goals (requires OSDG access).
-- `uv run tiangong-research research get-carbon-intensity <location>` — fetch grid-intensity metrics (requires `grid-intensity` CLI).
+- `uv run tiangong-research research get-carbon-intensity <location>` — fetch grid-intensity metrics (install via `uv sync --group 3rd`).
 - `uv run tiangong-research research visuals verify` — confirm the AntV MCP chart server is reachable.
 
 ## Need Help?

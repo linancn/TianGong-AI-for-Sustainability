@@ -14,6 +14,7 @@ dependencies = [
 
 [dependency-groups]
 dev = ["black>=25.9.0", "ruff>=0.14.1", "pytest>=8.4.2"]
+3rd = ["uk-grid-intensity>=0.1.1"]
 
 [build-system]
 requires = ["hatchling>=1.27.0"]

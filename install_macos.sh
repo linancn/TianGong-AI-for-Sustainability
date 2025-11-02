@@ -43,11 +43,43 @@ ask_yes_no() {
     [[ "$response" =~ ^[Yy]$ ]]
 }
 
+UV_OPTIONAL_GROUPS_SELECTED=()
+
+add_uv_group() {
+    local group="$1"
+    for existing in "${UV_OPTIONAL_GROUPS_SELECTED[@]}"; do
+        if [ "$existing" = "$group" ]; then
+            return
+        fi
+    done
+    UV_OPTIONAL_GROUPS_SELECTED+=("$group")
+}
+
+describe_uv_group() {
+    case "$1" in
+        "3rd")
+            echo "Third-party research libraries (uk-grid-intensity CLI for carbon metrics)"
+            ;;
+        *)
+            echo "Optional dependency group '$1'"
+            ;;
+    esac
+}
+
+group_selected() {
+    local target="$1"
+    for existing in "${UV_OPTIONAL_GROUPS_SELECTED[@]}"; do
+        if [ "$existing" = "$target" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
 # Parse command line arguments
 INSTALL_MODE="interactive"
 INSTALL_PDF=false
 INSTALL_CHARTS=false
-INSTALL_CARBON=false
 PDF_INSTALL_PERFORMED=false
 
 while [[ $# -gt 0 ]]; do
@@ -56,7 +88,7 @@ while [[ $# -gt 0 ]]; do
             INSTALL_MODE="full"
             INSTALL_PDF=true
             INSTALL_CHARTS=true
-            INSTALL_CARBON=true
+            add_uv_group "3rd"
             shift
             ;;
         --minimal)
@@ -72,7 +104,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --with-carbon)
-            INSTALL_CARBON=true
+            add_uv_group "3rd"
             shift
             ;;
         *)
@@ -255,23 +287,20 @@ if [ "$INSTALL_MODE" != "minimal" ] || [ "$INSTALL_PDF" = true ]; then
     fi
 fi
 
-# Optional: grid-intensity CLI (for carbon metrics)
-if [ "$INSTALL_MODE" != "minimal" ]; then
-    if [ "$INSTALL_MODE" = "interactive" ]; then
-        if ask_yes_no "Install grid-intensity CLI for carbon intensity metrics?"; then
-            INSTALL_CARBON=true
+# Optional: third-party research libraries (uv groups)
+if [ "$INSTALL_MODE" != "minimal" ] || group_selected "3rd"; then
+    GROUP_DESC="$(describe_uv_group "3rd")"
+    print_header "Step 3c: Third-Party Research Libraries"
+    if [ "$INSTALL_MODE" = "interactive" ] && ! group_selected "3rd"; then
+        if ask_yes_no "Install optional third-party packages via uv? (${GROUP_DESC})"; then
+            add_uv_group "3rd"
+        else
+            print_warning "Skipping optional third-party packages. You can install them later with: uv sync --group 3rd"
         fi
     fi
-fi
 
-if [ "$INSTALL_CARBON" = true ]; then
-    print_header "Step 3c: Installing grid-intensity CLI"
-    if ! pip3 list 2>/dev/null | grep -q grid-intensity; then
-        print_warning "grid-intensity not found. Installing..."
-        pip3 install grid-intensity
-        print_success "grid-intensity installed"
-    else
-        print_success "grid-intensity already installed"
+    if group_selected "3rd"; then
+        print_success "uv dependency group '3rd' scheduled (${GROUP_DESC})."
     fi
 fi
 
@@ -285,9 +314,18 @@ if [ ! -f "pyproject.toml" ]; then
     cd TianGong-AI-for-Sustainability
 fi
 
-# Run uv sync
-print_warning "Running 'uv sync' to install project dependencies..."
-uv sync
+# Run uv sync (include optional groups if selected)
+UV_SYNC_CMD=("uv" "sync")
+if [ "${#UV_OPTIONAL_GROUPS_SELECTED[@]}" -gt 0 ]; then
+    for group in "${UV_OPTIONAL_GROUPS_SELECTED[@]}"; do
+        UV_SYNC_CMD+=("--group" "$group")
+    done
+    CMD_DISPLAY=$(printf "%q " "${UV_SYNC_CMD[@]}")
+    print_warning "Running '${CMD_DISPLAY}' to install project dependencies..."
+else
+    print_warning "Running 'uv sync' to install project dependencies..."
+fi
+"${UV_SYNC_CMD[@]}"
 print_success "Project dependencies installed"
 
 # Verification
@@ -350,11 +388,11 @@ else
     fi
 fi
 
-if [ "$INSTALL_CARBON" = true ]; then
-    if grid-intensity --help &> /dev/null 2>&1; then
-        print_success "grid-intensity: installed"
+if group_selected "3rd"; then
+    if uv run grid-intensity --help &> /dev/null; then
+        print_success "grid-intensity (via uv run): available"
     else
-        print_error "grid-intensity not accessible"
+        print_error "grid-intensity not accessible via uv run. Re-run 'uv sync --group 3rd' or check installation."
     fi
 fi
 
