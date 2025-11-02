@@ -56,7 +56,8 @@ Always consult these sources before planning or executing changes.
 
 | Priority | Examples | Status | Notes |
 |----------|----------|--------|-------|
-| **P1** | UN SDG API, Semantic Scholar, GitHub Topics, Wikidata, grid-intensity CLI | Implemented | Provide core ontology and retrieval. |
+| **P0** | `tiangong_ai_remote` MCP knowledge base | Implemented | Primary corpus for sustainability research; use as first-line retrieval with comprehensive query payloads. |
+| **P1** | UN SDG API, Semantic Scholar, GitHub Topics, Wikidata, grid-intensity CLI, `tiangong_lca_remote` MCP | Implemented | Provide core ontology, general retrieval, and micro-level LCA data when needed. |
 | **P1 (bulk)** | arXiv S3 / Kaggle dumps | Planned | Download + vector indexing once storage constraints are resolved. |
 | **P2** | Scopus, Web of Science, WattTime (via grid-intensity), AntV MCP chart server | Conditional | Enable only when credentials or runtime dependencies (Node.js) are available. |
 | **P3** | GRI taxonomy XLSX/XBRL, GHG protocol workbooks, Open Sustainable Tech CSV, life cycle assessment inventories (e.g., openLCA datasets) | Rolling | Parse via shared file ingestion layer. |
@@ -66,8 +67,10 @@ Always consult these sources before planning or executing changes.
 
 1. All sources register metadata in `resources/datasources/*.yaml`.
 2. HTTP adapters use `httpx` with Tenacity-backed retry logic; they must emit `AdapterError` on failures.
-3. CLI adapters shell out via subprocess and should provide actionable install guidance when missing (e.g., `grid-intensity`, `mcp-server-chart --transport streamable`).
+3. CLI and MCP adapters should provide actionable install or access guidance when missing (e.g., `grid-intensity`, `mcp-server-chart --transport streamable`, MCP endpoints/API keys).
 4. Caching is deferred to services (e.g., storing SDG goals in DuckDB/Parquet) to keep adapters stateless.
+
+> **MCP Usage Notes** — The `tiangong_ai_remote` MCP delivers the most authoritative sustainability literature coverage (≈70M chunks, 70B tokens). Always formulate queries with complete context so the hybrid retriever can yield high-quality passages. The `tiangong_lca_remote` MCP focuses on life-cycle assessment datasets; invoke it alongside or after `tiangong_ai_remote` when granular LCA metrics are required.
 
 ### Ontology & Data Models
 
