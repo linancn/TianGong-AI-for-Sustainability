@@ -291,8 +291,8 @@ else
 fi
 
 # Check CLI
-if uv run tiangong-research --version &> /dev/null; then
-    print_success "TianGong CLI: $(uv run tiangong-research --version)"
+if uv run tiangong-research --help &> /dev/null; then
+    print_success "TianGong CLI: accessible (run 'uv run tiangong-research --help')"
 else
     print_error "TianGong CLI not accessible"
 fi
@@ -340,18 +340,18 @@ print_header "Setup Complete! 🎉"
 echo "Next steps:"
 echo ""
 echo "1. Test the CLI:"
-echo "   ${BLUE}uv run tiangong-research --help${NC}"
+printf "   %buv run tiangong-research --help%b\n" "$BLUE" "$NC"
 echo ""
 echo "2. List available data sources:"
-echo "   ${BLUE}uv run tiangong-research sources list${NC}"
+printf "   %buv run tiangong-research sources list%b\n" "$BLUE" "$NC"
 echo ""
 echo "3. Run a simple workflow:"
-echo "   ${BLUE}uv run tiangong-research research workflow simple --topic \"life cycle assessment\"${NC}"
+printf "   %buv run tiangong-research research workflow simple --topic \"life cycle assessment\"%b\n" "$BLUE" "$NC"
 echo ""
 echo "4. For more details, read:"
-echo "   ${BLUE}README.md${NC} - User guide"
-echo "   ${BLUE}SETUP_GUIDE.md${NC} - Detailed installation guide"
-echo "   ${BLUE}specs/architecture.md${NC} - Technical architecture"
+printf "   %bREADME.md%b - User guide\n" "$BLUE" "$NC"
+printf "   %bSETUP_GUIDE.md%b - Detailed installation guide\n" "$BLUE" "$NC"
+printf "   %bspecs/architecture.md%b - Technical architecture\n" "$BLUE" "$NC"
 echo ""
 
 if [ "$INSTALL_MODE" = "interactive" ]; then
