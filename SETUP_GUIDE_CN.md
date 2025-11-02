@@ -1,6 +1,6 @@
 # 系统配置指南 — Ubuntu & macOS
 
-TianGong AI for Sustainability 的完整平台特定配置说明。
+> **适用对象提示：** 本指南适合需要手动管理依赖或在定制环境部署的专业用户。如果只想快速使用 CLI，请直接运行项目根目录的 `install_macos.sh` / `install_ubuntu.sh`，并按照 README 的简单步骤操作。
 
 ## 目录
 
@@ -21,7 +21,7 @@ TianGong AI for Sustainability 的完整平台特定配置说明。
 | Node.js 22+ | 图表可视化 | ⭐ 可选 | 仅用于 AntV MCP 图表 |
 | Pandoc 3.0+ | 报告导出 | ⭐ 可选 | 用于 PDF/DOCX 输出 |
 | LaTeX (TeX Live) | PDF 生成 | ⭐ 可选 | 仅当需要 Pandoc + PDF |
-| `grid-intensity` CLI | 碳排指标 | ⭐ 可选 | 用于查询电网碳强度 |
+| `uk-grid-intensity` CLI | 碳排指标 | ⭐ 可选 | 建议执行 `uv sync --group 3rd` 安装；如需自定义可设置 `GRID_INTENSITY_CLI` |
 
 ---
 
@@ -136,17 +136,21 @@ source ~/.zshrc
 pdflatex --version  # 应显示版本信息
 ```
 
-### 4. 可选：grid-intensity CLI（用于碳排指标）
+### 4. 可选：uk-grid-intensity CLI（用于碳排指标）
+
+推荐使用 uv 依赖组安装：
 
 ```bash
-pip3 install grid-intensity
+uv sync --group 3rd
 ```
 
-验证安装：
+验证 CLI：
 
 ```bash
-grid-intensity --help
+uv run --group 3rd uk-grid-intensity --help
 ```
+
+如需手动放置可执行文件，可安装上游 CLI 并设置 `GRID_INTENSITY_CLI` 环境变量指向实际命令。
 
 ### 5. 项目配置
 
@@ -283,17 +287,19 @@ sudo apt install -y texlive-latex-base texlive-latex-extra texlive-fonts-recomme
 pdflatex --version  # 应显示版本信息
 ```
 
-### 4. 可选：grid-intensity CLI（用于碳排指标）
+### 4. 可选：uk-grid-intensity CLI（用于碳排指标）
 
 ```bash
-pip3 install grid-intensity
+uv sync --group 3rd
 ```
 
 验证安装：
 
 ```bash
-grid-intensity --help
+uv run --group 3rd uk-grid-intensity --help
 ```
+
+若需使用其他 CLI，可单独安装并设置 `GRID_INTENSITY_CLI` 环境变量。
 
 ### 5. 项目配置
 
@@ -342,8 +348,8 @@ pandoc --version
 # 检查 LaTeX（如已安装）
 pdflatex --version
 
-# 检查 grid-intensity（如已安装）
-grid-intensity --help
+# 检查 uk-grid-intensity（如已安装）
+uv run --group 3rd uk-grid-intensity --help
 
 # 验证 AntV 图表服务器（如已安装 Node.js）
 npx -y @antv/mcp-server-chart --transport streamable &
@@ -505,19 +511,19 @@ node --version  # 应为 22.x
 
 ### 两个平台通用
 
-#### 问题：`grid-intensity` 在 PATH 中找不到
+#### 问题：`uk-grid-intensity` 命令不可用
 
 **解决方案：**
 
 ```bash
-# 确认已安装
-pip3 install grid-intensity
+# 重新安装可选依赖组
+uv sync --group 3rd
 
-# 验证安装位置
-which grid-intensity
+# 使用 uv 验证命令是否可用
+uv run --group 3rd uk-grid-intensity --help
 
-# 如需要，添加到 PATH
-export PATH="$HOME/.local/bin:$PATH"
+# 如需自定义可执行文件，可设置环境变量
+export GRID_INTENSITY_CLI=/path/to/custom/cli
 ```
 
 #### 问题：运行命令时出现网络错误
@@ -563,7 +569,7 @@ npm install -g @antv/mcp-server-chart
 | Node.js | Homebrew | apt/NodeSource/nvm | 两者都很直接 |
 | Pandoc | Homebrew | apt | 两者官方仓库都有 |
 | LaTeX | MacTeX 或 BasicTeX | TeX Live | Linux 上 TeX Live 更小 |
-| `grid-intensity` | pip3 | pip3 | 两者相同 |
+| `uk-grid-intensity` | uv(sync) | uv(sync) | 推荐使用 `uv sync --group 3rd` 安装 |
 
 ---
 

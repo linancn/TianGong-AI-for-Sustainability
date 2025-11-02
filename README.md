@@ -1,47 +1,32 @@
 # TianGong AI for Sustainability CLI
 
-Welcome to the TianGong sustainability research CLI. This README is a single place for anyone—especially first‑time users—to install the tool, verify the environment, and run the first workflow.
+This README is the quick start for everyone. Run the setup script, follow the prompts, and you will be ready to use the TianGong research CLI in a few minutes.
 
-## Start in One Command
+## Quick Install (Recommended)
 
-1. Open a terminal and change to the project directory:
+1. Open a terminal and switch to the project directory:
    ```bash
    cd /path/to/TianGong-AI-for-Sustainability
    ```
-2. Run the installer that matches your operating system.
+2. Launch the installer for your operating system:
 
-### macOS
+   **macOS**
+   ```bash
+   bash install_macos.sh
+   ```
 
-```bash
-bash install_macos.sh
-```
+   **Ubuntu / Debian**
+   ```bash
+   bash install_ubuntu.sh
+   ```
 
-### Ubuntu / Debian
+The script checks Python 3.12+, uv, Git, and project dependencies. It also offers optional extras—charts (Node.js 22+), PDF export (Pandoc + LaTeX), and carbon metrics (`uk-grid-intensity`). Accept the defaults or answer **yes** when the script asks which features you want.
 
-```bash
-bash install_ubuntu.sh
-```
+> **Update or change features later?** Rerun the same script. You can add `--full`, `--minimal`, or any `--with-*` flag to skip the interactive questions.
 
-During the interactive run you can accept the defaults or opt into extras (charts, PDF export, carbon metrics). To skip the prompts:
+## After the Script Finishes
 
-- Full feature set: `bash install_<os>.sh --full`
-- Core only: `bash install_<os>.sh --minimal`
-- Pick features: `bash install_<os>.sh --with-charts --with-pdf --with-carbon`
-
-## What the Installer Checks
-
-- Python 3.12+ and the [uv](https://docs.astral.sh/uv/) package manager
-- Git and project dependencies (`uv sync`)
-- Optional tooling when requested:
-  - Node.js 22+ for AntV chart workflows (the script now verifies existing installations and offers to install or upgrade)
-  - Pandoc 3+ and LaTeX for PDF/DOCX export
-- `uk-grid-intensity` CLI for carbon metrics
-
-At the end you will see a summary of what succeeded and anything that still needs attention.
-
-## After Installation
-
-Run everything inside the managed environment with `uv run`.
+Use `uv run` for every CLI command so you stay inside the managed environment:
 
 ```bash
 uv run tiangong-research --help
@@ -50,45 +35,38 @@ uv run tiangong-research sources verify un_sdg_api
 uv run tiangong-research research workflow simple --topic "life cycle assessment"
 ```
 
-Need charts? Start the AntV MCP chart server first, then rerun the workflow with `--chart-output visuals/snapshot.png`.
+If you enabled charts, start the AntV MCP chart server before running workflows with `--chart-output`.
 
-### Verify Optional Features
+### Optional Feature Checks
 
 - Charts: `node --version` and `npx -y @antv/mcp-server-chart --transport streamable --version`
 - PDF export: `pandoc --version` and `pdflatex --version`
 - Carbon metrics: `uv run --group 3rd uk-grid-intensity --help`
 
-If any command is missing, rerun the installer with the matching `--with-*` flag or follow the guidance printed by the script.
+Missing a feature? Just re-run `install_<os>.sh` with the matching `--with-*` flag.
 
-## Manual Setup (Optional)
+## Most-Used CLI Commands
 
-If you prefer to configure everything yourself:
-
-1. Install Python 3.12+, Git, and uv.
-2. (Recommended) Create a virtual environment with Python 3.12.
-3. From the project root, install dependencies:
-   ```bash
-   uv sync              # core dependencies
-   uv sync --group 3rd  # optional carbon-metrics CLI
-   ```
-4. Run the CLI with `uv run tiangong-research …`.
-
-Detailed troubleshooting for macOS and Ubuntu is documented in `SETUP_GUIDE.md` (English) and `SETUP_GUIDE_CN.md` (中文).
-
-## Common Commands
-
-- `uv run tiangong-research sources list` — inspect the data-source registry.
-- `uv run tiangong-research sources verify <id>` — confirm connectivity/config for a specific source.
+- `uv run tiangong-research sources list` — browse the registered data sources.
+- `uv run tiangong-research sources verify <id>` — confirm credentials/connectivity.
 - `uv run tiangong-research research find-code "<topic>" --limit 5 --json` — discover sustainability repositories.
-- `uv run tiangong-research research map-sdg <file>` — map a document to SDG goals (requires OSDG access).
-- `uv run --group 3rd tiangong-research research get-carbon-intensity <location>` — fetch grid-intensity metrics (set `GRID_INTENSITY_CLI` if you use a custom executable).
-- `uv run tiangong-research research visuals verify` — confirm the AntV MCP chart server is reachable.
+- `uv run tiangong-research research map-sdg <file>` — align a document with SDG goals (requires OSDG access).
+- `uv run --group 3rd tiangong-research research get-carbon-intensity <location>` — fetch grid intensity metrics (set the `GRID_INTENSITY_CLI` env var if you use a non-default executable).
+- `uv run tiangong-research research visuals verify` — make sure the AntV MCP chart server is reachable.
 
-## Need Help?
+## Need Advanced Control?
 
-- **Setup guides**: `SETUP_GUIDE.md`, `SETUP_GUIDE_CN.md`
-- **Architecture**: `specs/architecture.md`
-- **Agent ops**: `AGENTS.md`
-- **Prompt templates**: `specs/prompts/`
+Power users who prefer to manage Python environments manually or run the CLI on atypical platforms should read:
 
-When optional dependencies are unavailable, the CLI falls back gracefully (e.g., text-only output when charts are disabled). Remember to keep environment variables or `.secrets/secrets.toml` up to date with any API tokens you need.
+- `SETUP_GUIDE.md` (English)
+- `SETUP_GUIDE_CN.md` (中文)
+
+Everyone else can simply rely on `install_macos.sh` or `install_ubuntu.sh` for installation, updates, and optional feature management.
+
+## More References
+
+- Architecture overview — `specs/architecture.md`
+- Automation agent handbook — `AGENTS.md`
+- Prompt templates — `specs/prompts/`
+
+Optional components degrade gracefully (for example, workflows fall back to text when charts are unavailable). Keep any required API keys in environment variables or `.secrets/secrets.toml` so the CLI can access protected sources.

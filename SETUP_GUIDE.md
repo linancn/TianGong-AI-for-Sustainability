@@ -1,6 +1,6 @@
 # System Setup Guide — Ubuntu & macOS
 
-Complete platform-specific setup instructions for TianGong AI for Sustainability.
+> **Who should read this?** Power users who want to manage dependencies manually or adapt the CLI to bespoke environments. If you simply want to get started, run `install_macos.sh` or `install_ubuntu.sh` from the project root and follow the prompts in the README.
 
 ## Table of Contents
 
@@ -21,7 +21,7 @@ Complete platform-specific setup instructions for TianGong AI for Sustainability
 | Node.js 22+ | Chart visualization | ⭐ Optional | Only for AntV MCP charts |
 | Pandoc 3.0+ | Report export | ⭐ Optional | For PDF/DOCX output |
 | LaTeX (TeX Live) | PDF generation | ⭐ Optional | Only if Pandoc + PDF needed |
-| `grid-intensity` CLI | Carbon metrics | ⭐ Optional | For grid carbon queries |
+| `uk-grid-intensity` CLI | Carbon metrics | ⭐ Optional | Install via `uv sync --group 3rd`; set `GRID_INTENSITY_CLI` to override executable |
 
 ---
 
@@ -136,17 +136,21 @@ Verify LaTeX installation:
 pdflatex --version  # Should print version info
 ```
 
-### 4. Optional: grid-intensity CLI (for carbon metrics)
+### 4. Optional: uk-grid-intensity CLI (for carbon metrics)
+
+Recommended install:
 
 ```bash
-pip3 install grid-intensity
+uv sync --group 3rd
 ```
 
-Verify installation:
+Verify availability:
 
 ```bash
-grid-intensity --help
+uv run --group 3rd uk-grid-intensity --help
 ```
+
+Need a different executable? Install it manually and point `GRID_INTENSITY_CLI` to the command path.
 
 ### 5. Project Setup
 
@@ -283,17 +287,19 @@ Verify LaTeX installation:
 pdflatex --version  # Should print version info
 ```
 
-### 4. Optional: grid-intensity CLI (for carbon metrics)
+### 4. Optional: uk-grid-intensity CLI (for carbon metrics)
 
 ```bash
-pip3 install grid-intensity
+uv sync --group 3rd
 ```
 
 Verify installation:
 
 ```bash
-grid-intensity --help
+uv run --group 3rd uk-grid-intensity --help
 ```
+
+If you must use a different CLI wrapper, install it manually and set `GRID_INTENSITY_CLI`.
 
 ### 5. Project Setup
 
@@ -342,8 +348,8 @@ pandoc --version
 # Check LaTeX (if installed)
 pdflatex --version
 
-# Check grid-intensity (if installed)
-grid-intensity --help
+# Check uk-grid-intensity (if installed)
+uv run --group 3rd uk-grid-intensity --help
 
 # Verify AntV chart server (if Node.js installed)
 npx -y @antv/mcp-server-chart --transport streamable &
@@ -505,19 +511,19 @@ node --version  # Should be 22.x
 
 ### Common to Both Platforms
 
-#### Problem: `grid-intensity` not found in PATH
+#### Problem: `uk-grid-intensity` command unavailable
 
 **Solution:**
 
 ```bash
-# Ensure installed
-pip3 install grid-intensity
+# Reinstall optional dependency group
+uv sync --group 3rd
 
-# Verify installation location
-which grid-intensity
+# Verify the CLI via uv
+uv run --group 3rd uk-grid-intensity --help
 
-# Add to PATH if needed
-export PATH="$HOME/.local/bin:$PATH"
+# Override the executable if using a custom binary
+export GRID_INTENSITY_CLI=/path/to/custom/cli
 ```
 
 #### Problem: Network errors when running commands
@@ -563,7 +569,7 @@ npm install -g @antv/mcp-server-chart
 | Node.js | Homebrew | apt/NodeSource/nvm | Both straightforward |
 | Pandoc | Homebrew | apt | Both official repos have it |
 | LaTeX | MacTeX or BasicTeX | TeX Live | TeX Live on Linux is smaller |
-| `grid-intensity` | pip3 | pip3 | Same for both |
+| `uk-grid-intensity` | uv(sync) | uv(sync) | Install with `uv sync --group 3rd`; use `GRID_INTENSITY_CLI` for overrides |
 
 ---
 
