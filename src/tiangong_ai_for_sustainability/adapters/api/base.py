@@ -9,12 +9,14 @@ state, and surfaces rich error messages when endpoints fail.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from logging import LoggerAdapter
 from typing import Any, Mapping, MutableMapping, Optional
 
 import httpx
 from tenacity import RetryError, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from ..base import AdapterError
+from ...core.logging import get_logger
 
 DEFAULT_TIMEOUT = 15.0
 
@@ -41,6 +43,13 @@ class BaseAPIClient:
     base_url: str
     timeout: float = DEFAULT_TIMEOUT
     default_headers: MutableMapping[str, str] = field(default_factory=dict)
+    logger: LoggerAdapter = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        self.logger = get_logger(
+            f"{self.__class__.__module__}.{self.__class__.__name__}",
+            extra={"base_url": self.base_url},
+        )
 
     def _build_client(self) -> httpx.Client:
         return httpx.Client(
@@ -58,6 +67,15 @@ class BaseAPIClient:
             raise APIError(f"HTTP {exc.response.status_code} error for {exc.request.method} {exc.request.url}: {exc.response.text}") from exc
 
     def _request(self, method: str, url: str, **kwargs: Any) -> httpx.Response:
+        self.logger.debug(
+            "HTTP request",
+            extra={
+                "method": method,
+                "url": url,
+                "params": kwargs.get("params"),
+            },
+        )
+
         @retry(
             retry=retry_if_exception_type(httpx.HTTPError),
             wait=wait_exponential(multiplier=1, min=1, max=8),
@@ -71,11 +89,26 @@ class BaseAPIClient:
         try:
             response = _send()
         except RetryError as exc:
+            self.logger.error(
+                "HTTP request failed after retries",
+                extra={"method": method, "url": url, "error": str(exc)},
+            )
             raise APIError(f"Failed to call {method} {url} after multiple attempts: {exc}") from exc
         except httpx.HTTPError as exc:  # pragma: no cover - retry handles most
+            self.logger.error(
+                "HTTP error during request",
+                extra={"method": method, "url": url, "error": str(exc)},
+            )
             raise APIError(f"HTTP error while calling {method} {url}: {exc}") from exc
 
         self._raise_for_status(response)
+        self.logger.debug(
+            "HTTP response",
+            extra={
+                "status_code": response.status_code,
+                "url": str(response.url),
+            },
+        )
         return response
 
     def _get_json(self, url: str, *, params: Optional[Mapping[str, Any]] = None) -> Any:

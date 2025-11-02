@@ -10,10 +10,12 @@ from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass
 from datetime import date
 from pathlib import Path
+from logging import LoggerAdapter
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from ..adapters.api.base import APIError
 from ..services import ResearchServices
+from ..core.logging import get_logger
 from .charting import ensure_chart_image
 
 LCA_CONCEPT_ID = "C2778706760"
@@ -114,6 +116,22 @@ def run_lca_citation_workflow(
     Execute an end-to-end analysis of LCA literature focused on planetary boundaries and SDGs.
     """
 
+    if hasattr(services, "context") and hasattr(services.context, "get_logger"):
+        workflow_logger = services.context.get_logger("workflow.lca_citations")
+    else:  # pragma: no cover - defensive fallback
+        workflow_logger = get_logger("workflow.lca_citations")
+
+    workflow_logger.info(
+        "Starting LCA citation workflow",
+        extra={
+            "report_path": report_path.as_posix(),
+            "chart_path": chart_path.as_posix(),
+            "years": years,
+            "max_records": max_records,
+            "keywords_override": list(keyword_overrides) if keyword_overrides else None,
+        },
+    )
+
     report_path.parent.mkdir(parents=True, exist_ok=True)
     chart_path.parent.mkdir(parents=True, exist_ok=True)
     if raw_data_path:
@@ -121,6 +139,7 @@ def run_lca_citation_workflow(
 
     keywords = _prepare_keywords(keyword_overrides)
     start_year, end_year = _derive_year_window(years)
+    workflow_logger.info("Collecting OpenAlex papers")
     try:
         papers = _collect_openalex_papers(
             services,
@@ -128,9 +147,11 @@ def run_lca_citation_workflow(
             start_year=start_year,
             end_year=end_year,
             max_records=max_records,
+            logger=workflow_logger,
         )
     except APIError as exc:
         _write_failure_report(report_path, start_year, end_year, str(exc))
+        workflow_logger.error("OpenAlex collection failed", extra={"error": str(exc)})
         return LCACitationWorkflowArtifacts(
             report_path=report_path,
             chart_path=None,
@@ -143,6 +164,7 @@ def run_lca_citation_workflow(
 
     if not papers:
         _write_empty_report(report_path, start_year, end_year)
+        workflow_logger.warning("No papers returned from OpenAlex", extra={"start_year": start_year, "end_year": end_year})
         return LCACitationWorkflowArtifacts(
             report_path=report_path,
             chart_path=None,
@@ -153,6 +175,8 @@ def run_lca_citation_workflow(
             papers=[],
         )
 
+    workflow_logger.debug("Collected OpenAlex papers", extra={"paper_count": len(papers)})
+
     _enrich_with_semantic_scholar(services, papers)
 
     questions = _derive_top_questions(papers, limit=8)
@@ -160,6 +184,7 @@ def run_lca_citation_workflow(
     research_gaps = _identify_research_gaps(papers, concept_series, start_year, end_year, keywords)
 
     if raw_data_path:
+        workflow_logger.info("Serialising raw dataset", extra={"raw_data_path": raw_data_path.as_posix()})
         _serialise_raw_dataset(raw_data_path, papers, questions, trending_topics, research_gaps)
 
     chart_caption: Optional[str] = None
@@ -172,6 +197,10 @@ def run_lca_citation_workflow(
         chart_generated = _render_question_chart(services, questions, chart_path)
 
     if not chart_generated:
+        workflow_logger.warning(
+            "Chart generation skipped or failed",
+            extra={"trending_topic_count": len(trending_topics), "question_count": len(questions)},
+        )
         chart_path = None
 
     _write_report(
@@ -186,6 +215,16 @@ def run_lca_citation_workflow(
         chart_path=chart_path,
         chart_caption=chart_caption,
         raw_data_path=raw_data_path,
+    )
+    workflow_logger.info(
+        "LCA citation workflow completed",
+        extra={
+            "report_path": report_path.as_posix(),
+            "chart_path": chart_path.as_posix() if chart_path else None,
+            "question_count": len(questions),
+            "trending_topic_count": len(trending_topics),
+            "research_gap_count": len(research_gaps),
+        },
     )
 
     return LCACitationWorkflowArtifacts(
@@ -228,6 +267,7 @@ def _collect_openalex_papers(
     start_year: int,
     end_year: int,
     max_records: int,
+    logger: Optional[LoggerAdapter] = None,
 ) -> List[PaperRecord]:
     client = services.openalex_client()
 
@@ -270,9 +310,16 @@ def _collect_openalex_papers(
             continue
         seen_ids.add(paper.work_id)
         records.append(paper)
+        if logger and len(records) % 20 == 0:
+            logger.debug("Collected OpenAlex papers batch", extra={"record_count": len(records)})
         if len(records) >= max_records:
             break
 
+    if logger:
+        logger.debug(
+            "Completed OpenAlex collection",
+            extra={"record_count": len(records), "max_records": max_records},
+        )
     return records
 
 

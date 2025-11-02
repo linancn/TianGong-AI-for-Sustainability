@@ -15,6 +15,7 @@ from .registry import (
     DataSourceStatus,
     RegistryLoadError,
 )
+from .logging import bind_tags, configure_logging, get_logger
 
 __all__ = [
     "ExecutionContext",
@@ -24,4 +25,7 @@ __all__ = [
     "DataSourceRegistry",
     "DataSourceStatus",
     "RegistryLoadError",
+    "get_logger",
+    "configure_logging",
+    "bind_tags",
 ]

@@ -10,10 +10,12 @@ sources are added or removed.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from logging import LoggerAdapter
 from pathlib import Path
 from typing import Mapping, MutableSet, Optional, Sequence
 
 from ..config import SecretsBundle, load_secrets
+from .logging import get_logger as _get_logger
 
 
 @dataclass(slots=True)
@@ -128,3 +130,9 @@ class ExecutionContext:
         """Disable a data source for subsequent calls."""
 
         self.enabled_sources.discard(source_id)
+
+    def get_logger(self, name: str, *, extra: Optional[Mapping[str, object]] = None) -> LoggerAdapter:
+        """Return a logger adapter enriched with execution context observability tags."""
+
+        tags = tuple(self.options.observability_tags)
+        return _get_logger(name, tags=tags if tags else None, extra=extra)

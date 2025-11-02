@@ -11,12 +11,13 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
+from logging import LoggerAdapter
 from typing import Any, Dict, Optional
 
 from ..adapters import AdapterError, DataSourceAdapter, VerificationResult, ChartMCPAdapter
 from ..adapters.api import GitHubTopicsClient, OSDGClient, OpenAlexClient, SemanticScholarClient, UNSDGClient
 from ..adapters.environment import GridIntensityCLIAdapter
-from ..core import DataSourceDescriptor, DataSourceRegistry, DataSourceStatus, ExecutionContext
+from ..core import DataSourceDescriptor, DataSourceRegistry, DataSourceStatus, ExecutionContext, get_logger
 
 
 @dataclass(slots=True)
@@ -25,12 +26,19 @@ class ResearchServices:
 
     registry: DataSourceRegistry
     context: ExecutionContext
+    logger: LoggerAdapter = field(init=False, repr=False)
     _un_sdg_client: Optional[UNSDGClient] = field(default=None, init=False, repr=False)
     _semantic_scholar_client: Optional[SemanticScholarClient] = field(default=None, init=False, repr=False)
     _openalex_client: Optional[OpenAlexClient] = field(default=None, init=False, repr=False)
     _github_topics_client: Optional[GitHubTopicsClient] = field(default=None, init=False, repr=False)
     _osdg_client: Optional[OSDGClient] = field(default=None, init=False, repr=False)
     _sdg_goal_cache: Optional[Dict[str, Dict[str, Any]]] = field(default=None, init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        if hasattr(self.context, "get_logger"):
+            self.logger = self.context.get_logger(self.__class__.__name__)
+        else:  # pragma: no cover - defensive for legacy contexts
+            self.logger = get_logger(self.__class__.__name__)
 
     def list_enabled_sources(self) -> list[DataSourceDescriptor]:
         """Return descriptors for sources enabled in the execution context."""
@@ -102,9 +110,11 @@ class ResearchServices:
                 "note": "Dry-run mode enabled; grid-intensity CLI was not executed.",
             }
 
+        self.logger.info("Querying carbon intensity", extra={"location": location, "provider": provider})
         result = adapter.query(location=location, provider=provider)
         result.setdefault("provider", provider)
         result.setdefault("location", location)
+        self.logger.debug("Carbon intensity result", extra={"payload": result})
         return result
 
     # -- Client factories -------------------------------------------------
@@ -152,6 +162,7 @@ class ResearchServices:
 
     def sdg_goal_map(self) -> Dict[str, Dict[str, Any]]:
         if self._sdg_goal_cache is None:
+            self.logger.info("Loading SDG catalogue via UNSDG client")
             goals = self.un_sdg_client().list_goals()
             goal_map: Dict[str, Dict[str, Any]] = {}
             for goal in goals:
@@ -159,16 +170,25 @@ class ResearchServices:
                 if code:
                     goal_map[code] = goal  # type: ignore[assignment]
             self._sdg_goal_cache = goal_map
+            self.logger.debug("Cached SDG goal map", extra={"goal_count": len(goal_map)})
         return self._sdg_goal_cache
 
     def classify_text_with_osdg(self, text: str, *, language: Optional[str] = None) -> Dict[str, Any]:
         if self.context.options.dry_run:
+            self.logger.debug(
+                "Skipping OSDG classification due to dry-run mode",
+                extra={"language": language, "text_length": len(text)},
+            )
             return {
                 "note": "Dry-run mode enabled; skipped OSDG classification.",
                 "language": language,
                 "length": len(text),
             }
         client = self.osdg_client()
+        self.logger.info(
+            "Submitting text to OSDG classifier",
+            extra={"language": language, "text_length": len(text)},
+        )
         return client.classify_text(text, language=language)
 
     def chart_mcp_endpoint(self) -> str:
@@ -183,4 +203,5 @@ class ResearchServices:
     def verify_chart_mcp(self) -> VerificationResult:
         endpoint = self.chart_mcp_endpoint()
         adapter = ChartMCPAdapter(endpoint=endpoint)
+        self.logger.info("Verifying AntV MCP chart endpoint", extra={"endpoint": endpoint})
         return adapter.verify()

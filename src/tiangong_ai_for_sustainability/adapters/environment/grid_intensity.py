@@ -12,10 +12,12 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from logging import LoggerAdapter
 from typing import Any, Dict, List, Optional
 
 from ..base import AdapterError, DataSourceAdapter, VerificationResult
+from ...core.logging import get_logger
 
 
 @dataclass(slots=True)
@@ -24,11 +26,16 @@ class GridIntensityCLIAdapter(DataSourceAdapter):
 
     source_id: str = "grid_intensity_cli"
     executable: str = "grid-intensity"
+    logger: LoggerAdapter = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        self.logger = get_logger(self.__class__.__name__)
 
     def verify(self) -> VerificationResult:
         """Check whether the CLI is available on ``PATH``."""
 
         if shutil.which(self.executable) is None:
+            self.logger.warning("grid-intensity CLI missing from PATH")
             return VerificationResult(
                 success=False,
                 message=(
@@ -48,12 +55,18 @@ class GridIntensityCLIAdapter(DataSourceAdapter):
                 timeout=10,
             )
         except OSError as exc:  # pragma: no cover - depends on environment
+            self.logger.error("Failed to execute grid-intensity during verification", extra={"error": str(exc)})
             raise AdapterError(f"Failed to execute '{self.executable}': {exc}") from exc
 
         if completed.returncode != 0:
             message = completed.stderr.strip() or completed.stdout.strip() or "Unknown error."
+            self.logger.warning(
+                "grid-intensity verification returned non-zero exit code",
+                extra={"exit_code": completed.returncode, "message": message},
+            )
             return VerificationResult(success=False, message=f"{self.executable} returned non-zero exit code: {message}")
 
+        self.logger.debug("grid-intensity CLI verification succeeded")
         return VerificationResult(success=True, message="grid-intensity CLI is available.")
 
     def query(self, location: str, provider: str = "WattTime", extra_args: Optional[List[str]] = None) -> Dict[str, Any]:
@@ -72,12 +85,17 @@ class GridIntensityCLIAdapter(DataSourceAdapter):
         """
 
         if shutil.which(self.executable) is None:
+            self.logger.error("grid-intensity CLI required but not installed", extra={"location": location, "provider": provider})
             raise AdapterError("grid-intensity CLI is required but not installed. " "Install it via 'pip install grid-intensity-cli' or follow the upstream documentation.")
 
         command = [self.executable, "--provider", provider, "--location", location, "--json"]
         if extra_args:
             command.extend(extra_args)
 
+        self.logger.info(
+            "Running grid-intensity CLI",
+            extra={"command": command},
+        )
         try:
             completed = subprocess.run(
                 command,
@@ -88,12 +106,20 @@ class GridIntensityCLIAdapter(DataSourceAdapter):
                 timeout=30,
             )
         except OSError as exc:  # pragma: no cover - system specific
+            self.logger.error("Failed to execute grid-intensity CLI", extra={"error": str(exc)})
             raise AdapterError(f"Failed to execute '{self.executable}': {exc}") from exc
 
         if completed.returncode != 0:
+            self.logger.error(
+                "grid-intensity CLI returned non-zero exit code",
+                extra={"exit_code": completed.returncode, "stderr": completed.stderr.strip()},
+            )
             raise AdapterError(f"{self.executable} exited with status {completed.returncode}: {completed.stderr.strip() or completed.stdout.strip()}")
 
         try:
-            return json.loads(completed.stdout)
+            data = json.loads(completed.stdout)
+            self.logger.debug("grid-intensity CLI response parsed", extra={"keys": list(data.keys())})
+            return data
         except json.JSONDecodeError as exc:
+            self.logger.error("Failed to parse grid-intensity CLI output", extra={"error": str(exc)})
             raise AdapterError(f"Failed to parse grid-intensity output as JSON: {exc}") from exc

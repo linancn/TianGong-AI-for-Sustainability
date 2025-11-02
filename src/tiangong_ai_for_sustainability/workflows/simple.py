@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from logging import LoggerAdapter
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
 from ..adapters import AdapterError
 from ..adapters.api.base import APIError
 from ..services import ResearchServices
+from ..core.logging import get_logger
 from .charting import ensure_chart_image
 
 
@@ -63,17 +65,33 @@ def run_simple_workflow(
     report_path.parent.mkdir(parents=True, exist_ok=True)
     chart_path.parent.mkdir(parents=True, exist_ok=True)
 
-    sdg_matches = _match_sdgs(services, topic)
-    repositories = _fetch_repositories(services, topic, github_limit)
-    papers = _fetch_papers(services, topic, paper_limit)
-    carbon_snapshot = _fetch_carbon_intensity(services, carbon_location)
+    if hasattr(services, "context") and hasattr(services.context, "get_logger"):
+        workflow_logger = services.context.get_logger("workflow.simple")
+    else:  # pragma: no cover - defensive when services.context missing
+        workflow_logger = get_logger("workflow.simple")
+
+    workflow_logger.info("Starting simple workflow", extra={"topic": topic})
+
+    sdg_matches = _match_sdgs(services, topic, workflow_logger)
+    workflow_logger.debug("Matched SDG goals", extra={"count": len(sdg_matches)})
+
+    repositories = _fetch_repositories(services, topic, github_limit, workflow_logger)
+    workflow_logger.debug("Fetched repositories", extra={"count": len(repositories)})
+
+    papers = _fetch_papers(services, topic, paper_limit, workflow_logger)
+    workflow_logger.debug("Fetched representative papers", extra={"count": len(papers)})
+
+    carbon_snapshot = _fetch_carbon_intensity(services, carbon_location, workflow_logger)
 
     chart_generated = False
     if repositories:
-        chart_generated = _render_repository_chart(services, repositories, topic, chart_path)
+        chart_generated = _render_repository_chart(services, repositories, topic, chart_path, workflow_logger)
 
     if not chart_generated:
         chart_path = None
+        workflow_logger.warning("Repository chart not generated", extra={"reason": "insufficient data"})
+    else:
+        workflow_logger.info("Repository chart generated", extra={"chart_path": chart_path.as_posix()})
 
     _write_report(
         topic=topic,
@@ -83,6 +101,16 @@ def run_simple_workflow(
         papers=papers,
         carbon_snapshot=carbon_snapshot,
         chart_path=chart_path,
+        logger=workflow_logger,
+    )
+
+    workflow_logger.info(
+        "Simple workflow completed",
+        extra={
+            "topic": topic,
+            "report_path": report_path.as_posix(),
+            "chart_generated": chart_generated,
+        },
     )
 
     return WorkflowArtifacts(
@@ -99,11 +127,14 @@ def run_simple_workflow(
 # SDG matching
 
 
-def _match_sdgs(services: ResearchServices, topic: str) -> List[Dict[str, Any]]:
+def _match_sdgs(services: ResearchServices, topic: str, logger: Optional[LoggerAdapter] = None) -> List[Dict[str, Any]]:
     keywords = _tokenise(topic)
+
     try:
         goals = services.un_sdg_client().list_goals()
     except APIError as exc:
+        if logger:
+            logger.error("Unable to load SDG catalogue", extra={"error": str(exc)})
         return [
             {
                 "code": None,
@@ -112,6 +143,9 @@ def _match_sdgs(services: ResearchServices, topic: str) -> List[Dict[str, Any]]:
                 "score": 0,
             }
         ]
+
+    if logger:
+        logger.debug("Scoring SDG goals", extra={"keyword_count": len(keywords), "goal_count": len(goals)})
 
     ranked: List[Dict[str, Any]] = []
     for goal in goals:
@@ -141,10 +175,17 @@ def _tokenise(text: str) -> List[str]:
 # GitHub repositories
 
 
-def _fetch_repositories(services: ResearchServices, topic: str, limit: int) -> List[Dict[str, Any]]:
+def _fetch_repositories(
+    services: ResearchServices,
+    topic: str,
+    limit: int,
+    logger: Optional[LoggerAdapter] = None,
+) -> List[Dict[str, Any]]:
     try:
         payload = services.github_topics_client().search_repositories(topic, per_page=limit)
     except APIError as exc:
+        if logger:
+            logger.error("Repository discovery failed", extra={"error": str(exc), "topic": topic})
         return [
             {
                 "full_name": "(error)",
@@ -155,6 +196,8 @@ def _fetch_repositories(services: ResearchServices, topic: str, limit: int) -> L
         ]
 
     items = payload.get("items") or []
+    if logger:
+        logger.debug("Processing repository payload", extra={"item_count": len(items)})
     repositories: List[Dict[str, Any]] = []
     for item in items[:limit]:
         if not isinstance(item, dict):
@@ -174,7 +217,12 @@ def _fetch_repositories(services: ResearchServices, topic: str, limit: int) -> L
 # Semantic Scholar papers
 
 
-def _fetch_papers(services: ResearchServices, topic: str, limit: int) -> List[Dict[str, Any]]:
+def _fetch_papers(
+    services: ResearchServices,
+    topic: str,
+    limit: int,
+    logger: Optional[LoggerAdapter] = None,
+) -> List[Dict[str, Any]]:
     try:
         payload = services.semantic_scholar_client().search_papers(
             topic,
@@ -182,6 +230,8 @@ def _fetch_papers(services: ResearchServices, topic: str, limit: int) -> List[Di
             fields=["title", "year", "url", "abstract", "authors"],
         )
     except APIError as exc:
+        if logger:
+            logger.error("Semantic Scholar query failed", extra={"error": str(exc), "topic": topic})
         return [
             {
                 "title": "Unable to query Semantic Scholar",
@@ -193,6 +243,8 @@ def _fetch_papers(services: ResearchServices, topic: str, limit: int) -> List[Di
         ]
 
     data = payload.get("data") or []
+    if logger:
+        logger.debug("Processing Semantic Scholar payload", extra={"item_count": len(data)})
     papers: List[Dict[str, Any]] = []
     for item in data[:limit]:
         if not isinstance(item, dict):
@@ -218,11 +270,19 @@ def _fetch_papers(services: ResearchServices, topic: str, limit: int) -> List[Di
 # Carbon intensity
 
 
-def _fetch_carbon_intensity(services: ResearchServices, location: str) -> Dict[str, Any]:
+def _fetch_carbon_intensity(
+    services: ResearchServices,
+    location: str,
+    logger: Optional[LoggerAdapter] = None,
+) -> Dict[str, Any]:
     try:
         snapshot = services.get_carbon_intensity(location)
+        if logger:
+            logger.info("Retrieved carbon intensity snapshot", extra={"location": location})
         return snapshot
     except AdapterError as exc:
+        if logger:
+            logger.error("Carbon intensity lookup failed", extra={"error": str(exc), "location": location})
         return {
             "note": "Grid intensity unavailable",
             "error": str(exc),
@@ -239,6 +299,7 @@ def _render_repository_chart(
     repositories: Iterable[Dict[str, Any]],
     topic: str,
     chart_path: Path,
+    logger: Optional[LoggerAdapter] = None,
 ) -> bool:
     chart_data = []
     for repo in repositories:
@@ -249,6 +310,8 @@ def _render_repository_chart(
         chart_data.append({"category": name, "value": int(stars)})
 
     if not chart_data:
+        if logger:
+            logger.warning("Skipping chart rendering due to empty repository list", extra={"topic": topic})
         return False
 
     endpoint = services.chart_mcp_endpoint()
@@ -259,6 +322,11 @@ def _render_repository_chart(
         "height": 500,
         "format": "png",
     }
+    if logger:
+        logger.info(
+            "Rendering repository chart",
+            extra={"endpoint": endpoint, "chart_path": chart_path.as_posix(), "repository_count": len(chart_data)},
+        )
     return ensure_chart_image(endpoint, tool_name="generate_bar_chart", arguments=arguments, destination=chart_path)
 
 
@@ -275,7 +343,11 @@ def _write_report(
     papers: List[Dict[str, Any]],
     carbon_snapshot: Dict[str, Any],
     chart_path: Optional[Path],
+    logger: Optional[LoggerAdapter] = None,
 ) -> None:
+    if logger:
+        logger.info("Writing workflow report", extra={"report_path": report_path.as_posix()})
+
     lines: List[str] = []
     lines.append(f"# Sustainability Snapshot: {topic}\n")
 
@@ -343,3 +415,5 @@ def _write_report(
         lines.append("Chart generation unavailable.\n")
 
     report_path.write_text("\n".join(lines), encoding="utf-8")
+    if logger:
+        logger.debug("Report written", extra={"report_path": report_path.as_posix(), "line_count": len(lines)})

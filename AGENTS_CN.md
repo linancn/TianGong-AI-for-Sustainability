@@ -90,6 +90,13 @@
 - **background_tasks**: 异步/延迟操作支持
 - **cache_dir**: 结果本地缓存目录
 
+### 可观测性与日志
+
+- 统一通过 `tiangong_ai_for_sustainability.core.logging.get_logger` 或 `ExecutionContext.get_logger` 获取记录器，确保日志格式和标签一致。
+- 使用 `extra` 参数传递结构化上下文，避免将 JSON 直接拼接进消息字符串，从而保持日志可解析、可复现。
+- 通过环境变量 `TIANGONG_LOG_LEVEL`（默认 `INFO`）调整日志级别；排查问题时可以升至 `DEBUG`，批量任务需要静默时可降至 `WARNING`。
+- 当自动化任务需要溯源时，可在 `ExecutionOptions.observability_tags` 中写入计划标识，以便后续关联日志。
+
 ### 优雅降级
 
 当可选依赖不可用时：
@@ -106,6 +113,7 @@
 4. 使用注册表与执行上下文暴露配置需求（包括 MCP 端点），严禁硬编码秘密信息。
 5. 执行可视化任务前，需启动 `npx -y @antv/mcp-server-chart --transport streamable` 并在 `.secrets` 的 `[chart_mcp] endpoint` 或环境变量 `TIANGONG_CHART_MCP_ENDPOINT` 中记录端点。
 6. 扩展自动化流程时，可复用或扩展 `workflows/simple.py`，并同步更新测试用例。
+7. 为新增的服务与工作流接入集中式日志工具，并在日志行为影响功能时补充回归测试。
 
 ## 验证清单
 

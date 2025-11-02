@@ -11,10 +11,12 @@ import subprocess
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from pathlib import Path
+from logging import LoggerAdapter
 from typing import Callable, Iterable, List, Optional, Sequence
 
 from ..deep_research import DeepResearchClient, DeepResearchResult, ResearchPrompt
 from ..services import ResearchServices
+from ..core.logging import get_logger
 from .lca_citations import (
     LCACitationWorkflowArtifacts,
     CitationQuestion,
@@ -79,6 +81,21 @@ def run_deep_lca_report(
         :func:`run_lca_citation_workflow`.
     """
 
+    if hasattr(services, "context") and hasattr(services.context, "get_logger"):
+        workflow_logger = services.context.get_logger("workflow.deep_lca")
+    else:  # pragma: no cover - defensive fallback
+        workflow_logger = get_logger("workflow.deep_lca")
+
+    workflow_logger.info(
+        "Starting deep LCA workflow",
+        extra={
+            "output_dir": output_dir.as_posix(),
+            "years": years,
+            "max_records": max_records,
+            "deep_research_enabled": deep_research,
+        },
+    )
+
     output_dir = output_dir.resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -87,6 +104,7 @@ def run_deep_lca_report(
     raw_data_path = output_dir / "lca_citations.json"
 
     lca_runner = lca_runner or run_lca_citation_workflow
+    workflow_logger.info("Running LCA citation workflow")
     lca_artifacts = lca_runner(
         services,
         report_path=lca_report_path,
@@ -96,12 +114,21 @@ def run_deep_lca_report(
         max_records=max_records,
         keyword_overrides=keywords,
     )
+    workflow_logger.debug(
+        "LCA citation workflow completed",
+        extra={
+            "report_path": lca_artifacts.report_path.as_posix(),
+            "chart_path": lca_artifacts.chart_path.as_posix() if lca_artifacts.chart_path else None,
+            "paper_count": len(lca_artifacts.papers),
+        },
+    )
 
     deep_summary: Optional[str] = None
     deep_response_path: Optional[Path] = None
 
     if deep_research:
         try:
+            workflow_logger.info("Invoking Deep Research synthesis")
             result = _run_deep_research(
                 lca_artifacts=lca_artifacts,
                 years=years,
@@ -110,6 +137,7 @@ def run_deep_lca_report(
             )
         except Exception as exc:  # pragma: no cover - depends on runtime credentials
             deep_summary = f"Deep Research unavailable: {exc}"
+            workflow_logger.error("Deep Research invocation failed", extra={"error": str(exc)})
         else:
             deep_summary = result.output_text.strip() or None
             deep_response_path = output_dir / "deep_research.json"
@@ -117,6 +145,9 @@ def run_deep_lca_report(
                 json.dumps(result.to_dict(), ensure_ascii=False, indent=2),
                 encoding="utf-8",
             )
+            workflow_logger.info("Deep Research synthesis completed", extra={"response_path": deep_response_path.as_posix()})
+    else:
+        workflow_logger.info("Deep Research disabled for this run")
 
     final_report_path = output_dir / "deep_lca_report.md"
     final_report_path.write_text(
@@ -133,6 +164,15 @@ def run_deep_lca_report(
     doc_variants, conversion_warnings = _generate_document_variants(
         markdown_path=final_report_path,
         output_dir=output_dir,
+    )
+
+    workflow_logger.info(
+        "Generated deep LCA report",
+        extra={
+            "final_report_path": final_report_path.as_posix(),
+            "doc_variants": [item.as_posix() for item in doc_variants],
+            "warnings": conversion_warnings,
+        },
     )
 
     return DeepLCAWorkflowArtifacts(

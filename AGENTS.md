@@ -90,6 +90,13 @@ All operations must respect the `ExecutionContext` settings:
 - **background_tasks**: Support for async/deferred operations
 - **cache_dir**: Local cache for results
 
+### Observability & Logging
+
+- Obtain loggers via `tiangong_ai_for_sustainability.core.logging.get_logger` or `ExecutionContext.get_logger` so output shares the standard format and observability tags.
+- Pass structured context through the `extra` argument instead of interpolating JSON into message strings; this keeps downstream log parsing deterministic.
+- Control verbosity with `TIANGONG_LOG_LEVEL` (defaults to `INFO`); raise to `DEBUG` for troubleshooting and reduce to `WARNING` for low-noise batch runs.
+- Populate `ExecutionOptions.observability_tags` when spawning work so log streams can be correlated with automation plans.
+
 ### Graceful Degradation
 
 When optional dependencies are unavailable:
@@ -106,6 +113,7 @@ When optional dependencies are unavailable:
 4. Surface configuration requirements (API keys, CLI dependencies, MCP endpoints) via the registry and execution context; do not embed secrets.
 5. When visualization features are required, ensure the AntV MCP chart server is running (`npx -y @antv/mcp-server-chart --transport streamable`) and record the endpoint in `.secrets` or `TIANGONG_CHART_MCP_ENDPOINT`.
 6. When extending workflows, reuse helpers from `workflows/simple.py` or add new modules under `workflows/`, keeping corresponding tests up to date.
+7. Instrument new services and workflows with the centralized logging helper and add regression tests when behaviour depends on specific log outputs.
 
 ## Verification Checklist
 
