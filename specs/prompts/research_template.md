@@ -40,6 +40,12 @@ If any step fails, capture the error, provide remediation, and pause the workflo
    - Before running, check that `tiangong-research research find-papers --help` is available (command is planned in the roadmap).
    - If the command is not yet implemented, record the limitation and rely on the Semantic Scholar API client when arXiv bulk index is absent.
    - If Scopus credentials exist, enrich with `--link-sdg` flag.
+   - When using `tiangong_ai_remote` directly, remember each `Search_*` tool returns a JSON string. Decode it first:
+     ```python
+     payload, _ = client.invoke_tool("tiangong_ai_remote", "Search_Sci_Tool", {...})
+     records = json.loads(payload)
+     ```
+   - Prefer `httpx` (already in the project dependencies) for any follow-up API calls and respect 429 throttling with exponential backoff or by falling back to `OpenAlex`.
 
 4. **Carbon Intensity Context**
    ```bash
