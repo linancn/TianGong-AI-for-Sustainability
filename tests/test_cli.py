@@ -106,7 +106,7 @@ def test_sources_describe_cli_json(cli_runner, registry_file):
     )
 
     assert result.exit_code == 0
-    assert "\"un_sdg_api\"" in result.stdout
+    assert '"un_sdg_api"' in result.stdout
 
 
 def test_research_get_carbon_intensity_cli(cli_runner, registry_file):
