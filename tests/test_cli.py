@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from typer.testing import CliRunner
 
-from tiangong_ai_for_sustainability.adapters.base import VerificationResult
+from tiangong_ai_for_sustainability.adapters.base import AdapterError, VerificationResult
 from tiangong_ai_for_sustainability.cli.main import app
 
 
@@ -36,6 +36,26 @@ def test_sources_verify_uses_stub(cli_runner, registry_file):
         )
     assert result.exit_code == 0
     assert "OK" in result.stdout
+
+
+def test_sources_verify_reports_failure(cli_runner, registry_file):
+    with (
+        patch(
+            "tiangong_ai_for_sustainability.cli.main.resolve_adapter",
+            return_value=None,
+        ),
+        patch(
+            "tiangong_ai_for_sustainability.cli.main.ResearchServices.verify_source",
+            return_value=VerificationResult(success=False, message="API key missing", details={"reason": "credentials"}),
+        ),
+    ):
+        result = invoke(
+            cli_runner,
+            ["--registry", str(registry_file), "sources", "verify", "osdg_api"],
+        )
+
+    assert result.exit_code == 1
+    assert "API key missing" in result.stdout
 
 
 def test_sources_audit_success(cli_runner, registry_file):
@@ -79,6 +99,16 @@ def test_sources_audit_failure_sets_exit_code(cli_runner, registry_file):
     assert "failed" in result.stdout
 
 
+def test_sources_describe_cli_json(cli_runner, registry_file):
+    result = invoke(
+        cli_runner,
+        ["--registry", str(registry_file), "sources", "describe", "un_sdg_api", "--json"],
+    )
+
+    assert result.exit_code == 0
+    assert "\"un_sdg_api\"" in result.stdout
+
+
 def test_research_get_carbon_intensity_cli(cli_runner, registry_file):
     with patch(
         "tiangong_ai_for_sustainability.cli.main.ResearchServices.get_carbon_intensity",
@@ -90,6 +120,20 @@ def test_research_get_carbon_intensity_cli(cli_runner, registry_file):
         )
     assert result.exit_code == 0
     assert "WattTime" in result.stdout
+
+
+def test_research_get_carbon_intensity_cli_failure(cli_runner, registry_file):
+    with patch(
+        "tiangong_ai_for_sustainability.cli.main.ResearchServices.get_carbon_intensity",
+        side_effect=AdapterError("grid-intensity CLI missing"),
+    ):
+        result = invoke(
+            cli_runner,
+            ["--registry", str(registry_file), "research", "get-carbon-intensity", "CAISO_NORTH"],
+        )
+
+    assert result.exit_code == 1
+    assert "grid-intensity CLI missing" in result.stderr
 
 
 def test_research_map_sdg_cli(cli_runner, registry_file, tmp_path):
@@ -119,6 +163,36 @@ def test_research_map_sdg_cli(cli_runner, registry_file, tmp_path):
 
     assert result.exit_code == 0
     assert "SDG 13" in result.stdout
+
+
+def test_research_workflow_simple_cli(cli_runner, registry_file, tmp_path):
+    report_path = tmp_path / "report.md"
+    chart_path = tmp_path / "chart.png"
+    artifacts = SimpleNamespace(report_path=report_path, chart_path=chart_path, carbon_snapshot={})
+
+    with patch(
+        "tiangong_ai_for_sustainability.cli.main.run_simple_workflow",
+        return_value=artifacts,
+    ):
+        result = invoke(
+            cli_runner,
+            [
+                "--registry",
+                str(registry_file),
+                "research",
+                "workflow",
+                "simple",
+                "sustainable software",
+                "--report-output",
+                str(report_path),
+                "--chart-output",
+                str(chart_path),
+            ],
+        )
+
+    assert result.exit_code == 0
+    assert f"Report written to {report_path}" in result.stdout
+    assert f"Chart saved to {chart_path}" in result.stdout
 
 
 def test_research_find_code_cli(cli_runner, registry_file):
@@ -161,3 +235,19 @@ def test_research_visuals_verify_cli(cli_runner, registry_file):
 
     assert result.exit_code == 0
     assert "OK" in result.stdout
+
+
+def test_research_visuals_verify_cli_failure(cli_runner, registry_file):
+    failure = VerificationResult(success=False, message="Node.js not installed", details={"requirement": "nodejs"})
+    with patch(
+        "tiangong_ai_for_sustainability.cli.main.ResearchServices.verify_chart_mcp",
+        return_value=failure,
+    ):
+        result = invoke(
+            cli_runner,
+            ["--registry", str(registry_file), "research", "visuals", "verify"],
+        )
+
+    assert result.exit_code == 1
+    assert "Node.js not installed" in result.stdout
+    assert "Hint" in result.stdout or "Hint" in result.stderr
