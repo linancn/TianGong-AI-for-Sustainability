@@ -5,7 +5,7 @@ Use this template when instructing an automation agent to run a compact, end-to-
 ## 0. Preconditions
 
 - Dependencies: `uv sync`, Node.js 22+, `npx -y @antv/mcp-server-chart --transport streamable` running locally.
-- Secrets: populate `.secrets/secret.toml` with required API tokens (Semantic Scholar optional, osdg optional).
+- Secrets: populate `.secrets/secrets.toml` with required API tokens (Semantic Scholar optional, osdg optional).
 - CLI: `tiangong-research` available via `uv run`.
 
 ## 1. Environment Checks
@@ -33,11 +33,12 @@ If any step fails, capture the error, provide remediation, and pause the workflo
    ```
    - Filter repositories relevant to the topic; highlight stars and descriptions.
 
-3. **Literature Query**
+3. **Literature Query** *(planned CLI capability — confirm availability first)*
    ```bash
    uv run tiangong-research research find-papers "<keywords>" --json
    ```
-   - Fall back to Semantic Scholar API client when arXiv bulk index is absent.
+   - Before running, check that `tiangong-research research find-papers --help` is available (command is planned in the roadmap).
+   - If the command is not yet implemented, record the limitation and rely on the Semantic Scholar API client when arXiv bulk index is absent.
    - If Scopus credentials exist, enrich with `--link-sdg` flag.
 
 4. **Carbon Intensity Context**

@@ -5,7 +5,7 @@
 ## 0. 前提条件
 
 - 依赖：已执行 `uv sync`，安装 Node.js 22+，并启动 `npx -y @antv/mcp-server-chart --transport streamable`。
-- 凭据：在 `.secrets/secret.toml` 中配置必要的 API Token（如 Semantic Scholar、OSDG 可选）。
+- 凭据：在 `.secrets/secrets.toml` 中配置必要的 API Token（如 Semantic Scholar、OSDG 可选）。
 - CLI：确认可以通过 `uv run tiangong-research` 调用命令行工具。
 
 ## 1. 环境检查
@@ -33,11 +33,12 @@
    ```
    - 关注与主题紧密相关的仓库，记录 star 数及简介。
 
-3. **文献查询**
+3. **文献查询**（目前处于路线图规划阶段，执行前需确认命令已上线）
    ```bash
    uv run tiangong-research research find-papers "<关键词>" --json
    ```
-   - 本地 arXiv 索引缺失时，使用 Semantic Scholar API 结果。
+   - 执行前先确认 `tiangong-research research find-papers --help` 可用（该命令仍在规划中）。
+   - 若命令尚未上线，请记录该限制，并在本地 arXiv 索引缺失时改用 Semantic Scholar API 结果。
    - 如具备 Scopus 凭据，可追加 `--link-sdg`。
 
 4. **碳强度背景**
