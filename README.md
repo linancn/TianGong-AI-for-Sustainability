@@ -20,6 +20,11 @@ This README is the quick start for everyone. Run the setup script, follow the pr
    bash install_ubuntu.sh
    ```
 
+   **Windows (PowerShell, run as Administrator)**
+   ```powershell
+   PowerShell -ExecutionPolicy Bypass -File .\install_windows.ps1
+   ```
+
 The script checks Python 3.12+, uv, Git, and project dependencies. It also offers optional extras—charts (Node.js 22+), PDF export (Pandoc + LaTeX), and carbon metrics (`uk-grid-intensity`). Accept the defaults or answer **yes** when the script asks which features you want.
 
 > **Update or change features later?** Rerun the same script. You can add `--full`, `--minimal`, or any `--with-*` flag to skip the interactive questions.
@@ -43,7 +48,7 @@ If you enabled charts, start the AntV MCP chart server before running workflows 
 - PDF export: `pandoc --version` and `pdflatex --version`
 - Carbon metrics: `uv run --group 3rd uk-grid-intensity --help`
 
-Missing a feature? Just re-run `install_<os>.sh` with the matching `--with-*` flag.
+Missing a feature? Just re-run your installer (`install_macos.sh`, `install_ubuntu.sh`, or `install_windows.ps1`) with the matching `--with-*` flag.
 
 ## Most-Used CLI Commands
 
@@ -61,7 +66,7 @@ Power users who prefer to manage Python environments manually or run the CLI on 
 - `SETUP_GUIDE.md` (English)
 - `SETUP_GUIDE_CN.md` (中文)
 
-Everyone else can simply rely on `install_macos.sh` or `install_ubuntu.sh` for installation, updates, and optional feature management.
+Everyone else can simply rely on the platform installers—`install_macos.sh`, `install_ubuntu.sh`, or `install_windows.ps1`—for installation, updates, and optional feature management.
 
 ## More References
 

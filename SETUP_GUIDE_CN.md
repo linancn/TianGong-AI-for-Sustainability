@@ -1,12 +1,13 @@
-# 系统配置指南 — Ubuntu & macOS
+# 系统配置指南 — macOS、Ubuntu 与 Windows
 
-> **适用对象提示：** 本指南适合需要手动管理依赖或在定制环境部署的专业用户。如果只想快速使用 CLI，请直接运行项目根目录的 `install_macos.sh` / `install_ubuntu.sh`，并按照 README 的简单步骤操作。
+> **适用对象提示：** 本指南适合需要手动管理依赖或在定制环境部署的专业用户。如果只想快速使用 CLI，请直接运行项目根目录的 `install_macos.sh`、`install_ubuntu.sh` 或 `install_windows.ps1`，并按照 README 的简单步骤操作。
 
 ## 目录
 
 - [快速开始](#快速开始)
 - [macOS 配置](#macos-配置)
 - [Ubuntu 配置](#ubuntu-配置)
+- [Windows 配置](#windows-配置)
 - [验证](#验证)
 - [故障排除](#故障排除)
 
@@ -18,6 +19,7 @@
 |------|------|--------|------|
 | Python 3.12+ | 核心运行时 | ✅ 必需 | 由 `uv` 管理 |
 | `uv` | 包管理器 | ✅ 必需 | 现代 Python 包管理工具 |
+| Chocolatey | Windows 包管理器 | ⭐ 可选 | `install_windows.ps1` 会自动安装；手动配置 Windows 时推荐 |
 | Node.js 22+ | 图表可视化 | ⭐ 可选 | 仅用于 AntV MCP 图表 |
 | Pandoc 3.0+ | 报告导出 | ⭐ 可选 | 用于 PDF/DOCX 输出 |
 | LaTeX (TeX Live) | PDF 生成 | ⭐ 可选 | 仅当需要 Pandoc + PDF |
@@ -316,6 +318,95 @@ uv sync
 ```bash
 uv run tiangong-research --help
 ```
+
+---
+
+## Windows 配置
+
+> ⚠️ 安装系统级依赖或运行 `install_windows.ps1` 时，请以管理员身份打开 PowerShell：右键 PowerShell 图标，选择“以管理员身份运行”。
+
+### 1. 核心依赖
+
+#### 安装 Chocolatey（若尚未安装）
+
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+choco --version
+```
+
+#### 安装 Git
+
+```powershell
+choco install -y git
+git --version
+```
+
+#### 安装 Python 3.12+
+
+```powershell
+choco install -y python312
+python --version  # 期望输出 Python 3.12+
+```
+
+若执行 `python` 仍失败，可重启 PowerShell 或使用 `py -3.12`。
+
+#### 安装 `uv`
+
+```powershell
+irm https://astral.sh/uv/install.ps1 | iex
+uv --version
+```
+
+若 `uv` 未立即生效，请重新打开 PowerShell。
+
+### 2. 可选：Node.js 22+（图表可视化）
+
+```powershell
+choco install -y nodejs --version=22.0.0
+node --version  # 期望输出 v22.x
+npx -y @antv/mcp-server-chart --transport streamable --version
+```
+
+已经安装旧版本 Node.js 时，请升级到 ≥22 后再启用图表工作流。
+
+### 3. 可选：Pandoc 与 MiKTeX（PDF/DOCX 导出）
+
+```powershell
+choco install -y pandoc
+choco install -y miktex
+pandoc --version
+pdflatex --version
+```
+
+首次启动 MiKTeX 可能弹出 GUI 并提示按需下载宏包，保持默认选项即可。
+
+### 4. 可选：uk-grid-intensity CLI（碳排指标）
+
+```powershell
+uv sync --group 3rd
+uv run --group 3rd uk-grid-intensity --help
+```
+
+若使用自定义可执行文件，请设置 `GRID_INTENSITY_CLI` 环境变量。
+
+### 5. 项目初始化
+
+```powershell
+git clone https://github.com/linancn/TianGong-AI-for-Sustainability.git
+Set-Location TianGong-AI-for-Sustainability
+uv sync
+```
+
+### 6. 安装后检查
+
+```powershell
+uv run tiangong-research --help
+uv run tiangong-research sources list
+```
+
+安装新工具后建议重新打开 PowerShell，以确保 PATH 更新生效。
 
 ---
 

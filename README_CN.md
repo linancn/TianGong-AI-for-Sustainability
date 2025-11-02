@@ -20,6 +20,11 @@
    bash install_ubuntu.sh
    ```
 
+   **Windows（以管理员身份运行 PowerShell）**
+   ```powershell
+   PowerShell -ExecutionPolicy Bypass -File .\install_windows.ps1
+   ```
+
 脚本会自动检查 Python 3.12+、uv、Git 以及项目依赖，并在需要时安装可选组件：图表支持（Node.js 22+）、PDF 导出（Pandoc + LaTeX）、碳强度查询（`uk-grid-intensity`）。只需根据提示回答 **y/n**。
 
 > **想更新或添加功能？** 直接重新运行脚本即可。也可以用 `--full`、`--minimal`、`--with-*` 等参数跳过交互。
@@ -43,7 +48,7 @@ uv run tiangong-research research workflow simple --topic "生命周期评估"
 - PDF 导出：`pandoc --version`、`pdflatex --version`
 - 碳强度：`uv run --group 3rd uk-grid-intensity --help`
 
-缺少某项功能时，重新运行 `install_<os>.sh` 并选择对应的 `--with-*` 选项即可。
+缺少某项功能时，重新运行对应的安装脚本（`install_macos.sh`、`install_ubuntu.sh`、`install_windows.ps1`），并选择合适的 `--with-*` 选项即可。
 
 ## 常用命令速查
 
@@ -61,7 +66,7 @@ uv run tiangong-research research workflow simple --topic "生命周期评估"
 - `SETUP_GUIDE.md`（英文）
 - `SETUP_GUIDE_CN.md`（中文）
 
-大多数用户只要依赖安装脚本，即可完成安装、更新与可选功能管理。
+大多数用户直接运行 `install_macos.sh`、`install_ubuntu.sh` 或 `install_windows.ps1`，即可完成安装、更新与可选功能管理。
 
 ## 其他资源
 

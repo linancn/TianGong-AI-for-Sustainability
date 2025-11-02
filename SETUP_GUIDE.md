@@ -1,12 +1,13 @@
-# System Setup Guide — Ubuntu & macOS
+# System Setup Guide — macOS, Ubuntu & Windows
 
-> **Who should read this?** Power users who want to manage dependencies manually or adapt the CLI to bespoke environments. If you simply want to get started, run `install_macos.sh` or `install_ubuntu.sh` from the project root and follow the prompts in the README.
+> **Who should read this?** Power users who want to manage dependencies manually or adapt the CLI to bespoke environments. If you simply want to get started, run `install_macos.sh`, `install_ubuntu.sh`, or `install_windows.ps1` from the project root and follow the prompts in the README.
 
 ## Table of Contents
 
 - [Quick Start](#quick-start)
 - [macOS Setup](#macos-setup)
 - [Ubuntu Setup](#ubuntu-setup)
+- [Windows Setup](#windows-setup)
 - [Verification](#verification)
 - [Troubleshooting](#troubleshooting)
 
@@ -18,6 +19,7 @@
 |-----------|---------|-----------|-------|
 | Python 3.12+ | Core runtime | ✅ Yes | Managed by `uv` |
 | `uv` | Package manager | ✅ Yes | Modern Python packaging |
+| Chocolatey | Windows package manager | ⭐ Optional | Auto-installed by `install_windows.ps1`; recommended for manual Windows setup |
 | Node.js 22+ | Chart visualization | ⭐ Optional | Only for AntV MCP charts |
 | Pandoc 3.0+ | Report export | ⭐ Optional | For PDF/DOCX output |
 | LaTeX (TeX Live) | PDF generation | ⭐ Optional | Only if Pandoc + PDF needed |
@@ -316,6 +318,95 @@ Test CLI:
 ```bash
 uv run tiangong-research --help
 ```
+
+---
+
+## Windows Setup
+
+> ⚠️ Open PowerShell **as Administrator** when installing system packages or running `install_windows.ps1`. Right-click the PowerShell icon and choose “Run as Administrator.”
+
+### 1. Core Dependencies
+
+#### Install Chocolatey (if not present)
+
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+choco --version
+```
+
+#### Install Git
+
+```powershell
+choco install -y git
+git --version
+```
+
+#### Install Python 3.12+
+
+```powershell
+choco install -y python312
+python --version  # Expect Python 3.12 or later
+```
+
+If `python` is not immediately available, restart the shell or use `py -3.12`.
+
+#### Install `uv`
+
+```powershell
+irm https://astral.sh/uv/install.ps1 | iex
+uv --version
+```
+
+Restart PowerShell if `uv` is still missing from PATH.
+
+### 2. Optional: Node.js 22+ (chart visualization)
+
+```powershell
+choco install -y nodejs --version=22.0.0
+node --version  # Expect v22.x
+npx -y @antv/mcp-server-chart --transport streamable --version
+```
+
+Upgrade existing Node.js installations to >=22 before enabling chart workflows.
+
+### 3. Optional: Pandoc & MiKTeX (PDF/DOCX export)
+
+```powershell
+choco install -y pandoc
+choco install -y miktex
+pandoc --version
+pdflatex --version
+```
+
+MiKTeX may open a GUI installer and prompt for package downloads on first use—accept the defaults.
+
+### 4. Optional: uk-grid-intensity CLI (carbon metrics)
+
+```powershell
+uv sync --group 3rd
+uv run --group 3rd uk-grid-intensity --help
+```
+
+Set the `GRID_INTENSITY_CLI` environment variable if you rely on a custom executable.
+
+### 5. Project Setup
+
+```powershell
+git clone https://github.com/linancn/TianGong-AI-for-Sustainability.git
+Set-Location TianGong-AI-for-Sustainability
+uv sync
+```
+
+### 6. Post-Install Checks
+
+```powershell
+uv run tiangong-research --help
+uv run tiangong-research sources list
+```
+
+Reopen PowerShell after installing new tools so updated PATH entries apply.
 
 ---
 
