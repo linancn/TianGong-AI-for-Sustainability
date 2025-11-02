@@ -14,6 +14,7 @@
 |------|------|------|
 | 架构蓝图 | `AGENTS_CN.md`（本文档） | 本体、数据源优先级、CLI 路线图、执行策略。 |
 | 任务图 | `tasks/blueprint.yaml` | 关键功能之间的依赖关系。 |
+| 待办登记 | `tasks/backlog.yaml` | 将研究缺口映射到确定性适配器与提示包的跟踪清单。 |
 | 人类手册 | `README.md` | 面向终端用户的使用说明，需保持行为一致。 |
 | 系统配置指南 | `SETUP_GUIDE.md` / `SETUP_GUIDE_CN.md` | 平台特定安装说明（macOS/Ubuntu）、前置条件、故障排除。 |
 | 可视化服务 | `https://github.com/antvis/mcp-server-chart` | AntV MCP 图表服务器的使用说明与配置。 |

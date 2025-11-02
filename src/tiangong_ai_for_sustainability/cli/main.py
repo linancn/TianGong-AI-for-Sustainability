@@ -9,6 +9,7 @@ heavier workflows.
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
 from importlib import resources
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -16,9 +17,10 @@ from typing import Any, Dict, List, Optional
 import typer
 
 from ..adapters import AdapterError
+from ..adapters.api.base import APIError
 from ..core import DataSourceDescriptor, DataSourceRegistry, DataSourceStatus, ExecutionContext, ExecutionOptions, RegistryLoadError
 from ..services import ResearchServices
-from ..workflows import run_deep_lca_report, run_lca_citation_workflow, run_simple_workflow
+from ..workflows import run_deep_lca_report, run_lca_citation_workflow, run_simple_workflow, run_trending_metrics_workflow
 from .adapters import resolve_adapter
 
 app = typer.Typer(no_args_is_help=True, add_completion=False, help="TianGong sustainability research CLI.")
@@ -30,6 +32,8 @@ visuals_app = typer.Typer(help="Visualization tooling")
 research_app.add_typer(visuals_app, name="visuals")
 workflow_app = typer.Typer(help="Predefined multi-step research workflows")
 research_app.add_typer(workflow_app, name="workflow")
+
+_CURRENT_YEAR = datetime.now(UTC).year
 
 
 def _load_registry(registry_file: Optional[Path]) -> DataSourceRegistry:
@@ -722,6 +726,70 @@ def research_get_carbon_intensity(
     typer.echo(summary)
     if "datetime" in payload:
         typer.echo(f"Timestamp: {payload['datetime']}")
+
+
+@research_app.command("metrics-trending")
+def research_metrics_trending(
+    ctx: typer.Context,
+    start_year: int = typer.Option(2020, "--start-year", min=1900, max=_CURRENT_YEAR, help="Lower bound (inclusive) for publication years."),
+    end_year: Optional[int] = typer.Option(None, "--end-year", help="Upper bound (inclusive) for publication years. Defaults to the current year."),
+    max_records: int = typer.Option(120, "--max-records", "-n", min=10, max=400, help="Safety cap for OpenAlex works fetched per metric."),
+    output_path: Optional[Path] = typer.Option(None, "--output", "-o", resolve_path=True, help="Optional JSON report destination."),
+) -> None:
+    """Summarise scarcity, footprint, and biodiversity metrics via OpenAlex."""
+
+    registry = _require_registry(ctx)
+    context = _require_context(ctx)
+    services = ResearchServices(registry=registry, context=context)
+
+    resolved_output = output_path.resolve() if output_path else None
+
+    try:
+        artifacts = run_trending_metrics_workflow(
+            services,
+            start_year=start_year,
+            end_year=end_year,
+            max_records_per_metric=max_records,
+            output_path=resolved_output,
+        )
+    except (AdapterError, APIError) as exc:
+        typer.echo(f"Failed to compute trending metrics: {exc}", err=True)
+        raise typer.Exit(code=1)
+
+    if artifacts.plan:
+        typer.echo("Dry-run plan:")
+        for step in artifacts.plan:
+            typer.echo(f"- {step}")
+        return
+
+    if not artifacts.metrics:
+        typer.echo("No metrics available. Ensure OpenAlex is enabled and reachable.", err=True)
+        raise typer.Exit(code=1)
+
+    for summary in artifacts.metrics:
+        typer.echo(f"{summary.label}:")
+        typer.echo(f"  Works analysed: {summary.total_works} | Total citations: {summary.total_citations}")
+        if summary.citation_trend:
+            trend_str = ", ".join(f"{year}:{citations}" for year, citations in summary.citation_trend.items())
+            typer.echo(f"  Citations by year: {trend_str}")
+        if summary.top_works:
+            typer.echo("  Top works:")
+            for entry in summary.top_works:
+                title = entry.get("title") or "Untitled"
+                year = entry.get("year")
+                cites = entry.get("cited_by_count")
+                doi = entry.get("doi")
+                details = f"{title} ({year}) — {cites} citations"
+                if doi:
+                    details += f" | DOI {doi}"
+                typer.echo(f"    - {details}")
+        if summary.top_concepts:
+            concept_str = ", ".join(f"{concept['name']} ({concept['weighted_citations']})" for concept in summary.top_concepts)
+            typer.echo(f"  High-signal concepts: {concept_str}")
+        typer.echo("")
+
+    if artifacts.output_path:
+        typer.echo(f"Metrics written to {artifacts.output_path}")
 
 
 if __name__ == "__main__":  # pragma: no cover

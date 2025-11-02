@@ -14,6 +14,7 @@ AI operators must follow this document when working on the TianGong AI for Susta
 |----------|------|---------|
 | Architecture Blueprint | `AGENTS.md` (this document) | Ontology, data-source priorities, CLI roadmap, execution strategy. |
 | Task Graph | `tasks/blueprint.yaml` | Dependency ordering for major features. |
+| Backlog Register | `tasks/backlog.yaml` | Research-gap follow-ups mapped to deterministic adapters and prompt packs. |
 | Human Handbook | `README.md` | Public-facing usage instructions; mirror but do not override. |
 | System Setup Guide | `SETUP_GUIDE.md` / `SETUP_GUIDE_CN.md` | Platform-specific installation (macOS/Ubuntu), prerequisites, troubleshooting. |
 | Visualization Server | `https://github.com/antvis/mcp-server-chart` | Reference for the AntV MCP chart server integration. |

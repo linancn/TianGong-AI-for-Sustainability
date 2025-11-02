@@ -223,6 +223,50 @@ def test_research_find_code_cli(cli_runner, registry_file):
     assert "demo/lca-toolkit" in result.stdout
 
 
+def test_research_metrics_trending_cli(cli_runner, registry_file):
+    metrics = [
+        SimpleNamespace(
+            metric_id="resource_scarcity",
+            label="Resource Scarcity Footprint",
+            total_works=2,
+            total_citations=195,
+            citation_trend={2021: 120, 2023: 75},
+            top_works=[{"title": "Evaluating resource scarcity footprints in LCA", "year": 2021, "cited_by_count": 120, "doi": "10.1234/scarcity1"}],
+            top_concepts=[{"name": "Resource management", "weighted_citations": 120.0}],
+        )
+    ]
+    artifacts = SimpleNamespace(metrics=metrics, raw_records={}, plan=None, output_path=None)
+
+    with patch(
+        "tiangong_ai_for_sustainability.cli.main.run_trending_metrics_workflow",
+        return_value=artifacts,
+    ):
+        result = invoke(
+            cli_runner,
+            ["--registry", str(registry_file), "research", "metrics-trending", "--start-year", "2020"],
+        )
+
+    assert result.exit_code == 0
+    assert "Resource Scarcity Footprint" in result.stdout
+    assert "Works analysed: 2" in result.stdout
+
+
+def test_research_metrics_trending_cli_dry_run(cli_runner, registry_file):
+    artifacts = SimpleNamespace(metrics=[], raw_records={}, plan=["Step 1", "Step 2"], output_path=None)
+
+    with patch(
+        "tiangong_ai_for_sustainability.cli.main.run_trending_metrics_workflow",
+        return_value=artifacts,
+    ):
+        result = invoke(
+            cli_runner,
+            ["--registry", str(registry_file), "research", "metrics-trending"],
+        )
+
+    assert result.exit_code == 0
+    assert "Dry-run plan" in result.stdout
+
+
 def test_research_visuals_verify_cli(cli_runner, registry_file):
     with patch(
         "tiangong_ai_for_sustainability.cli.main.ResearchServices.verify_chart_mcp",

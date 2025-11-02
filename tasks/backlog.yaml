@@ -1,0 +1,50 @@
+version: "0.1"
+description: >
+  Backlog items derived from recent literature analysis. Each entry maps a
+  documented research gap to a concrete follow-up action that can be handled
+  by deterministic adapters or shared prompt packs.
+
+backlog:
+  - id: backlog.exante_lcsa_scenarios
+    summary: "Deterministic templates for ex-ante life cycle sustainability scenarios."
+    rationale: >
+      The systematic review on future scenarios in LCA highlights missing,
+      reusable blueprints for ex-ante assessments. Automating scenario template
+      generation would help codify best practices and reduce reliance on ad-hoc
+      prompts.
+    action_items:
+      - Build a scenario template adapter that accepts sector, geography, and time-horizon inputs and emits structured LCSA scenario stubs (JSON/YAML).
+      - Package companion prompts under specs/prompts/ to support hybrid workflows when LLM-based synthesis is required.
+    dependencies:
+      - ontology.sdgfetch
+      - ontology.gri
+    tags: ["lca", "scenarios", "templates", "adapter"]
+    status: proposed
+
+  - id: backlog.heritage_restoration_indicators
+    summary: "Indicator catalog for cultural heritage restoration sustainability assessments."
+    rationale: >
+      Current studies note the lack of comparable, multi-dimensional indicators
+      when evaluating heritage restoration projects. Encoding a deterministic
+      indicator catalog would enable reproducible scoring outside of bespoke case studies.
+    action_items:
+      - Assemble indicator metadata (environmental, social, economic) into a reusable registry (YAML/Parquet) with traceable sources.
+      - Expose a service method that cross-walks indicators with SDG/GHG ontologies for CLI reporting.
+    dependencies:
+      - ontology.sdgfetch
+      - ontology.ghgparse
+    tags: ["heritage", "indicators", "registry"]
+    status: proposed
+
+  - id: backlog.gold_mining_lcsa_dataset
+    summary: "Curated corpus and prompt pack for LCSA in the gold mining sector."
+    rationale: >
+      The LCSA gold mining review calls out under-documented social and environmental impact pathways. A focused corpus and prompt pack can bootstrap replication studies.
+    action_items:
+      - Use collect_mcp_corpus.py to seed an initial dataset, then normalise key variables (region, mining process, impact category) into tabular form.
+      - Publish a matching prompt template (EN/ZH) that orchestrates deterministic lookups before any synthesis.
+    dependencies:
+      - tiangong_ai_remote
+      - openalex
+    tags: ["lca", "mining", "prompt-pack"]
+    status: proposed

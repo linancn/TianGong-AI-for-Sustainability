@@ -16,6 +16,7 @@ from tiangong_ai_for_sustainability.workflows.lca_citations import (
     TrendingTopic,
     run_lca_citation_workflow,
 )
+from tiangong_ai_for_sustainability.workflows.metrics import TRENDING_METRIC_CONFIGS, run_trending_metrics_workflow
 from tiangong_ai_for_sustainability.workflows.simple import run_simple_workflow
 
 
@@ -127,6 +128,110 @@ def test_run_simple_workflow_dry_run(tmp_path, dummy_services):
     assert not report_path.exists()
     assert artifacts.chart_path is None
     assert "Dry-run" in artifacts.carbon_snapshot.get("note", "")
+
+
+def test_run_trending_metrics_workflow(tmp_path, dummy_services):
+    records_map = {
+        "resource_scarcity": [
+            {
+                "display_name": "Evaluating resource scarcity footprints in LCA",
+                "publication_year": 2021,
+                "cited_by_count": 120,
+                "doi": "10.1234/scarcity1",
+                "concepts": [
+                    {"display_name": "Resource management", "score": 0.6, "level": 1},
+                    {"display_name": "Life cycle assessment", "score": 0.7, "level": 1},
+                ],
+            },
+            {
+                "display_name": "Critical minerals scarcity assessment via LCA",
+                "publication_year": 2023,
+                "cited_by_count": 75,
+                "doi": "10.1234/scarcity2",
+                "concepts": [
+                    {"display_name": "Mineral resource", "score": 0.65, "level": 1},
+                ],
+            },
+        ],
+        "planetary_footprint": [
+            {
+                "display_name": "Planetary footprint indicators for consumer products",
+                "publication_year": 2022,
+                "cited_by_count": 88,
+                "doi": "10.1234/footprint1",
+                "concepts": [
+                    {"display_name": "Planetary boundaries", "score": 0.8, "level": 1},
+                    {"display_name": "Sustainability", "score": 0.5, "level": 1},
+                ],
+            }
+        ],
+        "biodiversity_loss": [
+            {
+                "display_name": "Quantifying biodiversity loss in LCA",
+                "publication_year": 2024,
+                "cited_by_count": 54,
+                "doi": "10.1234/biodiversity1",
+                "concepts": [
+                    {"display_name": "Biodiversity", "score": 0.75, "level": 1},
+                ],
+            }
+        ],
+        "sustainable_nanotechnology": [
+            {
+                "display_name": "Nanotechnology sustainability metrics in life cycle studies",
+                "publication_year": 2020,
+                "cited_by_count": 66,
+                "doi": "10.1234/nano1",
+                "concepts": [
+                    {"display_name": "Nanotechnology", "score": 0.7, "level": 1},
+                ],
+            }
+        ],
+    }
+
+    def iterate_works(**kwargs):
+        search = kwargs.get("search", "")
+        for config in TRENDING_METRIC_CONFIGS:
+            if config["search"] in search or config["id"].split("_")[0] in search:
+                return iter(records_map[config["id"]])
+        if '"resource scarcity"' in search:
+            return iter(records_map["resource_scarcity"])
+        if '"planetary boundaries"' in search:
+            return iter(records_map["planetary_footprint"])
+        if '"biodiversity"' in search:
+            return iter(records_map["biodiversity_loss"])
+        if '"nanotechnology"' in search:
+            return iter(records_map["sustainable_nanotechnology"])
+        return iter([])
+
+    dummy_services._openalex.iterate_works = iterate_works
+
+    output_path = tmp_path / "metrics.json"
+    artifacts = run_trending_metrics_workflow(
+        dummy_services,
+        start_year=2020,
+        end_year=2024,
+        max_records_per_metric=50,
+        output_path=output_path,
+    )
+
+    assert len(artifacts.metrics) == len(TRENDING_METRIC_CONFIGS)
+    scarcity_summary = next(summary for summary in artifacts.metrics if summary.metric_id == "resource_scarcity")
+    assert scarcity_summary.total_works == 2
+    assert scarcity_summary.total_citations == 195
+    assert any(concept["name"] == "Resource management" for concept in scarcity_summary.top_concepts)
+    assert artifacts.output_path == output_path
+    assert output_path.exists()
+
+
+def test_run_trending_metrics_workflow_dry_run(tmp_path, dummy_services):
+    dummy_services.context = ExecutionContext.build_default(
+        cache_dir=tmp_path / "cache",
+        options=ExecutionOptions(dry_run=True),
+    )
+    artifacts = run_trending_metrics_workflow(dummy_services, start_year=2020, end_year=2024)
+    assert artifacts.plan is not None
+    assert not artifacts.metrics
 
 
 def test_run_lca_citation_workflow(tmp_path, monkeypatch, dummy_services):
