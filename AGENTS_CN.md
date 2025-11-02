@@ -58,7 +58,11 @@
    ```bash
    uv run tiangong-research sources list
    uv run tiangong-research sources verify <source_id>
+   uv run tiangong-research sources audit [--json] [--show-blocked] [--no-fail-on-error]
    ```
+   - `--json`：以 JSON 形式输出巡检汇总，便于 CI 或后续解析。
+   - `--show-blocked`：在报告中包含注册表中标记为 `blocked` 的数据源，便于人工复核封禁原因。
+   - `--no-fail-on-error`：即使存在失败也返回 0，适用于探索性巡检或希望持续执行后续步骤的场景。
 
 3. **检查可选功能**：检测已安装的可选依赖：
    ```bash

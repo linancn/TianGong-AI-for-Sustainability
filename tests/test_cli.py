@@ -22,7 +22,7 @@ def test_sources_list(cli_runner, registry_file):
 def test_sources_verify_uses_stub(cli_runner, registry_file):
     with (
         patch(
-            "tiangong_ai_for_sustainability.cli.main._resolve_adapter",
+            "tiangong_ai_for_sustainability.cli.main.resolve_adapter",
             return_value=None,
         ),
         patch(
@@ -36,6 +36,47 @@ def test_sources_verify_uses_stub(cli_runner, registry_file):
         )
     assert result.exit_code == 0
     assert "OK" in result.stdout
+
+
+def test_sources_audit_success(cli_runner, registry_file):
+    with (
+        patch(
+            "tiangong_ai_for_sustainability.cli.main.resolve_adapter",
+            return_value=None,
+        ),
+        patch(
+            "tiangong_ai_for_sustainability.cli.main.ResearchServices.verify_source",
+            return_value=VerificationResult(success=True, message="OK", details={"status": "active"}),
+        ),
+    ):
+        result = invoke(
+            cli_runner,
+            ["--registry", str(registry_file), "sources", "audit"],
+        )
+
+    assert result.exit_code == 0
+    assert "Audit complete" in result.stdout
+    assert "0 failed" in result.stdout.splitlines()[-1]
+
+
+def test_sources_audit_failure_sets_exit_code(cli_runner, registry_file):
+    with (
+        patch(
+            "tiangong_ai_for_sustainability.cli.main.resolve_adapter",
+            return_value=None,
+        ),
+        patch(
+            "tiangong_ai_for_sustainability.cli.main.ResearchServices.verify_source",
+            return_value=VerificationResult(success=False, message="Down", details=None),
+        ),
+    ):
+        result = invoke(
+            cli_runner,
+            ["--registry", str(registry_file), "sources", "audit"],
+        )
+
+    assert result.exit_code == 1
+    assert "failed" in result.stdout
 
 
 def test_research_get_carbon_intensity_cli(cli_runner, registry_file):

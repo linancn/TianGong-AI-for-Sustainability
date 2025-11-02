@@ -15,21 +15,11 @@ from typing import Any, Dict, List, Optional
 
 import typer
 
-from ..adapters import AdapterError, ChartMCPAdapter, DataSourceAdapter, RemoteMCPAdapter
-from ..adapters.api import (
-    GitHubTopicsAdapter,
-    GitHubTopicsClient,
-    OSDGAdapter,
-    OSDGClient,
-    SemanticScholarAdapter,
-    SemanticScholarClient,
-    UNSDGAdapter,
-)
-from ..adapters.environment import GridIntensityCLIAdapter
+from ..adapters import AdapterError
 from ..core import DataSourceDescriptor, DataSourceRegistry, DataSourceStatus, ExecutionContext, ExecutionOptions, RegistryLoadError
-from ..core.mcp import load_mcp_server_configs
 from ..services import ResearchServices
 from ..workflows import run_deep_lca_report, run_lca_citation_workflow, run_simple_workflow
+from .adapters import resolve_adapter
 
 app = typer.Typer(no_args_is_help=True, add_completion=False, help="TianGong sustainability research CLI.")
 sources_app = typer.Typer(help="Inspect and validate external data source integrations.")
@@ -201,49 +191,6 @@ def _require_context(ctx: typer.Context) -> ExecutionContext:
     return context
 
 
-def _resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataSourceAdapter]:
-    secrets = context.secrets.data
-
-    semantic_key: Optional[str] = None
-    semantic_section = secrets.get("semantic_scholar")
-    if isinstance(semantic_section, dict):
-        value = semantic_section.get("api_key")
-        if isinstance(value, str) and value:
-            semantic_key = value
-
-    github_token: Optional[str] = None
-    github_section = secrets.get("github")
-    if isinstance(github_section, dict):
-        value = github_section.get("token")
-        if isinstance(value, str) and value:
-            github_token = value
-
-    osdg_token: Optional[str] = None
-    osdg_section = secrets.get("osdg")
-    if isinstance(osdg_section, dict):
-        value = osdg_section.get("api_token")
-        if isinstance(value, str) and value:
-            osdg_token = value
-
-    adapters = (
-        GridIntensityCLIAdapter(),
-        UNSDGAdapter(),
-        SemanticScholarAdapter(client=SemanticScholarClient(api_key=semantic_key)),
-        GitHubTopicsAdapter(client=GitHubTopicsClient(token=github_token)),
-        OSDGAdapter(client=OSDGClient(api_token=osdg_token)),
-        ChartMCPAdapter(),
-    )
-    for adapter in adapters:
-        if source_id == adapter.source_id:
-            return adapter
-
-    mcp_configs = load_mcp_server_configs(context.secrets)
-    config = mcp_configs.get(source_id)
-    if config:
-        return RemoteMCPAdapter(config=config)
-    return None
-
-
 @sources_app.command("list")
 def sources_list(
     ctx: typer.Context,
@@ -308,6 +255,83 @@ def sources_describe(
         typer.echo(f"Notes: {descriptor.notes}")
 
 
+@sources_app.command("audit")
+def sources_audit(
+    ctx: typer.Context,
+    show_blocked: bool = typer.Option(False, "--show-blocked", help="Include blocked sources in the audit results."),
+    output_json: bool = typer.Option(False, "--json", help="Emit the audit report in JSON format."),
+    fail_on_error: bool = typer.Option(True, "--fail-on-error/--no-fail-on-error", help="Control whether failures set a non-zero exit code."),
+) -> None:
+    """
+    Run verification across all registered data sources and emit a summary report.
+    """
+
+    registry = _require_registry(ctx)
+    context = _require_context(ctx)
+    services = ResearchServices(registry=registry, context=context)
+
+    descriptors = list(registry.iter_enabled(allow_blocked=show_blocked))
+    if not descriptors:
+        typer.echo("No data sources available for audit.")
+        raise typer.Exit(code=0)
+
+    records: List[Dict[str, Any]] = []
+    failures = 0
+    for descriptor in descriptors:
+        enabled = context.is_enabled(descriptor.source_id)
+        record: Dict[str, Any] = {
+            "id": descriptor.source_id,
+            "name": descriptor.name,
+            "priority": descriptor.priority.value,
+            "registry_status": descriptor.status.value,
+            "requires_credentials": descriptor.requires_credentials,
+            "enabled": enabled,
+            "success": False,
+            "message": "",
+            "details": None,
+        }
+
+        if descriptor.status == DataSourceStatus.BLOCKED:
+            record["message"] = f"Blocked: {descriptor.blocked_reason or 'No blocked reason provided.'}"
+            record["details"] = {"reason": "blocked"}
+        elif descriptor.requires_credentials and not enabled:
+            record["message"] = "Requires credentials; configure secrets and enable the source."
+            record["details"] = {"reason": "credentials-missing"}
+        else:
+            adapter = resolve_adapter(descriptor.source_id, context)
+            try:
+                verification = services.verify_source(descriptor.source_id, adapter)
+            except AdapterError as exc:
+                record["message"] = f"Adapter error: {exc}"
+                record["details"] = {"reason": "adapter-error"}
+            else:
+                record["success"] = verification.success
+                record["message"] = verification.message
+                if verification.details is not None:
+                    record["details"] = dict(verification.details)
+
+        if not record["success"]:
+            failures += 1
+        records.append(record)
+
+    if output_json:
+        typer.echo(json.dumps({"results": records}, ensure_ascii=False, indent=2))
+    else:
+        header = f"{'ID':<22} {'Registry':<9} {'Enabled':<7} {'Result':<7} Message"
+        typer.echo(header)
+        typer.echo("-" * len(header))
+        for record in records:
+            message = str(record["message"]).replace("\n", " ").strip()
+            enabled_str = "yes" if record["enabled"] else "no"
+            result_str = "pass" if record["success"] else "fail"
+            typer.echo(f"{record['id']:<22} {record['registry_status']:<9} {enabled_str:<7} {result_str:<7} {message}")
+        passed = len(records) - failures
+        typer.echo(f"Audit complete: {len(records)} source(s), {passed} passed, {failures} failed.")
+
+    if failures and fail_on_error:
+        raise typer.Exit(code=1)
+
+
 @sources_app.command("verify")
 def sources_verify(
     ctx: typer.Context,
@@ -339,7 +363,7 @@ def sources_verify(
         raise typer.Exit(code=1)
 
     services = ResearchServices(registry=registry, context=context)
-    adapter = _resolve_adapter(source_id, context)
+    adapter = resolve_adapter(source_id, context)
     try:
         result = services.verify_source(source_id, adapter)
     except AdapterError as exc:

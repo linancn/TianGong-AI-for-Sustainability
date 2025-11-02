@@ -58,7 +58,11 @@ Before executing automated tasks, verify the deployment environment meets these 
    ```bash
    uv run tiangong-research sources list
    uv run tiangong-research sources verify <source_id>
+   uv run tiangong-research sources audit [--json] [--show-blocked] [--no-fail-on-error]
    ```
+   - `--json` emits the aggregated report as JSON (useful for CI pipelines).
+   - `--show-blocked` includes sources marked as `blocked` in the registry so operators can review their reasons.
+   - `--no-fail-on-error` keeps the CLI exit code at zero even when failures occur (handy for exploratory audits).
 
 3. **Check Optional Features**: Detect installed optional dependencies:
    ```bash
