@@ -328,6 +328,13 @@ fi
 "${UV_SYNC_CMD[@]}"
 print_success "Project dependencies installed"
 
+if [ "${#UV_OPTIONAL_GROUPS_SELECTED[@]}" -gt 0 ]; then
+    mkdir -p .tiangong
+    GROUP_FILE=".tiangong/uv-groups.selected"
+    printf "%s\n" "${UV_OPTIONAL_GROUPS_SELECTED[@]}" | sort -u > "$GROUP_FILE"
+    print_success "Optional uv groups recorded in $GROUP_FILE (reapply with 'uv sync --group <name>')."
+fi
+
 # Verification
 print_header "Step 5: Verification"
 
@@ -389,10 +396,10 @@ else
 fi
 
 if group_selected "3rd"; then
-    if uv run grid-intensity --help &> /dev/null; then
-        print_success "grid-intensity (via uv run): available"
+    if uv run --group 3rd uk-grid-intensity --help &> /dev/null; then
+        print_success "uk-grid-intensity CLI (via uv run): available"
     else
-        print_error "grid-intensity not accessible via uv run. Re-run 'uv sync --group 3rd' or check installation."
+        print_error "uk-grid-intensity not accessible via uv run. Re-run 'uv sync --group 3rd' or check installation."
     fi
 fi
 

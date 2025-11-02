@@ -35,7 +35,7 @@ bash install_ubuntu.sh
 - 按需安装的可选工具：
   - AntV 图表流程所需的 Node.js 22+（脚本会检测已有版本并给出安装/升级建议）
   - PDF/DOCX 导出所需的 Pandoc 3+ 与 LaTeX
-  - 碳强度查询所需的 `grid-intensity` CLI
+- 碳强度查询所需的 `uk-grid-intensity` CLI
 
 安装结束后会给出总结，告诉您哪些组件已就绪、哪些仍需处理。
 
@@ -56,7 +56,7 @@ uv run tiangong-research research workflow simple --topic "生命周期评估"
 
 - 图表：`node --version`，以及 `npx -y @antv/mcp-server-chart --transport streamable --version`
 - PDF 导出：`pandoc --version`，`pdflatex --version`
-- 碳强度：`uv run grid-intensity --help`
+- 碳强度：`uv run --group 3rd uk-grid-intensity --help`
 
 如缺少任何命令，可携带对应 `--with-*` 选项重新运行安装脚本，或参考脚本输出的指引手动安装。
 
@@ -68,7 +68,8 @@ uv run tiangong-research research workflow simple --topic "生命周期评估"
 2. （推荐）使用 Python 3.12 创建虚拟环境。
 3. 在项目根目录执行：
    ```bash
-   uv sync
+   uv sync              # 核心依赖
+   uv sync --group 3rd  # 可选的碳强度 CLI
    ```
 4. 使用 `uv run tiangong-research ...` 运行 CLI。
 
@@ -80,7 +81,7 @@ macOS 与 Ubuntu 的详细排障说明见 `SETUP_GUIDE_CN.md`（中文）与 `SE
 - `uv run tiangong-research sources verify <id>` — 检查特定数据源的连通性与配置。
 - `uv run tiangong-research research find-code "<主题>" --limit 5 --json` — 搜索可持续性相关的开源代码仓库。
 - `uv run tiangong-research research map-sdg <文件>` — 调用 OSDG API 将文本映射到 SDG 目标（需配置可用的 OSDG 端点或令牌）。
-- `uv run tiangong-research research get-carbon-intensity <地区>` — 通过 `uv sync --group 3rd` 安装的 `grid-intensity` CLI 获取碳强度指标。
+- `uv run --group 3rd tiangong-research research get-carbon-intensity <地区>` — 在安装 `3rd` 依赖组后获取碳强度指标（如需自定义 CLI，可设置 `GRID_INTENSITY_CLI`）。
 - `uv run tiangong-research research visuals verify` — 检查 AntV MCP 图表服务器是否可连通。
 
 ## 获取更多帮助

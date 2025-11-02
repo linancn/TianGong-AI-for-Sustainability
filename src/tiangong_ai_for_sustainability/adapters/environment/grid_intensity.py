@@ -10,6 +10,7 @@ enabled.
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 from dataclasses import dataclass, field
@@ -28,8 +29,25 @@ class GridIntensityCLIAdapter(DataSourceAdapter):
     executable: str = "grid-intensity"
     logger: LoggerAdapter = field(init=False, repr=False)
 
+    CLI_ENV_VAR = "GRID_INTENSITY_CLI"
+    CLI_FALLBACKS = ("grid-intensity", "uk-grid-intensity")
+
     def __post_init__(self) -> None:
         self.logger = get_logger(self.__class__.__name__)
+        override = os.environ.get(self.CLI_ENV_VAR)
+        if override:
+            self.executable = override
+            self.logger.debug("Using grid-intensity CLI override from environment", extra={"executable": self.executable})
+            return
+
+        if shutil.which(self.executable) is not None:
+            return
+
+        for candidate in self.CLI_FALLBACKS:
+            if shutil.which(candidate) is not None:
+                self.logger.debug("Detected alternative grid-intensity CLI executable", extra={"executable": candidate})
+                self.executable = candidate
+                break
 
     def verify(self) -> VerificationResult:
         """Check whether the CLI is available on ``PATH``."""
@@ -39,9 +57,10 @@ class GridIntensityCLIAdapter(DataSourceAdapter):
             return VerificationResult(
                 success=False,
                 message=(
-                    "grid-intensity CLI is not installed or not discoverable on PATH. "
-                    "Install it from https://github.com/thegreenwebfoundation/grid-intensity-CLI "
-                    "or via pip install grid-intensity-cli."
+                    "grid-intensity CLI is not installed or discoverable on PATH. "
+                    "Install the official grid-intensity CLI, or run 'uv sync --group 3rd' to use the "
+                    "'uk-grid-intensity' fallback, then set GRID_INTENSITY_CLI or ensure the executable "
+                    "is available on PATH."
                 ),
             )
 
@@ -86,7 +105,10 @@ class GridIntensityCLIAdapter(DataSourceAdapter):
 
         if shutil.which(self.executable) is None:
             self.logger.error("grid-intensity CLI required but not installed", extra={"location": location, "provider": provider})
-            raise AdapterError("grid-intensity CLI is required but not installed. " "Install it via 'pip install grid-intensity-cli' or follow the upstream documentation.")
+            raise AdapterError(
+                "grid-intensity CLI is required but not installed. Install the upstream CLI or run "
+                "'uv sync --group 3rd' (uk-grid-intensity) and set GRID_INTENSITY_CLI to the executable path."
+            )
 
         command = [self.executable, "--provider", provider, "--location", location, "--json"]
         if extra_args:

@@ -35,7 +35,7 @@ During the interactive run you can accept the defaults or opt into extras (chart
 - Optional tooling when requested:
   - Node.js 22+ for AntV chart workflows (the script now verifies existing installations and offers to install or upgrade)
   - Pandoc 3+ and LaTeX for PDF/DOCX export
-  - `grid-intensity` CLI for carbon metrics
+- `uk-grid-intensity` CLI for carbon metrics
 
 At the end you will see a summary of what succeeded and anything that still needs attention.
 
@@ -56,7 +56,7 @@ Need charts? Start the AntV MCP chart server first, then rerun the workflow with
 
 - Charts: `node --version` and `npx -y @antv/mcp-server-chart --transport streamable --version`
 - PDF export: `pandoc --version` and `pdflatex --version`
-- Carbon metrics: `uv run grid-intensity --help`
+- Carbon metrics: `uv run --group 3rd uk-grid-intensity --help`
 
 If any command is missing, rerun the installer with the matching `--with-*` flag or follow the guidance printed by the script.
 
@@ -68,7 +68,8 @@ If you prefer to configure everything yourself:
 2. (Recommended) Create a virtual environment with Python 3.12.
 3. From the project root, install dependencies:
    ```bash
-   uv sync
+   uv sync              # core dependencies
+   uv sync --group 3rd  # optional carbon-metrics CLI
    ```
 4. Run the CLI with `uv run tiangong-research …`.
 
@@ -80,7 +81,7 @@ Detailed troubleshooting for macOS and Ubuntu is documented in `SETUP_GUIDE.md` 
 - `uv run tiangong-research sources verify <id>` — confirm connectivity/config for a specific source.
 - `uv run tiangong-research research find-code "<topic>" --limit 5 --json` — discover sustainability repositories.
 - `uv run tiangong-research research map-sdg <file>` — map a document to SDG goals (requires OSDG access).
-- `uv run tiangong-research research get-carbon-intensity <location>` — fetch grid-intensity metrics (install via `uv sync --group 3rd`).
+- `uv run --group 3rd tiangong-research research get-carbon-intensity <location>` — fetch grid-intensity metrics (set `GRID_INTENSITY_CLI` if you use a custom executable).
 - `uv run tiangong-research research visuals verify` — confirm the AntV MCP chart server is reachable.
 
 ## Need Help?
