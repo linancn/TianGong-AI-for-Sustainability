@@ -675,6 +675,6 @@ npm install -g @antv/mcp-server-chart
 
 如需了解更多高级主题，请参阅：
 
-- `specs/architecture.md` — 技术架构
+- `AGENTS_CN.md`（架构蓝图章节）— 技术架构
 - `AGENTS.md` — AI 自动化手册
 - `tasks/blueprint.yaml` — 开发任务图

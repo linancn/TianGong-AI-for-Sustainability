@@ -422,7 +422,7 @@ echo ""
 echo "4. For more details, read:"
 printf "   %bREADME.md%b - User guide\n" "$BLUE" "$NC"
 printf "   %bSETUP_GUIDE.md%b - Detailed installation guide\n" "$BLUE" "$NC"
-printf "   %bspecs/architecture.md%b - Technical architecture\n" "$BLUE" "$NC"
+printf "   %bAGENTS.md%b - Architecture Blueprint\n" "$BLUE" "$NC"
 echo ""
 
 if [ "$INSTALL_MODE" = "interactive" ]; then

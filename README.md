@@ -76,7 +76,7 @@ Everyone else can simply rely on the platform installers—`install_macos.sh`, `
 
 ## More References
 
-- Architecture overview — `specs/architecture.md`
+- Architecture overview — `AGENTS.md` (Architecture Blueprint)
 - Automation agent handbook — `AGENTS.md`
 - Prompt templates — `specs/prompts/`
 

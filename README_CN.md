@@ -76,7 +76,7 @@ uv run tiangong-research research workflow simple --topic "生命周期评估"
 
 ## 其他资源
 
-- 技术架构总览 — `specs/architecture.md`
+- 技术架构总览 — `AGENTS_CN.md`（架构蓝图）
 - 自动化代理手册 — `AGENTS_CN.md`
 - 提示模板 — `specs/prompts/`
 

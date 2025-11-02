@@ -675,6 +675,6 @@ After successful setup:
 
 For advanced topics, see:
 
-- `specs/architecture.md` — Technical architecture
+- `AGENTS.md` (Architecture Blueprint) — Technical architecture
 - `AGENTS.md` — AI automation playbook
 - `tasks/blueprint.yaml` — Development task graph

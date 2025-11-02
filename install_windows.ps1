@@ -609,7 +609,7 @@ Write-Host ""
 Write-Host "4. For more details, read:" -ForegroundColor Cyan
 Write-Host "   README.md - User guide" -ForegroundColor Blue
 Write-Host "   SETUP_GUIDE.md - Detailed installation guide" -ForegroundColor Blue
-Write-Host "   specs/architecture.md - Technical architecture" -ForegroundColor Blue
+Write-Host "   AGENTS.md - Architecture Blueprint" -ForegroundColor Blue
 Write-Host ""
 
 if ($INSTALL_MODE -eq "interactive") {
