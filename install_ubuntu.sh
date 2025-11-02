@@ -138,23 +138,50 @@ else
 fi
 
 # Optional: Node.js 22+ (for charts)
-if [ "$INSTALL_MODE" != "minimal" ]; then
-    if [ "$INSTALL_MODE" = "interactive" ]; then
-        if ask_yes_no "Install Node.js 22+ for AntV chart visualization?"; then
+NODE_VERSION=""
+NODE_MAJOR=0
+if command -v node &> /dev/null; then
+    NODE_VERSION=$(node --version)
+    NODE_MAJOR=$(echo "$NODE_VERSION" | sed 's/^v//' | cut -d. -f1)
+fi
+
+print_header "Step 3a: Node.js for Chart Workflows"
+if [ "$NODE_MAJOR" -ge 22 ]; then
+    print_success "Node.js already installed: $NODE_VERSION"
+else
+    if [ -n "$NODE_VERSION" ]; then
+        print_warning "Detected Node.js $NODE_VERSION (<22). Chart workflows require Node.js 22+."
+    else
+        print_warning "Node.js not found. Chart workflows require Node.js 22+."
+    fi
+
+    if [ "$INSTALL_MODE" = "full" ] && [ "$INSTALL_CHARTS" != true ]; then
+        INSTALL_CHARTS=true
+    fi
+
+    if [ "$INSTALL_MODE" = "interactive" ] && [ "$INSTALL_CHARTS" != true ]; then
+        if ask_yes_no "Install or upgrade Node.js to version 22+ now?"; then
             INSTALL_CHARTS=true
+        else
+            print_warning "Skipping Node.js installation. AntV chart features will remain disabled until Node.js 22+ is available."
         fi
     fi
 fi
 
 if [ "$INSTALL_CHARTS" = true ]; then
-    print_header "Step 3a: Installing Node.js 22+"
-    if ! command -v node &> /dev/null || [[ $(node --version | grep -oE '[0-9]+' | head -1) -lt 22 ]]; then
+    if [ "$NODE_MAJOR" -ge 22 ]; then
+        print_success "Node.js already meets the requirement. No installation needed."
+    else
         print_warning "Installing Node.js 22 from NodeSource repository..."
         curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
         sudo apt install -y nodejs
-        print_success "Node.js installed: $(node --version)"
-    else
-        print_success "Node.js already installed: $(node --version)"
+        NODE_VERSION=$(node --version)
+        NODE_MAJOR=$(echo "$NODE_VERSION" | sed 's/^v//' | cut -d. -f1)
+        if [ "$NODE_MAJOR" -ge 22 ]; then
+            print_success "Node.js installed: $NODE_VERSION"
+        else
+            print_error "Node.js installation did not reach version 22+. Please review the NodeSource output."
+        fi
     fi
 fi
 
@@ -271,12 +298,16 @@ else
 fi
 
 # Check optional components
-if [ "$INSTALL_CHARTS" = true ]; then
-    if node --version &> /dev/null; then
-        print_success "Node.js: $(node --version)"
+if command -v node &> /dev/null; then
+    NODE_VERSION=$(node --version)
+    NODE_MAJOR=$(echo "$NODE_VERSION" | sed 's/^v//' | cut -d. -f1)
+    if [ "$NODE_MAJOR" -ge 22 ]; then
+        print_success "Node.js: $NODE_VERSION"
     else
-        print_error "Node.js not found"
+        print_warning "Node.js: $NODE_VERSION (upgrade to >=22 for chart workflows)"
     fi
+else
+    print_warning "Node.js: not found (chart workflows disabled)"
 fi
 
 if [ "$INSTALL_PDF" = true ]; then
