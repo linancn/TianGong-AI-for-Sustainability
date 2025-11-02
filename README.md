@@ -21,6 +21,10 @@ The repository delivers a spec-driven command line interface that investigates s
   - [Pandoc](https://pandoc.org/) 3.0+
   - A LaTeX engine such as TeX Live when PDF output is desired
 
+**For detailed platform-specific setup instructions, see:**
+- **[SETUP_GUIDE.md](./SETUP_GUIDE.md)** — macOS and Ubuntu complete installation guides
+- **[SETUP_GUIDE_CN.md](./SETUP_GUIDE_CN.md)** — 中文版本（macOS 和 Ubuntu 完整安装指南）
+
 ### Installation
 
 ```bash

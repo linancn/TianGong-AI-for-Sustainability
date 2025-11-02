@@ -15,6 +15,7 @@
 | 架构规范 | `specs/architecture.md` | 本体、数据源优先级、CLI 路线图、执行策略。 |
 | 任务图 | `tasks/blueprint.yaml` | 关键功能之间的依赖关系。 |
 | 人类手册 | `README.md` | 面向终端用户的使用说明，需保持行为一致。 |
+| 系统配置指南 | `SETUP_GUIDE.md` / `SETUP_GUIDE_CN.md` | 平台特定安装说明（macOS/Ubuntu）、前置条件、故障排除。 |
 | 可视化服务 | `https://github.com/antvis/mcp-server-chart` | AntV MCP 图表服务器的使用说明与配置。 |
 | 提示模板 | `specs/prompts/` | 可复用的研究提示模板（需维护中英双语版本）。 |
 | 工作流脚本 | `tiangong_ai_for_sustainability/workflows/` | 自动化多源研究的 Python 工作流（如 `run_simple_workflow`）。 |

@@ -21,6 +21,10 @@
   - [Pandoc](https://pandoc.org/) 3.0+
   - 若需生成 PDF，还需安装 TeX Live 等 LaTeX 引擎
 
+**详细的平台特定配置说明请参阅：**
+- **[SETUP_GUIDE_CN.md](./SETUP_GUIDE_CN.md)** — macOS 和 Ubuntu 完整安装指南
+- **[SETUP_GUIDE.md](./SETUP_GUIDE.md)** — English version (macOS and Ubuntu complete installation guides)
+
 ### 安装
 
 ```bash

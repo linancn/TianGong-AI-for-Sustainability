@@ -15,6 +15,7 @@ AI operators must follow this document when working on the TianGong AI for Susta
 | Architecture Spec | `specs/architecture.md` | Ontology, data-source priorities, CLI roadmap, execution strategy. |
 | Task Graph | `tasks/blueprint.yaml` | Dependency ordering for major features. |
 | Human Handbook | `README.md` | Public-facing usage instructions; mirror but do not override. |
+| System Setup Guide | `SETUP_GUIDE.md` / `SETUP_GUIDE_CN.md` | Platform-specific installation (macOS/Ubuntu), prerequisites, troubleshooting. |
 | Visualization Server | `https://github.com/antvis/mcp-server-chart` | Reference for the AntV MCP chart server integration. |
 | Prompt Templates | `specs/prompts/` | Reusable research prompts (maintain English/Chinese pairs). |
 | Workflow scripts | `tiangong_ai_for_sustainability/workflows/` | Python workflows (e.g., `run_simple_workflow`) that automate multi-source studies. |
