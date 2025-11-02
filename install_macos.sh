@@ -48,6 +48,7 @@ INSTALL_MODE="interactive"
 INSTALL_PDF=false
 INSTALL_CHARTS=false
 INSTALL_CARBON=false
+PDF_INSTALL_PERFORMED=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -167,42 +168,90 @@ if [ "$INSTALL_CHARTS" = true ]; then
 fi
 
 # Optional: Pandoc & LaTeX (for PDF/DOCX)
-if [ "$INSTALL_MODE" != "minimal" ]; then
-    if [ "$INSTALL_MODE" = "interactive" ]; then
-        if ask_yes_no "Install Pandoc + LaTeX for PDF/DOCX report export?"; then
-            INSTALL_PDF=true
+if [ "$INSTALL_MODE" != "minimal" ] || [ "$INSTALL_PDF" = true ]; then
+    PANDOC_PRESENT=false
+    PANDOC_OK=false
+    PANDOC_VERSION_STR=""
+    PANDOC_VERSION_NUM=""
+    if command -v pandoc &> /dev/null; then
+        PANDOC_PRESENT=true
+        PANDOC_VERSION_STR=$(pandoc --version | head -1)
+        PANDOC_VERSION_NUM=$(echo "$PANDOC_VERSION_STR" | grep -Eo '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -1)
+        PANDOC_MAJOR=$(echo "$PANDOC_VERSION_NUM" | cut -d. -f1)
+        if [ "${PANDOC_MAJOR:-0}" -ge 3 ]; then
+            PANDOC_OK=true
         fi
     fi
-fi
 
-if [ "$INSTALL_PDF" = true ]; then
-    print_header "Step 3b: Installing Pandoc & LaTeX"
-    
-    # Pandoc
-    if ! command -v pandoc &> /dev/null; then
-        print_warning "Pandoc not found. Installing..."
-        brew install pandoc
-        print_success "Pandoc installed"
-    else
-        print_success "Pandoc already installed: $(pandoc --version | head -1)"
+    PDFLATEX_PRESENT=false
+    PDFLATEX_VERSION_STR=""
+    if command -v pdflatex &> /dev/null; then
+        PDFLATEX_PRESENT=true
+        PDFLATEX_VERSION_STR=$(pdflatex --version 2>&1 | head -1)
     fi
-    
-    # LaTeX
-    if ! command -v pdflatex &> /dev/null; then
-        print_warning "LaTeX not found. Installing BasicTeX (lightweight)..."
-        echo ""
-        echo "⚠  Note: Installation may take a few minutes..."
-        echo ""
-        brew install basictex
-        
-        # Add to PATH
-        export PATH="/Library/TeX/texbin:$PATH"
-        echo 'export PATH="/Library/TeX/texbin:$PATH"' >> ~/.zshrc
-        
-        print_success "BasicTeX installed"
-        print_warning "Please run: source ~/.zshrc"
+
+    PDF_READY=false
+    if [ "$PANDOC_OK" = true ] && [ "$PDFLATEX_PRESENT" = true ]; then
+        PDF_READY=true
+    fi
+
+    print_header "Step 3b: Pandoc & LaTeX"
+
+    if [ "$PANDOC_PRESENT" = true ]; then
+        if [ "$PANDOC_OK" = true ]; then
+            print_success "Pandoc already installed: $PANDOC_VERSION_STR"
+        else
+            print_warning "Pandoc detected but version < 3.0: $PANDOC_VERSION_STR"
+        fi
     else
-        print_success "LaTeX already installed: $(pdflatex --version 2>&1 | head -1)"
+        print_warning "Pandoc not found."
+    fi
+
+    if [ "$PDFLATEX_PRESENT" = true ]; then
+        print_success "LaTeX already installed: $PDFLATEX_VERSION_STR"
+    else
+        print_warning "LaTeX not found."
+    fi
+
+    if [ "$PDF_READY" = true ] && [ "$INSTALL_PDF" != true ]; then
+        print_success "PDF/DOCX export requirements already satisfied."
+    else
+        if [ "$INSTALL_MODE" = "interactive" ] && [ "$INSTALL_PDF" != true ]; then
+            if ask_yes_no "Install Pandoc + LaTeX for PDF/DOCX report export?"; then
+                INSTALL_PDF=true
+            else
+                print_warning "Skipping Pandoc/LaTeX installation. PDF export will remain disabled."
+            fi
+        fi
+    fi
+
+    if [ "$INSTALL_PDF" = true ]; then
+        PDF_INSTALL_PERFORMED=true
+
+        if [ "$PANDOC_OK" != true ]; then
+            print_warning "Installing or upgrading Pandoc..."
+            brew install pandoc
+            PANDOC_PRESENT=true
+            PANDOC_VERSION_STR=$(pandoc --version | head -1)
+            PANDOC_OK=true
+            print_success "Pandoc ready: $PANDOC_VERSION_STR"
+        fi
+
+        if [ "$PDFLATEX_PRESENT" != true ]; then
+            print_warning "Installing BasicTeX (lightweight LaTeX)..."
+            echo ""
+            echo "⚠  Note: Installation may take a few minutes..."
+            echo ""
+            brew install basictex
+            export PATH="/Library/TeX/texbin:$PATH"
+            if ! grep -q '/Library/TeX/texbin' ~/.zshrc 2>/dev/null; then
+                echo 'export PATH="/Library/TeX/texbin:$PATH"' >> ~/.zshrc
+            fi
+            print_success "BasicTeX installed"
+            print_warning "Run 'source ~/.zshrc' or restart your terminal to refresh PATH."
+            PDFLATEX_PRESENT=true
+            PDFLATEX_VERSION_STR=$(pdflatex --version 2>&1 | head -1)
+        fi
     fi
 fi
 
@@ -281,17 +330,23 @@ else
     print_warning "Node.js: not found (chart workflows disabled)"
 fi
 
-if [ "$INSTALL_PDF" = true ]; then
-    if pandoc --version &> /dev/null; then
-        print_success "Pandoc: $(pandoc --version | head -1)"
+if pandoc --version &> /dev/null; then
+    print_success "Pandoc: $(pandoc --version | head -1)"
+else
+    if [ "$PDF_INSTALL_PERFORMED" = true ]; then
+        print_error "Pandoc not found (installation may have failed)"
     else
-        print_error "Pandoc not found"
+        print_warning "Pandoc: not found (PDF/DOCX export disabled)"
     fi
-    
-    if pdflatex --version &> /dev/null; then
-        print_success "LaTeX: installed"
-    else
+fi
+
+if pdflatex --version &> /dev/null; then
+    print_success "LaTeX: $(pdflatex --version 2>&1 | head -1)"
+else
+    if [ "$PDF_INSTALL_PERFORMED" = true ]; then
         print_warning "LaTeX not in PATH. Run: source ~/.zshrc"
+    else
+        print_warning "LaTeX: not found (PDF/DOCX export disabled)"
     fi
 fi
 
