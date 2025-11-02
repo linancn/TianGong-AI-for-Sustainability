@@ -12,12 +12,14 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 from logging import LoggerAdapter
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Mapping, Optional, Sequence
 
 from ..adapters import AdapterError, ChartMCPAdapter, DataSourceAdapter, VerificationResult
 from ..adapters.api import GitHubTopicsClient, OpenAlexClient, OSDGClient, SemanticScholarClient, UNSDGClient
 from ..adapters.environment import GridIntensityCLIAdapter
 from ..core import DataSourceDescriptor, DataSourceRegistry, DataSourceStatus, ExecutionContext, get_logger
+from ..core.mcp import MCPServerConfig, load_mcp_server_configs
+from ..core.mcp_client import MCPToolClient
 
 
 @dataclass(slots=True)
@@ -33,6 +35,8 @@ class ResearchServices:
     _github_topics_client: Optional[GitHubTopicsClient] = field(default=None, init=False, repr=False)
     _osdg_client: Optional[OSDGClient] = field(default=None, init=False, repr=False)
     _sdg_goal_cache: Optional[Dict[str, Dict[str, Any]]] = field(default=None, init=False, repr=False)
+    _mcp_configs: Optional[Dict[str, MCPServerConfig]] = field(default=None, init=False, repr=False)
+    _mcp_client: Optional[MCPToolClient] = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
         if hasattr(self.context, "get_logger"):
@@ -210,3 +214,44 @@ class ResearchServices:
         adapter = ChartMCPAdapter(endpoint=endpoint)
         self.logger.info("Verifying AntV MCP chart endpoint", extra={"endpoint": endpoint})
         return adapter.verify()
+
+    # -- Remote MCP helpers -----------------------------------------------------
+
+    def mcp_server_configs(self) -> Dict[str, MCPServerConfig]:
+        if self._mcp_configs is None:
+            self._mcp_configs = load_mcp_server_configs(self.context.secrets)
+        return self._mcp_configs
+
+    def mcp_tool_client(self) -> MCPToolClient:
+        if self._mcp_client is None:
+            configs = self.mcp_server_configs()
+            if not configs:
+                raise AdapterError("No MCP servers are configured in the current secrets bundle.")
+            self._mcp_client = MCPToolClient(configs)
+        return self._mcp_client
+
+    def list_mcp_tools(self, source_id: str) -> Sequence[Dict[str, Any]]:
+        config = self._resolve_mcp_config(source_id)
+        client = self.mcp_tool_client()
+        tools = client.list_tools(config.service_name)
+        return [{"name": getattr(tool, "name", None), "description": getattr(tool, "description", None)} for tool in tools]
+
+    def invoke_mcp_tool(
+        self,
+        source_id: str,
+        tool_name: str,
+        arguments: Mapping[str, Any] | None = None,
+    ) -> tuple[Any, Optional[list[dict[str, Any]]]]:
+        config = self._resolve_mcp_config(source_id)
+        if config.requires_api_key and not config.api_key:
+            raise AdapterError(f"MCP server '{source_id}' requires an API key. " "Add credentials to .secrets or configure the referenced environment variable.")
+        client = self.mcp_tool_client()
+        return client.invoke_tool(config.service_name, tool_name, arguments or {})
+
+    def _resolve_mcp_config(self, source_id: str) -> MCPServerConfig:
+        self._require_source_enabled(source_id)
+        configs = self.mcp_server_configs()
+        config = configs.get(source_id)
+        if not config:
+            raise AdapterError(f"MCP server '{source_id}' is not configured.")
+        return config

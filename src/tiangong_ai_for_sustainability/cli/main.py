@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional
 
 import typer
 
-from ..adapters import AdapterError, ChartMCPAdapter, DataSourceAdapter
+from ..adapters import AdapterError, ChartMCPAdapter, DataSourceAdapter, RemoteMCPAdapter
 from ..adapters.api import (
     GitHubTopicsAdapter,
     GitHubTopicsClient,
@@ -27,6 +27,7 @@ from ..adapters.api import (
 )
 from ..adapters.environment import GridIntensityCLIAdapter
 from ..core import DataSourceDescriptor, DataSourceRegistry, DataSourceStatus, ExecutionContext, ExecutionOptions, RegistryLoadError
+from ..core.mcp import load_mcp_server_configs
 from ..services import ResearchServices
 from ..workflows import run_deep_lca_report, run_lca_citation_workflow, run_simple_workflow
 
@@ -235,6 +236,11 @@ def _resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[Data
     for adapter in adapters:
         if source_id == adapter.source_id:
             return adapter
+
+    mcp_configs = load_mcp_server_configs(context.secrets)
+    config = mcp_configs.get(source_id)
+    if config:
+        return RemoteMCPAdapter(config=config)
     return None
 
 
