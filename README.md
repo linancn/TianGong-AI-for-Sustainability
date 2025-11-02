@@ -10,7 +10,31 @@ The repository delivers a spec-driven command line interface that investigates s
 - Providing Typer-based commands to list/verify sources, search sustainability codebases, map documents to SDG goals, and query carbon intensity.
 - Exposing adapters and services that separate deterministic API access from LLM-assisted reasoning so automation agents can orchestrate reliable research workflows.
 
+## 🚀 Quick Navigation
+
+| Want to... | Read... |
+|-----------|---------|
+| **Get started immediately** | [QUICKSTART.md](./QUICKSTART.md) — 5 min setup |
+| **Understand the project** | [README.md](./README.md) — This page |
+| **Detailed installation** | [SETUP_GUIDE.md](./SETUP_GUIDE.md) — Platform-specific guide |
+| **Technical architecture** | [specs/architecture.md](./specs/architecture.md) — For developers |
+| **中文用户请看** | [QUICKSTART_CN.md](./QUICKSTART_CN.md) — 快速入门 |
+
 ## Getting Started
+
+### ⚡ Quick Start (One-Click Setup)
+
+**For macOS:**
+```bash
+bash install_macos.sh
+```
+
+**For Ubuntu/Debian:**
+```bash
+bash install_ubuntu.sh
+```
+
+These scripts will guide you through interactive setup with options for optional components.
 
 ### Prerequisites
 
@@ -25,7 +49,9 @@ The repository delivers a spec-driven command line interface that investigates s
 - **[SETUP_GUIDE.md](./SETUP_GUIDE.md)** — macOS and Ubuntu complete installation guides
 - **[SETUP_GUIDE_CN.md](./SETUP_GUIDE_CN.md)** — 中文版本（macOS 和 Ubuntu 完整安装指南）
 
-### Installation
+### Manual Installation
+
+If you prefer manual setup, run:
 
 ```bash
 uv sync

@@ -10,7 +10,31 @@
 - 提供基于 Typer 的命令，支持列出/验证数据源、搜索可持续性代码库、将文本映射到联合国可持续发展目标（SDG）、查询碳强度。
 - 暴露适配器与服务层，将确定性的数据访问与 LLM 辅助的综合分析解耦，便于自动化代理稳定地编排研究流程。
 
+## 🚀 快速导航
+
+| 想要... | 请阅读... |
+|--------|---------|
+| **立即开始** | [QUICKSTART_CN.md](./QUICKSTART_CN.md) — 5 分钟快速配置 |
+| **了解项目** | [README_CN.md](./README_CN.md) — 本页面 |
+| **详细安装步骤** | [SETUP_GUIDE_CN.md](./SETUP_GUIDE_CN.md) — 平台特定指南 |
+| **技术架构说明** | [specs/architecture_CN.md](./specs/architecture_CN.md) — 给开发者 |
+| **English users** | [QUICKSTART.md](./QUICKSTART.md) — Quick start |
+
 ## 开始使用
+
+### ⚡ 快速开始（一键配置）
+
+**macOS 用户：**
+```bash
+bash install_macos.sh
+```
+
+**Ubuntu/Debian 用户：**
+```bash
+bash install_ubuntu.sh
+```
+
+这两个脚本会引导您进行交互式配置，并可选择安装额外组件。
 
 ### 前置条件
 
@@ -25,7 +49,9 @@
 - **[SETUP_GUIDE_CN.md](./SETUP_GUIDE_CN.md)** — macOS 和 Ubuntu 完整安装指南
 - **[SETUP_GUIDE.md](./SETUP_GUIDE.md)** — English version (macOS and Ubuntu complete installation guides)
 
-### 安装
+### 手动安装
+
+如果您更喜欢手动配置，请运行：
 
 ```bash
 uv sync

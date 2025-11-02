@@ -30,6 +30,74 @@ Always consult these sources before planning or executing changes.
 4. **Bilingual Docs** — whenever `README*.md`, `AGENTS*.md`, or `specs/architecture*.md` are modified, update both English and Chinese versions in the same change set.
 5. **Tooling Dependencies** — chart-related tasks require Node.js and the AntV MCP chart server. Check for `node`/`npx` availability and surface installation guidance if missing.
 
+## Environment & System Requirements
+
+Before executing automated tasks, verify the deployment environment meets these criteria:
+
+### Core Requirements (Mandatory)
+- **Python 3.12+** — Verify with `python3 --version` (required for all operations)
+- **uv package manager** — Verify with `uv --version` (required for dependency management)
+- **Git** — Verify with `git --version` (required for repository operations)
+
+### Runtime Dependencies (By Feature)
+| Feature | Dependency | Check Command | Impact |
+|---------|-----------|---|---------|
+| Chart visualization | Node.js 22+ | `node --version` | Required for AntV MCP chart server |
+| PDF/DOCX export | Pandoc 3.0+ | `pandoc --version` | Required for report format conversion |
+| PDF generation | LaTeX (TeX Live) | `pdflatex --version` | Required when PDF output is desired |
+| Carbon metrics | `grid-intensity` CLI | `grid-intensity --help` | Required for carbon intensity queries |
+
+### Environment Setup for Agents
+
+1. **Activate Project Environment**: Always run commands via `uv run` to ensure managed environment:
+   ```bash
+   uv run <command>
+   ```
+
+2. **Verify Data Sources**: Before executing workflows, check data source availability:
+   ```bash
+   uv run tiangong-research sources list
+   uv run tiangong-research sources verify <source_id>
+   ```
+
+3. **Check Optional Features**: Detect installed optional dependencies:
+   ```bash
+   # Charts support
+   npx -y @antv/mcp-server-chart --transport streamable --version
+
+   # PDF support
+   pandoc --version && pdflatex --version
+
+   # Carbon metrics
+   grid-intensity --help
+   ```
+
+4. **Configuration Files**: Respect these configuration sources (in order of precedence):
+   - Environment variables (e.g., `TIANGONG_CHART_MCP_ENDPOINT`, API keys)
+   - `.secrets/secrets.toml` — secrets bundle (API keys, auth tokens)
+   - `.env` — local environment overrides
+   - `config.py` — default application settings
+
+5. **Automated Setup**: Use provided installation scripts for consistent environment provisioning:
+   - **macOS**: `bash install_macos.sh --full` (installs all optional components)
+   - **Ubuntu**: `bash install_ubuntu.sh --full` (installs all optional components)
+
+### Execution Context
+
+All operations must respect the `ExecutionContext` settings:
+- **enabled_sources**: Set of data sources available for use
+- **dry_run**: Planning mode (no side effects, e.g., no external API calls)
+- **background_tasks**: Support for async/deferred operations
+- **cache_dir**: Local cache for results
+
+### Graceful Degradation
+
+When optional dependencies are unavailable:
+- **Charts**: If AntV server unavailable, workflows should complete with text-only output
+- **PDF export**: If Pandoc/LaTeX missing, fall back to Markdown or JSON output
+- **Carbon metrics**: If `grid-intensity` unavailable, workflows should skip carbon calculations
+- **Rate-limited APIs**: Implement exponential backoff and checkpoint mechanisms
+
 ## Development Workflow
 
 1. Synchronise dependencies with `uv sync` when the lock file changes.

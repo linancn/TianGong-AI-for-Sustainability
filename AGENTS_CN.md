@@ -30,6 +30,74 @@
 4. **双语维护** — 对 `README*.md`、`AGENTS*.md`、`specs/architecture*.md` 的任何修改，必须同步更新英文与中文版本。
 5. **工具依赖** — 涉及图表的工作需确认 Node.js 与 AntV MCP 图表服务器已安装并可访问。
 
+## 环境与系统要求
+
+执行自动化任务前，需验证部署环境满足以下条件：
+
+### 核心要求（强制）
+- **Python 3.12+** — 用 `python3 --version` 验证（所有操作必需）
+- **uv 包管理器** — 用 `uv --version` 验证（依赖管理必需）
+- **Git** — 用 `git --version` 验证（仓库操作必需）
+
+### 运行时依赖（按功能划分）
+| 功能 | 依赖 | 检查命令 | 影响 |
+|------|------|---------|------|
+| 图表可视化 | Node.js 22+ | `node --version` | AntV MCP 图表服务器必需 |
+| PDF/DOCX 导出 | Pandoc 3.0+ | `pandoc --version` | 报告格式转换必需 |
+| PDF 生成 | LaTeX (TeX Live) | `pdflatex --version` | 需要 PDF 输出时必需 |
+| 碳排指标 | `grid-intensity` CLI | `grid-intensity --help` | 碳强度查询必需 |
+
+### AI 智能体的环境配置
+
+1. **激活项目环境**：所有命令必须通过 `uv run` 执行以确保使用受管虚拟环境：
+   ```bash
+   uv run <command>
+   ```
+
+2. **验证数据源**：工作流执行前检查数据源可用性：
+   ```bash
+   uv run tiangong-research sources list
+   uv run tiangong-research sources verify <source_id>
+   ```
+
+3. **检查可选功能**：检测已安装的可选依赖：
+   ```bash
+   # 图表支持
+   npx -y @antv/mcp-server-chart --transport streamable --version
+
+   # PDF 支持
+   pandoc --version && pdflatex --version
+
+   # 碳排指标
+   grid-intensity --help
+   ```
+
+4. **配置文件**：按优先级顺序加载配置（优先级从高到低）：
+   - 环境变量（如 `TIANGONG_CHART_MCP_ENDPOINT`、API 密钥）
+   - `.secrets/secrets.toml` — 密钥包（API 密钥、认证令牌）
+   - `.env` — 本地环境覆盖
+   - `config.py` — 默认应用设置
+
+5. **自动化配置**：使用提供的安装脚本确保环境一致性配置：
+   - **macOS**: `bash install_macos.sh --full`（安装所有可选组件）
+   - **Ubuntu**: `bash install_ubuntu.sh --full`（安装所有可选组件）
+
+### 执行上下文
+
+所有操作必须尊重 `ExecutionContext` 设置：
+- **enabled_sources**: 可用的数据源集合
+- **dry_run**: 规划模式（无副作用，如不调用外部 API）
+- **background_tasks**: 异步/延迟操作支持
+- **cache_dir**: 结果本地缓存目录
+
+### 优雅降级
+
+当可选依赖不可用时：
+- **图表**：若 AntV 服务器不可达，工作流应以纯文本输出完成
+- **PDF 导出**：若 Pandoc/LaTeX 缺失，降级为 Markdown 或 JSON 输出
+- **碳排指标**：若 `grid-intensity` 不可用，工作流应跳过碳计算
+- **速率限制**：实现指数退避和检查点机制
+
 ## 开发流程
 
 1. 当锁文件变化时执行 `uv sync`。
