@@ -117,7 +117,7 @@ When optional dependencies are unavailable:
 
 ## Verification Checklist
 
-Run the following before handing work back to a human or chaining additional agents:
+Run the following after every code change:
 
 ```bash
 uv run black .
