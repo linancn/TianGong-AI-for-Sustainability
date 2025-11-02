@@ -1,14 +1,20 @@
 # TianGong 可持续发展研究 CLI
 
+[English](https://github.com/linancn/TianGong-AI-for-Sustainability/blob/main/README.md) | 中文
+
 本 README 面向所有用户，按照脚本提示一步步完成安装即可。无需手动配置环境，也不需要了解复杂依赖。
 
 ## 推荐做法：运行安装脚本
 
-1. 打开终端，进入项目目录：
+1. 打开终端，克隆仓库：
    ```bash
-   cd /path/to/TianGong-AI-for-Sustainability
+   git clone https://github.com/linancn/TianGong-AI-for-Sustainability.git
    ```
-2. 根据操作系统执行脚本：
+2. 进入项目目录：
+   ```bash
+   cd TianGong-AI-for-Sustainability
+   ```
+3. 根据操作系统执行脚本：
 
    **macOS**
    ```bash

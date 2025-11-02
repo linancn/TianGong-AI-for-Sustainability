@@ -1,14 +1,20 @@
 # TianGong AI for Sustainability CLI
 
+English | [中文](https://github.com/linancn/TianGong-AI-for-Sustainability/blob/main/README_CN.md)
+
 This README is the quick start for everyone. Run the setup script, follow the prompts, and you will be ready to use the TianGong research CLI in a few minutes.
 
 ## Quick Install (Recommended)
 
-1. Open a terminal and switch to the project directory:
+1. Open a terminal and clone the repository:
    ```bash
-   cd /path/to/TianGong-AI-for-Sustainability
+   git clone https://github.com/linancn/TianGong-AI-for-Sustainability.git
    ```
-2. Launch the installer for your operating system:
+2. Change into the project directory:
+   ```bash
+   cd TianGong-AI-for-Sustainability
+   ```
+3. Launch the installer for your operating system:
 
    **macOS**
    ```bash
