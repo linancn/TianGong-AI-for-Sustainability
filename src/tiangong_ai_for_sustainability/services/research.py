@@ -14,8 +14,8 @@ from dataclasses import dataclass, field
 from logging import LoggerAdapter
 from typing import Any, Dict, Optional
 
-from ..adapters import AdapterError, DataSourceAdapter, VerificationResult, ChartMCPAdapter
-from ..adapters.api import GitHubTopicsClient, OSDGClient, OpenAlexClient, SemanticScholarClient, UNSDGClient
+from ..adapters import AdapterError, ChartMCPAdapter, DataSourceAdapter, VerificationResult
+from ..adapters.api import GitHubTopicsClient, OpenAlexClient, OSDGClient, SemanticScholarClient, UNSDGClient
 from ..adapters.environment import GridIntensityCLIAdapter
 from ..core import DataSourceDescriptor, DataSourceRegistry, DataSourceStatus, ExecutionContext, get_logger
 
@@ -55,8 +55,7 @@ class ResearchServices:
         descriptor = self.registry.get(source_id)
         if not descriptor:
             raise AdapterError(f"Data source '{source_id}' is not registered.")
-        if not self.context.is_enabled(source_id):
-            raise AdapterError(f"Data source '{source_id}' is disabled in the current execution context.")
+        self._require_source_enabled(source_id)
         return descriptor
 
     def verify_source(self, source_id: str, adapter: Optional[DataSourceAdapter] = None) -> VerificationResult:
@@ -90,6 +89,10 @@ class ResearchServices:
             message=f"Source '{source_id}' is registered with priority {descriptor.priority.value} (metadata only).",
             details={"status": descriptor.status.value},
         )
+
+    def _require_source_enabled(self, source_id: str) -> None:
+        if not self.context.is_enabled(source_id):
+            raise AdapterError(f"Data source '{source_id}' is disabled in the current execution context.")
 
     def get_carbon_intensity(self, location: str, provider: str = "WattTime") -> Dict[str, Any]:
         """
@@ -128,33 +131,34 @@ class ResearchServices:
         return None
 
     def un_sdg_client(self) -> UNSDGClient:
+        self._require_source_enabled("un_sdg_api")
         if self._un_sdg_client is None:
             self._un_sdg_client = UNSDGClient()
         return self._un_sdg_client
 
     def semantic_scholar_client(self) -> SemanticScholarClient:
+        self._require_source_enabled("semantic_scholar")
         if self._semantic_scholar_client is None:
             api_key = self._get_secret("semantic_scholar", "api_key")
             self._semantic_scholar_client = SemanticScholarClient(api_key=api_key)
         return self._semantic_scholar_client
 
     def openalex_client(self) -> OpenAlexClient:
+        self._require_source_enabled("openalex")
         if self._openalex_client is None:
-            mailto = (
-                self._get_secret("openalex", "mailto")
-                or os.getenv("TIANGONG_OPENALEX_MAILTO")
-                or "tiangong-cli@localhost"
-            )
+            mailto = self._get_secret("openalex", "mailto") or os.getenv("TIANGONG_OPENALEX_MAILTO") or "tiangong-cli@localhost"
             self._openalex_client = OpenAlexClient(mailto=mailto)
         return self._openalex_client
 
     def github_topics_client(self) -> GitHubTopicsClient:
+        self._require_source_enabled("github_topics")
         if self._github_topics_client is None:
             token = self._get_secret("github", "token")
             self._github_topics_client = GitHubTopicsClient(token=token)
         return self._github_topics_client
 
     def osdg_client(self) -> OSDGClient:
+        self._require_source_enabled("osdg_api")
         if self._osdg_client is None:
             api_token = self._get_secret("osdg", "api_token")
             self._osdg_client = OSDGClient(api_token=api_token)
@@ -192,6 +196,7 @@ class ResearchServices:
         return client.classify_text(text, language=language)
 
     def chart_mcp_endpoint(self) -> str:
+        self._require_source_enabled("chart_mcp_server")
         secret_endpoint = self._get_secret("chart_mcp", "endpoint")
         if secret_endpoint:
             return secret_endpoint

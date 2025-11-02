@@ -15,8 +15,8 @@ from typing import Any, Mapping, MutableMapping, Optional
 import httpx
 from tenacity import RetryError, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
-from ..base import AdapterError
 from ...core.logging import get_logger
+from ..base import AdapterError
 
 DEFAULT_TIMEOUT = 15.0
 

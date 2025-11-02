@@ -17,7 +17,7 @@ import json
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Dict, Iterable, Iterator, List, MutableMapping, Optional, Sequence
+from typing import Dict, Iterator, List, MutableMapping, Optional, Sequence
 
 import yaml
 

@@ -48,12 +48,21 @@ class SecretsBundle:
     openai: OpenAISettings
 
 
+def _discover_project_root() -> Optional[Path]:
+    current = Path(__file__).resolve()
+    for parent in current.parents:
+        if (parent / "pyproject.toml").is_file():
+            return parent
+    return None
+
+
 def _candidate_paths() -> Iterable[Path]:
     env_override = os.getenv("TIANGONG_SECRETS_PATH")
     if env_override:
         yield Path(env_override).expanduser()
 
-    package_root = Path(__file__).resolve().parents[3]
+    package_root = _discover_project_root()
+    module_root = Path(__file__).resolve().parents[1]
     cwd = Path.cwd()
 
     def secrets_paths(base: Path) -> Iterable[Path]:
@@ -63,7 +72,13 @@ def _candidate_paths() -> Iterable[Path]:
         yield secrets_dir / "secrets.example.toml"
 
     seen: set[Path] = set()
-    for base in (cwd, package_root):
+    search_roots = [cwd]
+    if package_root:
+        search_roots.append(package_root)
+    for candidate_root in (module_root, module_root.parent):
+        if candidate_root not in search_roots:
+            search_roots.append(candidate_root)
+    for base in search_roots:
         for candidate in secrets_paths(base):
             if candidate not in seen:
                 seen.add(candidate)

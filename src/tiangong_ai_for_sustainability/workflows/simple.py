@@ -9,8 +9,8 @@ from typing import Any, Dict, Iterable, List, Optional
 
 from ..adapters import AdapterError
 from ..adapters.api.base import APIError
-from ..services import ResearchServices
 from ..core.logging import get_logger
+from ..services import ResearchServices
 from .charting import ensure_chart_image
 
 
@@ -62,15 +62,56 @@ def run_simple_workflow(
         Grid intensity location identifier forwarded to the `grid-intensity` CLI.
     """
 
-    report_path.parent.mkdir(parents=True, exist_ok=True)
-    chart_path.parent.mkdir(parents=True, exist_ok=True)
+    context = getattr(services, "context", None)
+    options = getattr(context, "options", None)
+    is_dry_run = bool(getattr(options, "dry_run", False))
 
     if hasattr(services, "context") and hasattr(services.context, "get_logger"):
         workflow_logger = services.context.get_logger("workflow.simple")
     else:  # pragma: no cover - defensive when services.context missing
         workflow_logger = get_logger("workflow.simple")
 
-    workflow_logger.info("Starting simple workflow", extra={"topic": topic})
+    workflow_logger.info(
+        "Starting simple workflow",
+        extra={
+            "topic": topic,
+            "dry_run": is_dry_run,
+            "report_path": report_path.as_posix(),
+            "chart_path": chart_path.as_posix(),
+        },
+    )
+
+    if is_dry_run:
+        plan = WorkflowArtifacts(
+            report_path=report_path,
+            chart_path=None,
+            sdg_matches=[],
+            repositories=[],
+            papers=[],
+            carbon_snapshot={
+                "note": "Dry-run mode enabled; no external requests were made.",
+                "planned_location": carbon_location,
+                "planned_topic": topic,
+                "planned_steps": [
+                    "Fetch SDG catalogue via UNSDG API and score against topic keywords.",
+                    f"Search GitHub repositories tagged with '{topic}'.",
+                    f"Query Semantic Scholar for top {paper_limit} papers.",
+                    f"Invoke grid-intensity CLI for location '{carbon_location}'.",
+                    "Render repository chart via AntV MCP server and write Markdown report.",
+                ],
+            },
+        )
+        workflow_logger.info(
+            "Dry-run plan generated",
+            extra={
+                "steps": plan.carbon_snapshot.get("planned_steps"),
+                "topic": topic,
+            },
+        )
+        return plan
+
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    chart_path.parent.mkdir(parents=True, exist_ok=True)
 
     sdg_matches = _match_sdgs(services, topic, workflow_logger)
     workflow_logger.debug("Matched SDG goals", extra={"count": len(sdg_matches)})
@@ -315,6 +356,14 @@ def _render_repository_chart(
         return False
 
     endpoint = services.chart_mcp_endpoint()
+    verification = services.verify_chart_mcp()
+    if not verification.success:
+        if logger:
+            logger.warning(
+                "Chart MCP verification failed",
+                extra={"details": verification.details},
+            )
+        return False
     arguments = {
         "data": chart_data,
         "title": f"Top repositories for {topic}",

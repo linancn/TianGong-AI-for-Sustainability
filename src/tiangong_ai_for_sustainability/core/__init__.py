@@ -8,6 +8,7 @@ level services.
 """
 
 from .context import ExecutionContext, ExecutionOptions
+from .logging import bind_tags, configure_logging, get_logger
 from .registry import (
     DataSourceDescriptor,
     DataSourcePriority,
@@ -15,7 +16,6 @@ from .registry import (
     DataSourceStatus,
     RegistryLoadError,
 )
-from .logging import bind_tags, configure_logging, get_logger
 
 __all__ = [
     "ExecutionContext",

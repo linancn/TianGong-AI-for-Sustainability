@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
+from tiangong_ai_for_sustainability.adapters.base import VerificationResult
+from tiangong_ai_for_sustainability.core import ExecutionContext, ExecutionOptions
 from tiangong_ai_for_sustainability.workflows.deep_lca import run_deep_lca_report
 from tiangong_ai_for_sustainability.workflows.lca_citations import (
-    LCACitationWorkflowArtifacts,
     CitationQuestion,
+    LCACitationWorkflowArtifacts,
     PaperRecord,
     ResearchGap,
     TrendingTopic,
@@ -67,6 +68,9 @@ class DummyServices:
     def get_carbon_intensity(self, location: str):
         return {"provider": "WattTime", "location": location, "carbon_intensity": 312, "units": "gCO2e/kWh", "datetime": "2025-11-01T07:30:00Z"}
 
+    def verify_chart_mcp(self) -> VerificationResult:
+        return VerificationResult(success=True, message="ok", details={"endpoint": self.chart_mcp_endpoint()})
+
 
 @pytest.fixture()
 def dummy_services():
@@ -101,6 +105,28 @@ def test_run_simple_workflow(tmp_path, monkeypatch, dummy_services):
     assert artifacts.chart_path == chart_path
     assert chart_path.exists()
     assert chart_path.read_bytes() == b"fake-image"
+
+
+def test_run_simple_workflow_dry_run(tmp_path, dummy_services):
+    report_path = tmp_path / "report.md"
+    chart_path = tmp_path / "chart.png"
+
+    context = ExecutionContext.build_default(
+        cache_dir=tmp_path / "cache",
+        options=ExecutionOptions(dry_run=True),
+    )
+    dummy_services.context = context
+
+    artifacts = run_simple_workflow(
+        dummy_services,
+        topic="low-carbon ai",
+        report_path=report_path,
+        chart_path=chart_path,
+    )
+
+    assert not report_path.exists()
+    assert artifacts.chart_path is None
+    assert "Dry-run" in artifacts.carbon_snapshot.get("note", "")
 
 
 def test_run_lca_citation_workflow(tmp_path, monkeypatch, dummy_services):

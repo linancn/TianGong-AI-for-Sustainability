@@ -30,7 +30,8 @@ from openai.types.responses import Response, ResponseStreamEvent
 from openai.types.responses.response_create_params import ToolChoice
 from openai.types.responses.tool_param import Mcp as McpToolParam
 
-from .config import load_secrets
+from .config import SecretsBundle, load_secrets
+from .core import ExecutionContext
 
 MessageList = List[Dict[str, Any]]
 
@@ -233,14 +234,21 @@ class DeepResearchClient:
         organization: Optional[str] = None,
         config: DeepResearchConfig | None = None,
         client: Optional[OpenAI] = None,
+        context: ExecutionContext | None = None,
+        secrets: SecretsBundle | None = None,
     ) -> None:
-        secrets = load_secrets()
+        context_secrets: Optional[SecretsBundle] = None
+        if context is not None:
+            context_secrets = getattr(context, "secrets", None)
+
+        resolved_secrets = secrets or context_secrets or load_secrets()
+        self._context = context
         self.config = config or DeepResearchConfig()
 
         if not self.config.model:
-            self.config.model = secrets.openai.resolve_deep_research_model() or DEFAULT_DEEP_RESEARCH_MODEL
+            self.config.model = resolved_secrets.openai.resolve_deep_research_model() or DEFAULT_DEEP_RESEARCH_MODEL
 
-        resolved_api_key = api_key or os.getenv("OPENAI_API_KEY") or secrets.openai.api_key
+        resolved_api_key = api_key or os.getenv("OPENAI_API_KEY") or resolved_secrets.openai.api_key
 
         if client is not None:
             self._client = client
@@ -252,7 +260,7 @@ class DeepResearchClient:
                 client_kwargs["organization"] = organization
             self._client = OpenAI(**client_kwargs)
 
-        self._secrets = secrets
+        self._secrets = resolved_secrets
 
     @property
     def responses(self) -> Responses:

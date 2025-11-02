@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional
 
 import typer
 
-from ..adapters import AdapterError, DataSourceAdapter, ChartMCPAdapter
+from ..adapters import AdapterError, ChartMCPAdapter, DataSourceAdapter
 from ..adapters.api import (
     GitHubTopicsAdapter,
     GitHubTopicsClient,
@@ -509,6 +509,19 @@ def research_workflow_simple(
         carbon_location=carbon_location,
     )
 
+    if context.options.dry_run:
+        typer.echo("Dry-run: generated execution plan; no files were written.")
+        plan = artifacts.carbon_snapshot if isinstance(artifacts.carbon_snapshot, dict) else {}
+        steps = plan.get("planned_steps") if isinstance(plan, dict) else None
+        if steps:
+            typer.echo("Planned steps:")
+            for item in steps:
+                typer.echo(f"- {item}")
+        typer.echo(f"Planned report location: {report_output}")
+        if chart_output:
+            typer.echo(f"Planned chart location: {chart_output}")
+        return
+
     typer.echo(f"Report written to {artifacts.report_path}")
     if artifacts.chart_path:
         typer.echo(f"Chart saved to {artifacts.chart_path}")
@@ -560,6 +573,18 @@ def research_workflow_lca_deep_report(
         deep_research_prompt=deep_prompt,
         deep_research_instructions=deep_instructions,
     )
+
+    if context.options.dry_run:
+        typer.echo("Dry-run: generated execution plan; no artefacts were created.")
+        typer.echo(f"Planned output directory: {output_dir}")
+        typer.echo("Planned steps:")
+        for step in (
+            "Run LCA citation scan (OpenAlex).",
+            "Optionally invoke Deep Research for synthesis.",
+            "Produce Markdown report and optional exports.",
+        ):
+            typer.echo(f"- {step}")
+        return
 
     typer.echo(f"Final report written to {artifacts.final_report_path}")
     typer.echo(f"Citation scan stored at {artifacts.citation_report_path}")
@@ -615,6 +640,15 @@ def research_workflow_lca_citations(
         keyword_overrides=keyword,
         max_records=max_records,
     )
+
+    if context.options.dry_run:
+        typer.echo("Dry-run: generated execution plan; no files were written.")
+        typer.echo(f"Planned report location: {report_output}")
+        if chart_output:
+            typer.echo(f"Planned chart location: {chart_output}")
+        if raw_output:
+            typer.echo(f"Planned dataset location: {raw_output}")
+        return
 
     typer.echo(f"Report written to {artifacts.report_path}")
     if artifacts.chart_path:

@@ -12,12 +12,11 @@ import os
 import shutil
 from dataclasses import dataclass, field
 from logging import LoggerAdapter
-from typing import Optional
 
 import httpx
 
-from ..base import AdapterError, DataSourceAdapter, VerificationResult
 from ...core.logging import get_logger
+from ..base import DataSourceAdapter, VerificationResult
 
 DEFAULT_ENDPOINT = "http://127.0.0.1:1122/mcp"
 

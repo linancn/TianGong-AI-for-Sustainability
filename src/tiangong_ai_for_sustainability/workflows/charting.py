@@ -8,13 +8,14 @@ import shutil
 import subprocess
 import time
 from pathlib import Path
-from typing import Any, Dict, Mapping, Optional
+from typing import Any, Mapping, Optional
 
 import httpx
 
 from ..core.logging import get_logger
 
 logger = get_logger(__name__)
+
 
 def call_chart_tool(endpoint: str, tool_name: str, arguments: Mapping[str, Any]) -> Optional[str]:
     """

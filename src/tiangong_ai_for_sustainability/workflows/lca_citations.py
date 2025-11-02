@@ -6,16 +6,16 @@ papers intersecting planetary boundaries and the Sustainable Development Goals.
 from __future__ import annotations
 
 import json
-from collections import Counter, defaultdict
+from collections import defaultdict
 from dataclasses import asdict, dataclass
 from datetime import date
-from pathlib import Path
 from logging import LoggerAdapter
+from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from ..adapters.api.base import APIError
-from ..services import ResearchServices
 from ..core.logging import get_logger
+from ..services import ResearchServices
 from .charting import ensure_chart_image
 
 LCA_CONCEPT_ID = "C2778706760"
@@ -27,6 +27,8 @@ DEFAULT_KEYWORDS = [
     "sustainable development goals",
     "sdg",
 ]
+
+logger = get_logger(__name__)
 
 
 @dataclass(slots=True)
@@ -116,6 +118,10 @@ def run_lca_citation_workflow(
     Execute an end-to-end analysis of LCA literature focused on planetary boundaries and SDGs.
     """
 
+    context = getattr(services, "context", None)
+    options = getattr(context, "options", None)
+    is_dry_run = bool(getattr(options, "dry_run", False))
+
     if hasattr(services, "context") and hasattr(services.context, "get_logger"):
         workflow_logger = services.context.get_logger("workflow.lca_citations")
     else:  # pragma: no cover - defensive fallback
@@ -129,8 +135,35 @@ def run_lca_citation_workflow(
             "years": years,
             "max_records": max_records,
             "keywords_override": list(keyword_overrides) if keyword_overrides else None,
+            "dry_run": is_dry_run,
         },
     )
+
+    if is_dry_run:
+        planned_keywords = list(keyword_overrides) if keyword_overrides else None
+        plan_steps = [
+            f"Query OpenAlex for LCA works between the last {years} years using default keywords.",
+            "Aggregate citation metrics and derive top questions, trending topics, and gaps.",
+            "Persist raw dataset and Markdown report summarising findings.",
+            "Render trend chart via AntV MCP chart server.",
+        ]
+        workflow_logger.info(
+            "Dry-run plan generated",
+            extra={
+                "steps": plan_steps,
+                "keywords": planned_keywords,
+            },
+        )
+        return LCACitationWorkflowArtifacts(
+            report_path=report_path,
+            chart_path=None,
+            chart_caption=None,
+            raw_data_path=None,
+            questions=[],
+            trending_topics=[],
+            research_gaps=[],
+            papers=[],
+        )
 
     report_path.parent.mkdir(parents=True, exist_ok=True)
     chart_path.parent.mkdir(parents=True, exist_ok=True)
@@ -708,6 +741,10 @@ def _identify_research_gaps(
 
 def _render_trend_chart(services: ResearchServices, topics: List[TrendingTopic], chart_path: Path) -> bool:
     endpoint = services.chart_mcp_endpoint()
+    verification = services.verify_chart_mcp()
+    if not verification.success:
+        logger.warning("Chart MCP verification failed", extra={"details": verification.details})
+        return False
     data = [{"category": topic.topic[:60], "value": round(topic.trend_score, 2)} for topic in topics[:8]]
     arguments = {
         "data": data,
@@ -721,10 +758,11 @@ def _render_trend_chart(services: ResearchServices, topics: List[TrendingTopic],
 
 def _render_question_chart(services: ResearchServices, questions: List[CitationQuestion], chart_path: Path) -> bool:
     endpoint = services.chart_mcp_endpoint()
-    data = [
-        {"category": item.question[:60], "value": int(item.citation_count)}
-        for item in sorted(questions, key=lambda x: x.citation_count, reverse=True)[:8]
-    ]
+    verification = services.verify_chart_mcp()
+    if not verification.success:
+        logger.warning("Chart MCP verification failed", extra={"details": verification.details})
+        return False
+    data = [{"category": item.question[:60], "value": int(item.citation_count)} for item in sorted(questions, key=lambda x: x.citation_count, reverse=True)[:8]]
     arguments = {
         "data": data,
         "title": "Top LCA questions by citation count",

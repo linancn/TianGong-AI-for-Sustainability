@@ -3,7 +3,6 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import patch
 
-import pytest
 from typer.testing import CliRunner
 
 from tiangong_ai_for_sustainability.adapters.base import VerificationResult

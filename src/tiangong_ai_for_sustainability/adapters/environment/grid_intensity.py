@@ -17,8 +17,8 @@ from dataclasses import dataclass, field
 from logging import LoggerAdapter
 from typing import Any, Dict, List, Optional
 
-from ..base import AdapterError, DataSourceAdapter, VerificationResult
 from ...core.logging import get_logger
+from ..base import AdapterError, DataSourceAdapter, VerificationResult
 
 
 @dataclass(slots=True)

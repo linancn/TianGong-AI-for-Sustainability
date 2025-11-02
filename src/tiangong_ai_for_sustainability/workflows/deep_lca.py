@@ -11,16 +11,14 @@ import subprocess
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from pathlib import Path
-from logging import LoggerAdapter
 from typing import Callable, Iterable, List, Optional, Sequence
 
+from ..core.logging import get_logger
 from ..deep_research import DeepResearchClient, DeepResearchResult, ResearchPrompt
 from ..services import ResearchServices
-from ..core.logging import get_logger
 from .lca_citations import (
-    LCACitationWorkflowArtifacts,
     CitationQuestion,
-    ResearchGap,
+    LCACitationWorkflowArtifacts,
     TrendingTopic,
     run_lca_citation_workflow,
 )
@@ -52,9 +50,7 @@ def run_deep_lca_report(
     deep_research: bool = True,
     deep_research_prompt: Optional[str] = None,
     deep_research_instructions: Optional[str] = None,
-    lca_runner: Optional[
-        Callable[..., LCACitationWorkflowArtifacts]
-    ] = None,
+    lca_runner: Optional[Callable[..., LCACitationWorkflowArtifacts]] = None,
 ) -> DeepLCAWorkflowArtifacts:
     """
     Run the end-to-end deep LCA workflow.
@@ -81,6 +77,10 @@ def run_deep_lca_report(
         :func:`run_lca_citation_workflow`.
     """
 
+    context = getattr(services, "context", None)
+    options = getattr(context, "options", None)
+    is_dry_run = bool(getattr(options, "dry_run", False))
+
     if hasattr(services, "context") and hasattr(services.context, "get_logger"):
         workflow_logger = services.context.get_logger("workflow.deep_lca")
     else:  # pragma: no cover - defensive fallback
@@ -93,10 +93,50 @@ def run_deep_lca_report(
             "years": years,
             "max_records": max_records,
             "deep_research_enabled": deep_research,
+            "dry_run": is_dry_run,
         },
     )
 
     output_dir = output_dir.resolve()
+
+    if is_dry_run:
+        lca_report_path = output_dir / "lca_citations.md"
+        chart_path = output_dir / "lca_trends.png"
+        final_report_path = output_dir / "deep_lca_report.md"
+        workflow_logger.info(
+            "Dry-run plan generated",
+            extra={
+                "output_dir": output_dir.as_posix(),
+                "steps": [
+                    "Run LCA citation workflow and derive questions, trends, gaps.",
+                    "Invoke Deep Research (optional) for synthesis.",
+                    "Generate Markdown report and optional document variants.",
+                ],
+            },
+        )
+        placeholder_artifacts = LCACitationWorkflowArtifacts(
+            report_path=lca_report_path,
+            chart_path=None,
+            chart_caption=None,
+            raw_data_path=None,
+            questions=[],
+            trending_topics=[],
+            research_gaps=[],
+            papers=[],
+        )
+        return DeepLCAWorkflowArtifacts(
+            final_report_path=final_report_path,
+            citation_report_path=lca_report_path,
+            chart_path=None,
+            chart_caption=None,
+            raw_data_path=None,
+            deep_research_summary=None,
+            deep_research_response_path=None,
+            doc_variants=[],
+            conversion_warnings=[],
+            lca_artifacts=placeholder_artifacts,
+        )
+
     output_dir.mkdir(parents=True, exist_ok=True)
 
     lca_report_path = output_dir / "lca_citations.md"
@@ -196,11 +236,7 @@ def _run_deep_research(
     prompt_override: Optional[str],
     instructions_override: Optional[str],
 ) -> DeepResearchResult:
-    prompt = (
-        ResearchPrompt(question=prompt_override.strip())
-        if prompt_override
-        else _build_default_prompt(years)
-    )
+    prompt = ResearchPrompt(question=prompt_override.strip()) if prompt_override else _build_default_prompt(years)
     context = _build_prompt_context(lca_artifacts)
     if context:
         prompt.context = context
@@ -208,26 +244,24 @@ def _run_deep_research(
     return client.run(
         prompt,
         instructions=instructions_override
-        or "Synthesize the findings into concise sections that complement the deterministic citation scan provided in the context. Highlight citation leaders, accelerating themes, and unanswered questions.",
+        or (
+            "Synthesize the findings into concise sections that complement the deterministic "
+            "citation scan provided in the context. Highlight citation leaders, accelerating "
+            "themes, and unanswered questions."
+        ),
         max_tool_calls=30,
     )
 
 
 def _build_default_prompt(years: int) -> ResearchPrompt:
     return ResearchPrompt(
-        question=(
-            "Investigate how recent peer-reviewed life cycle assessment (LCA) research "
-            "connects planetary boundaries with the Sustainable Development Goals."
-        ),
+        question=("Investigate how recent peer-reviewed life cycle assessment (LCA) research " "connects planetary boundaries with the Sustainable Development Goals."),
         follow_up_questions=[
             "Which research questions attract the highest citation energy and why?",
             "Which LCA sub-topics show accelerating citation trends in the last few years?",
             "Where do clear research gaps remain that could yield high impact if addressed?",
         ],
-        context=(
-            f"Time horizon: last {years} years. Assume the deterministic citation scan has already "
-            "filtered relevant journals and returns structured summaries."
-        ),
+        context=(f"Time horizon: last {years} years. Assume the deterministic citation scan has already " "filtered relevant journals and returns structured summaries."),
     )
 
 
@@ -236,21 +270,15 @@ def _build_prompt_context(lca_artifacts: LCACitationWorkflowArtifacts) -> str:
     if lca_artifacts.questions:
         lines.append("Top citation questions:")
         for item in lca_artifacts.questions[:5]:
-            lines.append(
-                f"- {item.paper_title} ({item.citation_count} citations, {item.publication_year}); DOI: {item.doi or 'N/A'}"
-            )
+            lines.append(f"- {item.paper_title} ({item.citation_count} citations, {item.publication_year}); DOI: {item.doi or 'N/A'}")
     if lca_artifacts.trending_topics:
         lines.append("\nTrending concepts with positive citation slopes:")
         for topic in lca_artifacts.trending_topics[:5]:
-            lines.append(
-                f"- {topic.topic} (trend score {topic.trend_score:+.2f}, recent share {topic.recent_share*100:.1f}%)"
-            )
+            lines.append(f"- {topic.topic} (trend score {topic.trend_score:+.2f}, recent share {topic.recent_share*100:.1f}%)")
     if lca_artifacts.research_gaps:
         lines.append("\nSparse but high-impact gaps:")
         for gap in lca_artifacts.research_gaps[:5]:
-            lines.append(
-                f"- {gap.topic} ({gap.paper_count} papers, {gap.avg_citations:.1f} average citations) — {gap.rationale}"
-            )
+            lines.append(f"- {gap.topic} ({gap.paper_count} papers, {gap.avg_citations:.1f} average citations) — {gap.rationale}")
     return "\n".join(lines).strip()
 
 
@@ -276,9 +304,7 @@ def _render_final_report(
     if deep_summary:
         lines.append(deep_summary.strip() + "\n")
     else:
-        lines.append(
-            "Deep Research synthesis was unavailable. See the deterministic citation scan and raw data sections below.\n"
-        )
+        lines.append("Deep Research synthesis was unavailable. See the deterministic citation scan and raw data sections below.\n")
 
     lines.append("## Citation Highlights\n")
     keyword_label = ", ".join(keywords) if keywords else "life cycle assessment, sustainability, planetary boundaries, SDGs"
@@ -307,9 +333,7 @@ def _render_final_report(
     if lca_artifacts.research_gaps:
         for gap in lca_artifacts.research_gaps[:8]:
             doi = f"https://doi.org/{gap.supporting_doi}" if gap.supporting_doi else "N/A"
-            lines.append(
-                f"- **{gap.topic}** — {gap.rationale} Representative study: *{gap.representative_title}* ({doi})."
-            )
+            lines.append(f"- **{gap.topic}** — {gap.rationale} Representative study: *{gap.representative_title}* ({doi}).")
         lines.append("")
     else:
         lines.append("- No high-leverage gaps identified.\n")
@@ -339,10 +363,7 @@ def _generate_document_variants(
     warnings: List[str] = []
 
     if pandoc_path is None:
-        warnings.append(
-            "Pandoc not found on PATH; skipped generating PDF/DOCX variants. "
-            "Install pandoc (and a TeX engine for PDF) to enable automatic conversions."
-        )
+        warnings.append("Pandoc not found on PATH; skipped generating PDF/DOCX variants. " "Install pandoc (and a TeX engine for PDF) to enable automatic conversions.")
         return outputs, warnings
 
     resource_path = f"{markdown_path.parent.resolve()}:{output_dir.resolve()}"
@@ -358,9 +379,7 @@ def _generate_document_variants(
             subprocess.run(cmd, check=True, capture_output=True)
         except subprocess.CalledProcessError as exc:
             log = exc.stderr.decode("utf-8", "ignore") if exc.stderr else ""
-            warnings.append(
-                f"Failed to generate {extension.upper()} via pandoc: {exc}. Output: {log.strip()}"
-            )
+            warnings.append(f"Failed to generate {extension.upper()} via pandoc: {exc}. Output: {log.strip()}")
             continue
         outputs.append(target)
 
@@ -374,9 +393,7 @@ def _render_question_table(questions: Iterable[CitationQuestion]) -> List[str]:
     ]
     for item in questions:
         doi_link = f"[{item.doi}](https://doi.org/{item.doi})" if item.doi else "—"
-        rows.append(
-            f"| {item.question} | {item.citation_count} | {item.publication_year} | {item.journal or '—'} | {doi_link} |"
-        )
+        rows.append(f"| {item.question} | {item.citation_count} | {item.publication_year} | {item.journal or '—'} | {doi_link} |")
     rows.append("")
     return rows
 
@@ -387,8 +404,6 @@ def _render_trending_table(topics: Iterable[TrendingTopic]) -> List[str]:
         "|-------|-------------|-----------------|--------------|",
     ]
     for topic in topics:
-        rows.append(
-            f"| {topic.topic} | {topic.trend_score:+.2f} | {topic.citation_growth:+.1f} | {topic.recent_share*100:.1f}% |"
-        )
+        rows.append(f"| {topic.topic} | {topic.trend_score:+.2f} | {topic.citation_growth:+.1f} | {topic.recent_share*100:.1f}% |")
     rows.append("")
     return rows
