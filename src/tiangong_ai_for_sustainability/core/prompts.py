@@ -4,8 +4,8 @@ Prompt template resolution utilities shared across CLI commands and workflows.
 The helpers here provide a deterministic way to pick reusable prompt templates
 for LLM-enabled features (e.g. Deep Research or the planned ``research
 synthesize`` command). Templates live under ``specs/prompts/`` and can be
-selected via aliases (``default``, ``default-cn``) or by passing an explicit
-filesystem path.
+selected via aliases (e.g. ``default``) or by passing an explicit filesystem
+path.
 """
 
 from __future__ import annotations
@@ -51,14 +51,10 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 _PROMPT_DIR = _REPO_ROOT / "specs" / "prompts"
 
 _ALIAS_MAP: Dict[str, tuple[str, str]] = {
-    "default": ("research_template.md", "en"),
-    "default-en": ("research_template.md", "en"),
-    "en": ("research_template.md", "en"),
-    "research": ("research_template.md", "en"),
-    "default-cn": ("research_template_CN.md", "zh"),
-    "cn": ("research_template_CN.md", "zh"),
-    "zh": ("research_template_CN.md", "zh"),
-    "zh-cn": ("research_template_CN.md", "zh"),
+    "default": ("default.md", "en"),
+    "default-en": ("default.md", "en"),
+    "en": ("default.md", "en"),
+    "research": ("default.md", "en"),
 }
 
 
@@ -79,10 +75,8 @@ def _resolve_path(identifier: Optional[str], language: Optional[str]) -> tuple[s
         return alias, _PROMPT_DIR / filename, lang
 
     if not identifier:
-        lang_key = (language or "en").lower()
-        alias = "default-cn" if lang_key.startswith(("zh", "cn")) else "default"
-        filename, lang = _ALIAS_MAP[alias]
-        return alias, _PROMPT_DIR / filename, lang
+        filename, lang = _ALIAS_MAP["default"]
+        return "default", _PROMPT_DIR / filename, lang
 
     path = Path(identifier).expanduser()
     if not path.is_absolute():
@@ -98,11 +92,11 @@ def load_prompt_template(identifier: Optional[str], *, language: Optional[str] =
     Parameters
     ----------
     identifier:
-        Alias (e.g. ``default-cn``) or path to a Markdown file. When ``None`` the
-        helper picks an alias based on the requested language.
+        Alias (e.g. ``default``) or path to a Markdown file. When ``None`` the
+        helper picks the default alias.
     language:
-        Optional language hint (``en``, ``zh``). Used to choose between English
-        and Chinese defaults and to annotate ad-hoc paths.
+        Optional language hint used only to annotate ad-hoc paths; all registered
+        aliases resolve to the English template.
     """
 
     resolved_identifier, path, lang = _resolve_path(identifier, language)

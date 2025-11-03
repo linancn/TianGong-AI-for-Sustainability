@@ -69,8 +69,10 @@ Missing a feature? Just re-run your installer (`install_macos.sh`, `install_ubun
 
 ## Prompt Templates & Deep Research
 
-- Global flags `--prompt-template`, `--prompt-language`, and `--prompt-variable key=value` control which Markdown template feeds LLM synthesis steps (Deep Research workflows and `research synthesize`).
-- Built-in aliases: `default` (English) and `default-cn` (Chinese). You can also pass an absolute or project-relative path to a custom template.
+- Global flags `--prompt-template`, `--prompt-language` (use `en`), and `--prompt-variable key=value` control which Markdown template feeds LLM synthesis steps (Deep Research workflows and `research synthesize`).
+- Built-in aliases: `default`, `default-en`, and `en` (all point to the same English template). When no `--prompt-template` is provided, the CLI falls back to `default`. You can also pass an absolute or project-relative path to a custom template.
+- Copy the default prompt scaffold at `specs/prompts/default.md` (AI-facing, English) and customise it before briefing Codex; use `specs/prompts/default_CN.md` only as a human-readable translation.
+- Follow the CLI-first rule: run `uv run tiangong-research …` subcommands before reading or writing Python. Escalate only when a capability lacks a CLI wrapper.
 - Templates accept simple placeholders such as `{{topic}}`; combine multiple `--prompt-variable` arguments to substitute values.
 - Example:
   ```bash
@@ -91,6 +93,6 @@ Everyone else can simply rely on the platform installers—`install_macos.sh`, `
 
 - Architecture overview — `AGENTS.md` (Architecture Blueprint)
 - Automation agent handbook — `AGENTS.md`
-- Prompt templates — `specs/prompts/`
+- Prompt template — `specs/prompts/default.md` (AI) / `specs/prompts/default_CN.md` (human reference)
 
 Optional components degrade gracefully (for example, workflows fall back to text when charts are unavailable). Keep any required API keys in environment variables or `.secrets/secrets.toml` so the CLI can access protected sources.

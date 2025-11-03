@@ -18,7 +18,8 @@ AI operators must follow this document when working on the TianGong AI for Susta
 | Human Handbook | `README.md` | Public-facing usage instructions; mirror but do not override. |
 | System Setup Guide | `SETUP_GUIDE.md` / `SETUP_GUIDE_CN.md` | Platform-specific installation (macOS/Ubuntu), prerequisites, troubleshooting. |
 | Visualization Server | `https://github.com/antvis/mcp-server-chart` | Reference for the AntV MCP chart server integration. |
-| Prompt Templates | `specs/prompts/` | Reusable research prompts (maintain English/Chinese pairs). |
+| Prompt Template (AI) | `specs/prompts/default.md` | English-only prompt delivered to Codex via CLI aliases. |
+| Prompt Template (CN, human) | `specs/prompts/default_CN.md` | Chinese translation for operators; do not send to Codex. |
 | Workflow scripts | `tiangong_ai_for_sustainability/workflows/` | Python workflows (e.g., `run_simple_workflow`) that automate multi-source studies. |
 
 Always consult these sources before planning or executing changes.
@@ -27,10 +28,11 @@ Always consult these sources before planning or executing changes.
 
 1. **Spec-First Execution** — verify that requested work aligns with the Architecture Blueprint below. Escalate conflicts instead of improvising.
 2. **Deterministic Pipelines** — prefer rule-based adapters for data acquisition and reserve LLM prompting for synthesis as described in the spec.
-3. **Reversibility** — avoid destructive commands (`git reset --hard`, force pushes, etc.) unless explicitly authorised.
-4. **Bilingual Docs** — whenever `README*.md` or `AGENTS*.md` (including the Architecture Blueprint) are modified, update both English and Chinese versions in the same change set.
-5. **Tooling Dependencies** — chart-related tasks require Node.js and the AntV MCP chart server. Check for `node`/`npx` availability and surface installation guidance if missing.
-6. **Prompt Templates** — LLM-enabled workflows (Deep Research, future `research synthesize`) must pull instructions from the prompt template registry. Default aliases are `default` (English) and `default-cn` (Chinese); selectors accept filesystem paths. Placeholders use `{{variable}}` syntax populated via CLI flags (`--prompt-template`, `--prompt-language`, `--prompt-variable`).
+3. **CLI-First Commands** — invoke `uv run tiangong-research …` subcommands before reading or writing Python modules. Document any fallbacks when the CLI surface is incomplete and create backlog items to expose missing features.
+4. **Reversibility** — avoid destructive commands (`git reset --hard`, force pushes, etc.) unless explicitly authorised.
+5. **Bilingual Docs** — whenever `README*.md` or `AGENTS*.md` (including the Architecture Blueprint) are modified, update both English and Chinese versions in the same change set.
+6. **Tooling Dependencies** — chart-related tasks require Node.js and the AntV MCP chart server. Check for `node`/`npx` availability and surface installation guidance if missing.
+7. **Prompt Templates** — LLM-enabled workflows (Deep Research, future `research synthesize`) must load `specs/prompts/default.md` via the registered aliases (`default`, `default-en`, etc.). Keep AI-facing prompts in English only; `specs/prompts/default_CN.md` is for human use. Placeholders use `{{variable}}` syntax populated via CLI flags (`--prompt-template`, `--prompt-language`, `--prompt-variable`).
 
 ## Architecture Blueprint
 
@@ -109,7 +111,7 @@ Phase progression must honour dependencies encoded in `tasks/blueprint.yaml`.
 2. **Task Graph** — before implementing a feature, consult `tasks/blueprint.yaml` to ensure prerequisites are met (e.g., ontology ingestion before map-gri).
 3. **Dry-Run Support** — services and CLI commands should surface dry-run plans rather than performing side effects when `context.options.dry_run` is true.
 4. **Missing Dependencies** — if a command depends on external binaries or credentials (e.g., OSDG token, `grid-intensity` CLI, Node.js for the chart server), surface clear instructions rather than failing silently.
-5. **Prompt Templates** — default to the registered templates in `specs/prompts/` when no explicit instructions are given. Templates resolve through `ResearchServices.load_prompt_template`, support `{{placeholder}}` substitution from `ExecutionOptions.prompt_variables`, and are configured via CLI flags (`--prompt-template`, `--prompt-language`, `--prompt-variable`).
+5. **Prompt Templates** — default to `specs/prompts/default.md` when no explicit instructions are provided. The loader resolves aliases through `ResearchServices.load_prompt_template`, supports `{{placeholder}}` substitution from `ExecutionOptions.prompt_variables`, and is configured via CLI flags (`--prompt-template`, `--prompt-language`, `--prompt-variable`). The Chinese file `specs/prompts/default_CN.md` is for humans only and must not be routed to Codex.
 
 ### Testing Strategy
 

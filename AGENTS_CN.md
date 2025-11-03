@@ -18,7 +18,8 @@
 | 人类手册 | `README.md` | 面向终端用户的使用说明，需保持行为一致。 |
 | 系统配置指南 | `SETUP_GUIDE.md` / `SETUP_GUIDE_CN.md` | 平台特定安装说明（macOS/Ubuntu）、前置条件、故障排除。 |
 | 可视化服务 | `https://github.com/antvis/mcp-server-chart` | AntV MCP 图表服务器的使用说明与配置。 |
-| 提示模板 | `specs/prompts/` | 可复用的研究提示模板（需维护中英双语版本）。 |
+| 提示模板（AI） | `specs/prompts/default.md` | 仅供 Codex 使用的英文提示模版。 |
+| 提示模板（人工中文） | `specs/prompts/default_CN.md` | 面向人类操作员的中文翻译，禁止直接发送给 Codex。 |
 | 工作流脚本 | `tiangong_ai_for_sustainability/workflows/` | 自动化多源研究的 Python 工作流（如 `run_simple_workflow`）。 |
 
 > **更新要求**：凡涉及上述文档内容变更，必须同时更新对应的中文与英文版本，确保双语文档一致。
@@ -27,10 +28,11 @@
 
 1. **规格优先** — 开发前校验需求是否符合下文的架构蓝图；若有冲突，先与人类确认。
 2. **确定性优先** — 数据采集使用规则化适配器；仅在综合分析阶段引入 LLM 推理。
-3. **可回滚** — 未获授权不得执行破坏性 Git 命令（如 `git reset --hard`）。
-4. **双语维护** — 对 `README*.md` 或 `AGENTS*.md`（包括架构蓝图章节）的任何修改，必须同步更新英文与中文版本。
-5. **工具依赖** — 涉及图表的工作需确认 Node.js 与 AntV MCP 图表服务器已安装并可访问。
-6. **提示模版** — 所有包含 LLM 的工作流（如 Deep Research、未来的 `research synthesize`）需从提示模版注册表加载指令。默认别名为 `default`（英文）与 `default-cn`（中文），也支持直接传入文件路径。模版占位符使用 `{{variable}}` 语法，并可通过 CLI 参数（`--prompt-template`、`--prompt-language`、`--prompt-variable`）填充，确保执行可复现。
+3. **CLI 优先** — 优先调用 `uv run tiangong-research …` 子命令；仅在确认 CLI 尚未覆盖能力时，记录原因并说明拟访问的 Python 模块，同时创建待办以补全 CLI。
+4. **可回滚** — 未获授权不得执行破坏性 Git 命令（如 `git reset --hard`）。
+5. **双语维护** — 对 `README*.md` 或 `AGENTS*.md`（包括架构蓝图章节）的任何修改，必须同步更新英文与中文版本。
+6. **工具依赖** — 涉及图表的工作需确认 Node.js 与 AntV MCP 图表服务器已安装并可访问。
+7. **提示模版** — 所有包含 LLM 的工作流（如 Deep Research、`research synthesize`）需通过别名加载 `specs/prompts/default.md`（支持 `default`、`default-en` 等别名）；模版保持英文内容以避免多语言提示漂移。`specs/prompts/default_CN.md` 仅供人工参考，禁止直接发送给 Codex。模版占位符使用 `{{variable}}` 语法，并可通过 CLI 参数（`--prompt-template`、`--prompt-language`、`--prompt-variable`）填充，确保执行可复现。
 
 ## 架构蓝图
 
@@ -109,7 +111,7 @@
 2. **任务图**：实现功能前先对照 `tasks/blueprint.yaml`，确认所需前置任务已完成。
 3. **Dry-Run 支持**：服务与 CLI 在 `dry_run` 模式下应返回执行计划而非真正操作。
 4. **前置依赖提示**：缺少外部工具或凭据时（如 OSDG 令牌、`grid-intensity` CLI、Node.js + MCP 图表服务器）需输出明确指导，不得默默失败。
-5. **提示模版配置**：当命令未显式提供指令时，应通过 `ResearchServices.load_prompt_template` 加载 `specs/prompts/` 下的模版。模版支持 `{{placeholder}}` 占位符替换（来自 `ExecutionOptions.prompt_variables`），CLI 可通过 `--prompt-template`、`--prompt-language`、`--prompt-variable` 设定参数，后续 `research synthesize` 亦复用相同机制。
+5. **提示模版配置**：当命令未显式提供指令时，应通过 `ResearchServices.load_prompt_template` 加载 `specs/prompts/default.md`。模版支持 `{{placeholder}}` 占位符替换（来自 `ExecutionOptions.prompt_variables`），CLI 可通过 `--prompt-template`、`--prompt-language`、`--prompt-variable` 设定参数，后续 `research synthesize` 亦复用相同机制。中文文件 `specs/prompts/default_CN.md` 仅供人工阅读，请勿传递给 Codex。
 
 ### 测试策略
 

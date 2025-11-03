@@ -69,12 +69,14 @@ uv run tiangong-research research workflow simple --topic "生命周期评估"
 
 ## 提示模版与 Deep Research
 
-- CLI 提供全局参数 `--prompt-template`、`--prompt-language`、`--prompt-variable key=value`，用于选择驱动 LLM 综合分析的 Markdown 模版（适用于 Deep Research 与 `research synthesize`）。
-- 内置别名包括 `default`（英文）与 `default-cn`（中文），也可传入仓库相对或绝对路径以加载自定义模版。
+- CLI 提供全局参数 `--prompt-template`、`--prompt-language`（请使用 `en`）、`--prompt-variable key=value`，用于选择驱动 LLM 综合分析的 Markdown 模版（适用于 Deep Research 与 `research synthesize`）。
+- 内置别名包括 `default`、`default-en`、`en`（均指向相同的英文模版）。若未指定 `--prompt-template`，CLI 会默认使用 `default`；也可传入仓库相对或绝对路径以加载自定义模版。
+- `specs/prompts/default.md` 是提供给 Codex 的英文提示骨架；`specs/prompts/default_CN.md` 为人工翻译版，勿直接发送给 Codex。
+- 遵循 CLI 优先原则：先运行 `uv run tiangong-research …` 子命令，只有在确认缺失对应子命令时才考虑阅读或编写 Python 代码。
 - 模版支持 `{{topic}}` 等占位符，可多次使用 `--prompt-variable` 按键值对替换内容。
 - 示例：
   ```bash
-  uv run tiangong-research --prompt-template default-cn --prompt-variable topic="城市气候韧性" research workflow lca-deep-report --years 3
+  uv run tiangong-research --prompt-template default --prompt-variable topic="城市气候韧性" research workflow lca-deep-report --years 3
   ```
 - 若仅需一次性覆盖，可继续使用 `--deep-prompt` 与 `--deep-instructions`；当未提供指令时，CLI 会自动回退至模版机制。
 
@@ -91,6 +93,6 @@ uv run tiangong-research research workflow simple --topic "生命周期评估"
 
 - 技术架构总览 — `AGENTS_CN.md`（架构蓝图）
 - 自动化代理手册 — `AGENTS_CN.md`
-- 提示模板 — `specs/prompts/`
+- 提示模板 — `specs/prompts/default.md`（AI 使用） / `specs/prompts/default_CN.md`（人工参考）
 
 可选组件缺失时，工作流会自动降级（例如无图表时输出纯文本）。如需访问受限数据源，请将所需密钥配置在环境变量或 `.secrets/secrets.toml` 文件中。
