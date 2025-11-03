@@ -56,6 +56,14 @@ uv run tiangong-research research workflow simple --topic "生命周期评估"
 
 缺少某项功能时，重新运行对应的安装脚本（`install_macos.sh`、`install_ubuntu.sh`、`install_windows.ps1`），并选择合适的 `--with-*` 选项即可。
 
+## Codex Docker 工作流
+
+- 使用默认参数构建镜像即可自动安装 Codex：`docker build -t tiangong-ai-codex .`（若需精简，可传入 `--build-arg INSTALL_CODEX=false`、`INSTALL_NODE=false` 等关闭对应组件）。
+- 运行时请挂载仓库目录，确保 Codex 能访问项目与数据：`docker run --rm -v "$(pwd):/workspace" tiangong-ai-codex codex`。
+- 自动化任务建议使用 `codex exec --json "<指令>"`；通过 `turn.completed` 事件判断成功，或在捕获 `turn.failed`/`error` 时人工介入，可配合 `--ask-for-approval never` 免去审批提示。
+- 如需回到 CLI 环境，可覆盖入口：`docker run --rm --entrypoint uv tiangong-ai-codex run tiangong-research --help`。
+- 持久化 Codex 会话数据时，可将卷挂载到 `/workspace/.codex`（示例：`-v codex_state:/workspace/.codex`）。
+
 ## 常用命令速查
 
 - `uv run tiangong-research sources list` — 查看数据源注册表。

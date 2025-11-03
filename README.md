@@ -56,6 +56,14 @@ If you enabled charts, start the AntV MCP chart server before running workflows 
 
 Missing a feature? Just re-run your installer (`install_macos.sh`, `install_ubuntu.sh`, or `install_windows.ps1`) with the matching `--with-*` flag.
 
+## Codex Docker Workflow
+
+- Build the container with Codex enabled: `docker build -t tiangong-ai-codex .` (toggle extras with `--build-arg INSTALL_CODEX=false`, `INSTALL_NODE=false`, etc. if you need leaner images).
+- Mount the repository when running so Codex can see your files: `docker run --rm -v "$(pwd):/workspace" tiangong-ai-codex codex`.
+- Use `codex exec --json "<prompt>"` for unattended tasks; watch for `turn.completed` in the stream to detect success or `turn.failed`/`error` when human intervention is required. Pair with `--ask-for-approval never` to avoid interactive pauses.
+- Keep CLI access available by overriding the entrypoint when necessary: `docker run --rm --entrypoint uv tiangong-ai-codex run tiangong-research --help`.
+- Persist Codex state across runs by mounting a volume to `/workspace/.codex` (for example `-v codex_state:/workspace/.codex`).
+
 ## Most-Used CLI Commands
 
 - `uv run tiangong-research sources list` — browse the registered data sources.
