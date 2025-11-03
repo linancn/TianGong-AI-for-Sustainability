@@ -33,13 +33,13 @@
    ```
    - 关注与主题紧密相关的仓库，记录 star 数及简介。
 
-3. **文献查询**（目前处于路线图规划阶段，执行前需确认命令已上线）
+3. **文献查询**
    ```bash
    uv run tiangong-research research find-papers "<关键词>" --json
    ```
-   - 执行前先确认 `tiangong-research research find-papers --help` 可用（该命令仍在规划中）。
-   - 若命令尚未上线，请记录该限制，并在本地 arXiv 索引缺失时改用 Semantic Scholar API 结果。
-   - 如具备 Scopus 凭据，可追加 `--link-sdg`。
+   - 可选参数：`--openalex/--no-openalex`、`--citation-graph`、`--limit`。
+   - 默认从 Semantic Scholar 获取结果；如 OpenAlex 源启用，可补充引用次数与部分参考文献。
+   - 后续如具备 Scopus 凭据，可扩展相关适配器；暂时保持记录说明。
    - 直接调用 `tiangong_ai_remote` 时，注意所有 `Search_*` 工具返回的都是 JSON 字符串，需先解析：
    ```python
     payload, _ = client.invoke_tool("tiangong_ai_remote", "Search_Sci_Tool", {...})

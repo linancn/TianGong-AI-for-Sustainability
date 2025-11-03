@@ -94,7 +94,7 @@ Services should normalise these entities into graph-friendly structures (Network
 | `research find-code` | Phase 1 | Combines seed lists and GitHub Topics to discover repositories. **Implemented** (seed list ingestion pending). |
 | `research get-carbon-intensity` | Phase 1 | Invokes `grid-intensity` CLI and reformats output. **Implemented** (depends on CLI installation). |
 | `research query-kg` | Phase 1 | Planned wrapper around `wdq`/`wikidata-dl` for SPARQL queries. |
-| `research find-papers` | Phase 1 | Planned aggregator across Semantic Scholar, arXiv index (when available), Scopus fallback. |
+| `research find-papers` | Phase 1 | Aggregates Semantic Scholar (default) with optional OpenAlex enrichment and citation graph export. |
 | `research map-gri` | Phase 2 | Parse reports with PDF extractors, align against GRI ontology, optionally delegate to LLM scoring. |
 | `research synthesize` | Phase 3 | LLM controller orchestrating other commands according to user prompts. **Implemented** (template-aware). |
 | `research visuals verify` | Phase 2 | Confirms AntV MCP chart server availability prior to visualization workflows. **Implemented**. |
@@ -129,6 +129,7 @@ Phase progression must honour dependencies encoded in `tasks/blueprint.yaml`.
 
 - Registry, execution context, and verification commands are live.
 - Implemented Phase 1 commands: `research map-sdg`, `research find-code`, `research get-carbon-intensity`.
+- Phase 1 `research find-papers` now aggregates Semantic Scholar with optional OpenAlex enrichment and citation graph export.
 - Test suite (`uv run pytest`) covers core modules and CLI operations.
 - Next priorities: ingest SDG/GRI ontologies into structured storage, implement remaining Phase 1 commands, and broaden citation/graph tooling.
 - Phase 3 synthesis command now available with prompt template support.

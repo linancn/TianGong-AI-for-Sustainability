@@ -162,6 +162,7 @@ def discover_papers(
             names = []
         papers.append(
             {
+                "paper_id": item.get("paperId"),
                 "title": item.get("title", "unknown"),
                 "year": item.get("year"),
                 "url": item.get("url"),

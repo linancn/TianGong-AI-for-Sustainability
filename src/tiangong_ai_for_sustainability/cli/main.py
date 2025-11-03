@@ -23,6 +23,7 @@ from ..services import ResearchServices
 from ..workflows import (
     run_deep_lca_report,
     run_lca_citation_workflow,
+    run_paper_search,
     run_simple_workflow,
     run_synthesis_workflow,
     run_trending_metrics_workflow,
@@ -940,6 +941,99 @@ def research_synthesize(
         typer.echo(f"Prompt template ({artifacts.prompt_template_identifier}) -> {artifacts.prompt_template_path}")
     elif prompt_template or context.options.prompt_template:
         typer.echo(f"Prompt template alias: {prompt_template or context.options.prompt_template}")
+
+
+@research_app.command("find-papers")
+def research_find_papers(
+    ctx: typer.Context,
+    query: str = typer.Argument(..., help="Search query or keyword."),
+    limit: int = typer.Option(10, "--limit", "-n", min=1, max=50, help="Maximum number of papers per source."),
+    include_openalex: bool = typer.Option(True, "--openalex/--no-openalex", help="Toggle OpenAlex enrichment."),
+    citation_graph: bool = typer.Option(False, "--citation-graph/--no-citation-graph", help="Emit citation edges derived from OpenAlex references."),
+    output_json: bool = typer.Option(False, "--json", help="Emit aggregated results as JSON."),
+    sdg_text: Optional[Path] = typer.Option(None, "--sdg-text", resolve_path=True, help="Optional text/PDF file used to seed SDG alignment."),
+) -> None:
+    """Aggregate literature evidence across Semantic Scholar and (optionally) OpenAlex."""
+
+    registry = _require_registry(ctx)
+    context = _require_context(ctx)
+    services = ResearchServices(registry=registry, context=context)
+
+    sdg_context_text: Optional[str] = None
+    if sdg_text:
+        sdg_context_text = _read_text_file(sdg_text)
+
+    artifacts = run_paper_search(
+        services,
+        query=query,
+        sdg_context=sdg_context_text,
+        limit=limit,
+        include_openalex=include_openalex,
+        include_citations=citation_graph,
+    )
+
+    if context.options.dry_run and artifacts.plan:
+        typer.echo("Dry-run: generated execution plan; no searches executed.")
+        for step in artifacts.plan:
+            typer.echo(f"- {step}")
+        return
+
+    payload = {
+        "query": artifacts.query,
+        "sdg_matches": artifacts.sdg_matches,
+        "semantic_scholar": artifacts.semantic_scholar,
+        "openalex": artifacts.openalex,
+        "notes": artifacts.notes,
+    }
+    if artifacts.citation_edges is not None:
+        payload["citation_edges"] = artifacts.citation_edges
+
+    if output_json:
+        typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+
+    typer.echo(f"SDG alignment suggestions ({len(artifacts.sdg_matches)}):")
+    if artifacts.sdg_matches:
+        for match in artifacts.sdg_matches:
+            code = match.get("code", "?")
+            title = match.get("title", "Unknown goal")
+            score = match.get("score", 0)
+            typer.echo(f"- SDG {code} — {title} (score {score})")
+    else:
+        typer.echo("(no suggested SDG matches)")
+
+    typer.echo("")
+    typer.echo(f"Semantic Scholar results ({len(artifacts.semantic_scholar)}):")
+    for paper in artifacts.semantic_scholar:
+        title = paper.get("title", "Untitled")
+        year = paper.get("year") or "?"
+        authors = ", ".join(paper.get("authors", [])) or "N/A"
+        typer.echo(f"- {title} ({year}) — {authors}")
+        url = paper.get("url")
+        if url:
+            typer.echo(f"  {url}")
+
+    if artifacts.openalex:
+        typer.echo("")
+        typer.echo(f"OpenAlex results ({len(artifacts.openalex)}):")
+        for work in artifacts.openalex:
+            title = work.get("title", "Untitled")
+            year = work.get("year") or "?"
+            cites = work.get("cited_by_count", "?")
+            typer.echo(f"- {title} ({year}) — cited by {cites} works")
+            doi = work.get("doi")
+            if doi:
+                typer.echo(f"  DOI: {doi}")
+
+    if artifacts.citation_edges is not None:
+        typer.echo("")
+        typer.echo(f"Citation edges recorded: {len(artifacts.citation_edges)}")
+
+    if artifacts.notes:
+        typer.echo("")
+        typer.echo("Notes:")
+        for note in artifacts.notes:
+            typer.echo(f"- {note}")
 
 
 if __name__ == "__main__":  # pragma: no cover

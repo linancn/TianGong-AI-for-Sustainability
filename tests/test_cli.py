@@ -267,6 +267,39 @@ def test_research_metrics_trending_cli_dry_run(cli_runner, registry_file):
     assert "Dry-run plan" in result.stdout
 
 
+def test_research_find_papers_cli(cli_runner, registry_file):
+    artifacts = SimpleNamespace(
+        query="ai sustainability",
+        sdg_matches=[{"code": "7", "title": "Affordable and Clean Energy", "score": 2}],
+        semantic_scholar=[{"title": "Paper A", "year": 2024, "authors": ["Alice"], "url": "https://example.com"}],
+        openalex=[],
+        notes=[],
+        citation_edges=None,
+        plan=None,
+    )
+
+    with patch(
+        "tiangong_ai_for_sustainability.cli.main.run_paper_search",
+        return_value=artifacts,
+    ) as mocked:
+        result = invoke(
+            cli_runner,
+            [
+                "--registry",
+                str(registry_file),
+                "research",
+                "find-papers",
+                "ai sustainability",
+            ],
+        )
+
+    assert result.exit_code == 0
+    assert "Semantic Scholar results" in result.stdout
+    assert mocked.call_count == 1
+    _, kwargs = mocked.call_args
+    assert kwargs["query"] == "ai sustainability"
+
+
 def test_research_synthesize_cli(cli_runner, registry_file, tmp_path):
     report_path = tmp_path / "synthesis.md"
     llm_path = tmp_path / "synthesis.llm.json"
@@ -275,6 +308,8 @@ def test_research_synthesize_cli(cli_runner, registry_file, tmp_path):
         sdg_matches=[],
         repositories=[],
         papers=[],
+        semantic_scholar=[],
+        openalex=[],
         carbon_snapshot=None,
         llm_summary="Summary",
         llm_response_path=llm_path,
@@ -282,6 +317,8 @@ def test_research_synthesize_cli(cli_runner, registry_file, tmp_path):
         prompt_template_path=tmp_path / "template.md",
         prompt_language="en",
         plan=None,
+        notes=[],
+        citation_edges=None,
     )
 
     with patch(

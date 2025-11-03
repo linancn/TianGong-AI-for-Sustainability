@@ -33,13 +33,13 @@ If any step fails, capture the error, provide remediation, and pause the workflo
    ```
    - Filter repositories relevant to the topic; highlight stars and descriptions.
 
-3. **Literature Query** *(planned CLI capability — confirm availability first)*
+3. **Literature Query**
    ```bash
    uv run tiangong-research research find-papers "<keywords>" --json
    ```
-   - Before running, check that `tiangong-research research find-papers --help` is available (command is planned in the roadmap).
-   - If the command is not yet implemented, record the limitation and rely on the Semantic Scholar API client when arXiv bulk index is absent.
-   - If Scopus credentials exist, enrich with `--link-sdg` flag.
+   - Optional flags: `--openalex/--no-openalex`, `--citation-graph`, `--limit`.
+   - Results default to Semantic Scholar; when OpenAlex is enabled, the CLI enriches with cited-by counts and limited references.
+   - If Scopus credentials exist, enrich with `--include-scopus` once the adapter is available.
    - When using `tiangong_ai_remote` directly, remember each `Search_*` tool returns a JSON string. Decode it first:
      ```python
      payload, _ = client.invoke_tool("tiangong_ai_remote", "Search_Sci_Tool", {...})

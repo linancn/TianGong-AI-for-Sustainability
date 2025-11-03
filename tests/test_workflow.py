@@ -18,6 +18,7 @@ from tiangong_ai_for_sustainability.workflows.lca_citations import (
     run_lca_citation_workflow,
 )
 from tiangong_ai_for_sustainability.workflows.metrics import TRENDING_METRIC_CONFIGS, run_trending_metrics_workflow
+from tiangong_ai_for_sustainability.workflows.papers import run_paper_search
 from tiangong_ai_for_sustainability.workflows.simple import run_simple_workflow
 from tiangong_ai_for_sustainability.workflows.synthesize import run_synthesis_workflow
 
@@ -130,6 +131,70 @@ def test_run_simple_workflow_dry_run(tmp_path, dummy_services):
     assert not report_path.exists()
     assert artifacts.chart_path is None
     assert "Dry-run" in artifacts.carbon_snapshot.get("note", "")
+
+
+def test_run_paper_search(tmp_path, dummy_services):
+    context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
+    dummy_services.context = context
+
+    dummy_services._scholar = SimpleNamespace(
+        search_papers=lambda topic, limit, fields: {
+            "data": [
+                {
+                    "paperId": "S1",
+                    "title": "Semantic Scholar Paper",
+                    "year": 2024,
+                    "url": "https://example.com/s1",
+                    "abstract": "Abstract",
+                    "authors": [{"name": "Alice"}],
+                }
+            ]
+        }
+    )
+
+    def iterate_works(**kwargs):
+        yield {
+            "id": "W1",
+            "display_name": "OpenAlex Paper",
+            "publication_year": 2023,
+            "doi": "10.1234/example",
+            "cited_by_count": 12,
+            "referenced_works": ["W2", "W3"],
+            "authorships": [{"author": {"display_name": "Dr. Example"}}],
+        }
+
+    dummy_services._openalex = SimpleNamespace(iterate_works=iterate_works)
+
+    artifacts = run_paper_search(
+        dummy_services,
+        query="ai sustainability",
+        sdg_context="Artificial intelligence for sustainability",
+        include_openalex=True,
+        include_citations=True,
+        limit=5,
+    )
+
+    assert artifacts.sdg_matches
+    assert artifacts.semantic_scholar[0]["paper_id"] == "S1"
+    assert artifacts.openalex[0]["id"] == "W1"
+    assert artifacts.citation_edges and artifacts.citation_edges[0]["source"] == "W1"
+
+
+def test_run_paper_search_dry_run(tmp_path, dummy_services):
+    context = ExecutionContext.build_default(
+        cache_dir=tmp_path / "cache",
+        options=ExecutionOptions(dry_run=True),
+    )
+    dummy_services.context = context
+
+    artifacts = run_paper_search(
+        dummy_services,
+        query="energy efficiency",
+        include_openalex=False,
+    )
+
+    assert artifacts.plan
+    assert not artifacts.semantic_scholar
 
 
 def test_run_trending_metrics_workflow(tmp_path, dummy_services):
