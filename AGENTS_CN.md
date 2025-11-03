@@ -71,7 +71,7 @@
 3. CLI/MCP 适配器在缺失依赖或访问权限时，应给出明确安装/开通指引（如 `grid-intensity`、`mcp-server-chart --transport streamable`、MCP 端点或密钥）。
 4. 缓存与持久化逻辑保留在服务层，保证适配器无状态。
 
-> **MCP 使用提示**：`tiangong_ai_remote` MCP 覆盖最权威的可持续性文献语料（约 7000 万 chunks、700 亿 token），检索时务必提供信息完备的查询上下文，以充分发挥混合检索效果。所有 `Search_*` 工具（包括 `Search_Sci_Tool`）都会返回 JSON 字符串，需先通过 `json.loads` 解析，建议将 `topK` 控制在 50 以内以避免响应过大。补充检索（如 Semantic Scholar）需注意 429 节流；出现限频时可降速或改用 `OpenAlex` 数据。`tiangong_lca_remote` MCP 专注生命周期评估数据，需要细粒度 LCA 指标时与 `tiangong_ai_remote` 联合使用。
+> **MCP 使用提示**：`tiangong_ai_remote` MCP 覆盖最权威的可持续性文献语料（约 7000 万 chunks、700 亿 token），检索时务必提供信息完备的查询上下文，以充分发挥混合检索效果。所有 `Search_*` 工具（包括 `Search_Sci_Tool`）都会返回 JSON 字符串，需先通过 `json.loads` 解析，建议将 `topK` 控制在 50 以内以避免响应过大。补充检索（如 Semantic Scholar）需注意 429 节流；出现限频时可降速或改用 `OpenAlex` 数据。`tiangong_lca_remote` MCP 专注生命周期评估数据，适合微观 LCA 案例或细粒度排放比对，在宏观文献扫描时可优先使用 `tiangong_ai_remote` 及其它 P1 数据源。调用 TianGong 系列检索工具时，可通过 `extK` 参数控制返回的邻近 chunk 数量（默认 `extK=2`，仅在需要更多局部上下文时再调高）。
 
 ### 本体与数据模型
 
