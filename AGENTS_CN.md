@@ -60,7 +60,7 @@
 | **P0** | `tiangong_ai_remote` MCP 知识库 | 已实现 | 可持续性研究的首选语料；需提供完整上下文以获取高质量检索结果。 |
 | **P1** | UN SDG API、Semantic Scholar、GitHub Topics、Wikidata、grid-intensity CLI、`tiangong_lca_remote` MCP | 已实现 | 构成本体与通用检索基础，同时按需提供细粒度 LCA 数据。 |
 | **P1（批量）** | arXiv S3 / Kaggle | 规划中 | 待解决存储成本后引入全文索引。 |
-| **P2** | Scopus、Web of Science、WattTime（通过 grid-intensity）、AntV MCP 图表服务器 | 视凭据/环境启用 | 需提供密钥或运行时依赖（Node.js）。 |
+| **P2** | Scopus、Web of Science、WattTime（通过 grid-intensity）、AntV MCP 图表服务器、Tavily Web MCP、OpenAI Deep Research | 视凭据/环境启用 | 需提供密钥、运行时依赖（如 Node.js）或足够的 API 配额。 |
 | **P3** | GRI taxonomy、GHG 工作簿、Open Sustainable Tech CSV、生命周期评估清单（如 openLCA 数据集） | 持续接入 | 通过统一的文件解析框架处理。 |
 | **P4** | Google Scholar、ACM Digital Library | 禁用 | 强制使用替代方案（如 Semantic Scholar、Crossref）。 |
 
@@ -71,7 +71,7 @@
 3. CLI/MCP 适配器在缺失依赖或访问权限时，应给出明确安装/开通指引（如 `grid-intensity`、`mcp-server-chart --transport streamable`、MCP 端点或密钥）。
 4. 缓存与持久化逻辑保留在服务层，保证适配器无状态。
 
-> **MCP 使用提示**：`tiangong_ai_remote` MCP 覆盖最权威的可持续性文献语料（约 7000 万 chunks、700 亿 token），检索时务必提供信息完备的查询上下文，以充分发挥混合检索效果。所有 `Search_*` 工具（包括 `Search_Sci_Tool`）都会返回 JSON 字符串，需先通过 `json.loads` 解析，建议将 `topK` 控制在 50 以内以避免响应过大。补充检索（如 Semantic Scholar）需注意 429 节流；出现限频时可降速或改用 `OpenAlex` 数据。`tiangong_lca_remote` MCP 专注生命周期评估数据，适合微观 LCA 案例或细粒度排放比对，在宏观文献扫描时可优先使用 `tiangong_ai_remote` 及其它 P1 数据源。调用 TianGong 系列检索工具时，可通过 `extK` 参数控制返回的邻近 chunk 数量（默认 `extK=2`，仅在需要更多局部上下文时再调高）。
+> **MCP 使用提示**：`tiangong_ai_remote` MCP 覆盖最权威的可持续性文献语料（约 7000 万 chunks、700 亿 token），检索时务必提供信息完备的查询上下文，以充分发挥混合检索效果。所有 `Search_*` 工具（包括 `Search_Sci_Tool`）都会返回 JSON 字符串，需先通过 `json.loads` 解析，建议将 `topK` 控制在 50 以内以避免响应过大。补充检索（如 Semantic Scholar）需注意 429 节流；出现限频时可降速或改用 `OpenAlex` 数据。`tiangong_lca_remote` MCP 专注生命周期评估数据，适合微观 LCA 案例或细粒度排放比对，在宏观文献扫描时可优先使用 `tiangong_ai_remote` 及其它 P1 数据源。需要覆盖更广泛的站点或新闻源时，可启用 `tavily_web_mcp`（通过 `Authorization: Bearer <API_KEY>` 认证）。调用 TianGong 系列检索工具时，请显式设置 `extK` 参数以控制返回的邻近 chunk 数量（默认 `extK=2`），仅在确实需要更多局部上下文时再上调。同时将 `openai_deep_research` 视为高层综合分析的数据源，在确定性数据采集完成后再触发；请提前配置 OpenAI API Key 与 deep_research 模型。
 
 ### 本体与数据模型
 

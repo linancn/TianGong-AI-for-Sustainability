@@ -41,13 +41,14 @@
    - 若命令尚未上线，请记录该限制，并在本地 arXiv 索引缺失时改用 Semantic Scholar API 结果。
    - 如具备 Scopus 凭据，可追加 `--link-sdg`。
    - 直接调用 `tiangong_ai_remote` 时，注意所有 `Search_*` 工具返回的都是 JSON 字符串，需先解析：
-    ```python
+   ```python
     payload, _ = client.invoke_tool("tiangong_ai_remote", "Search_Sci_Tool", {...})
     records = json.loads(payload)
     ```
    - 后续访问外部 API 时优先使用项目依赖中的 `httpx`，并在遇到 429 节流时采用指数退避或切换 `OpenAlex` 作为补充来源。
    - `tiangong_lca_remote` 适用于微观 LCA 案例或精细排放比对，若只是宏观文献扫描，可继续依赖 `tiangong_ai_remote` 与其它 P1 数据源，以保持流程可预测。
    - 调用 TianGong 系列 MCP 检索工具时，请显式设置 `extK` 参数以控制返回的邻近 chunk 数量（默认 `extK=2`），仅在确实需要更多局部上下文时再上调。
+   - 如果需要检索更广泛的站点或新闻信息，可启用 `tavily_web_mcp`（在 secrets 中设置 `Authorization: Bearer <API_KEY>`）。
 
 4. **碳强度背景**
    ```bash

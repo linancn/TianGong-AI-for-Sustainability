@@ -7,6 +7,13 @@ service layer.
 """
 
 from .base import AdapterError, DataSourceAdapter, VerificationResult
-from .tools import ChartMCPAdapter, RemoteMCPAdapter
+from .tools import ChartMCPAdapter, OpenAIDeepResearchAdapter, RemoteMCPAdapter
 
-__all__ = ["AdapterError", "DataSourceAdapter", "VerificationResult", "ChartMCPAdapter", "RemoteMCPAdapter"]
+__all__ = [
+    "AdapterError",
+    "DataSourceAdapter",
+    "VerificationResult",
+    "ChartMCPAdapter",
+    "RemoteMCPAdapter",
+    "OpenAIDeepResearchAdapter",
+]

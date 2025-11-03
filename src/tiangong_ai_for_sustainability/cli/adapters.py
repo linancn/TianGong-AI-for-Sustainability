@@ -18,7 +18,7 @@ from ..adapters.api import (
     UNSDGClient,
 )
 from ..adapters.environment import GridIntensityCLIAdapter
-from ..adapters.tools import RemoteMCPAdapter
+from ..adapters.tools import OpenAIDeepResearchAdapter, RemoteMCPAdapter
 from ..core.context import ExecutionContext
 from ..core.mcp import load_mcp_server_configs
 
@@ -58,6 +58,7 @@ def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataS
         GitHubTopicsAdapter(client=GitHubTopicsClient(token=github_token)),
         OSDGAdapter(client=OSDGClient(api_token=osdg_token)),
         ChartMCPAdapter(),
+        OpenAIDeepResearchAdapter(settings=context.secrets.openai),
     )
     for adapter in adapters:
         if source_id == adapter.source_id:

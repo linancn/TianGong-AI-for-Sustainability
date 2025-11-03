@@ -130,6 +130,23 @@
   references:
     - "https://github.com/antvis/mcp-server-chart"
 
+- id: tavily_web_mcp
+  name: "Tavily Web Search MCP"
+  category: discovery
+  priority: P2
+  description: "Model Context Protocol gateway for Tavily's web and news search."
+  protocols: ["MCP", "streamable-http"]
+  base_urls:
+    - "https://github.com/tavily-ai/tavily-mcp"
+  authentication: "api-key"
+  requires_credentials: true
+  status: trial
+  capabilities: ["web-search", "news-search"]
+  tags: ["web", "search", "mcp"]
+  notes: "Configure credentials in .secrets under [tavily_web_mcp]; use Authorization: Bearer <API_KEY>."
+  references:
+    - "https://github.com/tavily-ai/tavily-mcp"
+
 - id: tiangong_ai_remote
   name: "TianGong AI Remote MCP"
   category: automation
@@ -163,6 +180,23 @@
   notes: "Requires API key. Configure credentials in .secrets under [tiangong_lca_remote]."
   references:
     - "https://lcamcp.tiangong.earth/docs"
+
+- id: openai_deep_research
+  name: "OpenAI Deep Research"
+  category: analysis
+  priority: P2
+  description: "OpenAI Responses API workflow for guided multi-source synthesis."
+  protocols: ["OpenAI"]
+  base_urls:
+    - "https://platform.openai.com/docs/guides/deep-research"
+  authentication: "api-key"
+  requires_credentials: true
+  status: trial
+  capabilities: ["research-synthesis", "question-decomposition"]
+  tags: ["openai", "llm", "synthesis"]
+  notes: "Requires OpenAI API key and deep_research_model configuration; falls back to o4-mini-deep-research."
+  references:
+    - "https://platform.openai.com/docs/guides/deep-research"
 
 - id: scopus
   name: "Scopus API"
