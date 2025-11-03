@@ -46,6 +46,8 @@ If any step fails, capture the error, provide remediation, and pause the workflo
      records = json.loads(payload)
      ```
    - Prefer `httpx` (already in the project dependencies) for any follow-up API calls and respect 429 throttling with exponential backoff or by falling back to `OpenAlex`.
+   - Reserve `tiangong_lca_remote` for micro-level LCA case studies or detailed footprint comparisons; macro literature sweeps should stay with `tiangong_ai_remote` and the other P1 sources to keep the workflow deterministic.
+   - When invoking TianGong MCP search tools, explicitly set `extK` to control how many neighbouring chunks are returned (default `extK=2`); raise it only when additional local context is truly required.
 
 4. **Carbon Intensity Context**
    ```bash
