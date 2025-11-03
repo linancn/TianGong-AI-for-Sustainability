@@ -272,6 +272,8 @@ def test_research_find_papers_cli(cli_runner, registry_file):
         query="ai sustainability",
         sdg_matches=[{"code": "7", "title": "Affordable and Clean Energy", "score": 2}],
         semantic_scholar=[{"title": "Paper A", "year": 2024, "authors": ["Alice"], "url": "https://example.com"}],
+        arxiv=[],
+        scopus=[],
         openalex=[],
         notes=[],
         citation_edges=None,

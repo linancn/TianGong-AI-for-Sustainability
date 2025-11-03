@@ -62,6 +62,7 @@ Missing a feature? Just re-run your installer (`install_macos.sh`, `install_ubun
 - `uv run tiangong-research sources verify <id>` — confirm credentials/connectivity.
 - `uv run tiangong-research research find-code "<topic>" --limit 5 --json` — discover sustainability repositories.
 - `uv run tiangong-research research map-sdg <file>` — align a document with SDG goals (requires OSDG access).
+- `uv run tiangong-research research find-papers "<keywords>" --openalex --arxiv --scopus --citation-graph --limit 10 --json` — aggregate Semantic Scholar plus optional OpenAlex/arXiv/Scopus enrichment.
 - `uv run --group 3rd tiangong-research research get-carbon-intensity <location>` — fetch grid intensity metrics (set the `GRID_INTENSITY_CLI` env var if you use a non-default executable).
 - `uv run tiangong-research research synthesize "<question>" --output reports/synthesis.md` — orchestrate SDG, code, literature, carbon checks, then compile an LLM-guided summary.
 - `uv run tiangong-research research visuals verify` — make sure the AntV MCP chart server is reachable.

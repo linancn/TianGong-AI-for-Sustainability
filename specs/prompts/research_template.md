@@ -37,9 +37,9 @@ If any step fails, capture the error, provide remediation, and pause the workflo
    ```bash
    uv run tiangong-research research find-papers "<keywords>" --json
    ```
-   - Optional flags: `--openalex/--no-openalex`, `--citation-graph`, `--limit`.
+   - Optional flags: `--openalex/--no-openalex`, `--arxiv/--no-arxiv`, `--scopus/--no-scopus`, `--citation-graph`, `--limit`.
    - Results default to Semantic Scholar; when OpenAlex is enabled, the CLI enriches with cited-by counts and limited references.
-   - If Scopus credentials exist, enrich with `--include-scopus` once the adapter is available.
+   - Local arXiv and Scopus exports are read from `TIANGONG_ARXIV_INDEX` / `TIANGONG_SCOPUS_INDEX` (or `.cache/tiangong/<source>/index.jsonl`).
    - When using `tiangong_ai_remote` directly, remember each `Search_*` tool returns a JSON string. Decode it first:
      ```python
      payload, _ = client.invoke_tool("tiangong_ai_remote", "Search_Sci_Tool", {...})

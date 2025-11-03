@@ -949,6 +949,8 @@ def research_find_papers(
     query: str = typer.Argument(..., help="Search query or keyword."),
     limit: int = typer.Option(10, "--limit", "-n", min=1, max=50, help="Maximum number of papers per source."),
     include_openalex: bool = typer.Option(True, "--openalex/--no-openalex", help="Toggle OpenAlex enrichment."),
+    include_arxiv: bool = typer.Option(False, "--arxiv/--no-arxiv", help="Toggle local arXiv dump enrichment (TIANGONG_ARXIV_INDEX or cache)."),
+    include_scopus: bool = typer.Option(False, "--scopus/--no-scopus", help="Toggle Scopus export enrichment (TIANGONG_SCOPUS_INDEX or cache)."),
     citation_graph: bool = typer.Option(False, "--citation-graph/--no-citation-graph", help="Emit citation edges derived from OpenAlex references."),
     output_json: bool = typer.Option(False, "--json", help="Emit aggregated results as JSON."),
     sdg_text: Optional[Path] = typer.Option(None, "--sdg-text", resolve_path=True, help="Optional text/PDF file used to seed SDG alignment."),
@@ -969,6 +971,8 @@ def research_find_papers(
         sdg_context=sdg_context_text,
         limit=limit,
         include_openalex=include_openalex,
+        include_arxiv=include_arxiv,
+        include_scopus=include_scopus,
         include_citations=citation_graph,
     )
 
@@ -982,6 +986,8 @@ def research_find_papers(
         "query": artifacts.query,
         "sdg_matches": artifacts.sdg_matches,
         "semantic_scholar": artifacts.semantic_scholar,
+        "arxiv": artifacts.arxiv,
+        "scopus": artifacts.scopus,
         "openalex": artifacts.openalex,
         "notes": artifacts.notes,
     }
@@ -1028,6 +1034,29 @@ def research_find_papers(
     if artifacts.citation_edges is not None:
         typer.echo("")
         typer.echo(f"Citation edges recorded: {len(artifacts.citation_edges)}")
+
+    if artifacts.arxiv:
+        typer.echo("")
+        typer.echo(f"arXiv local results ({len(artifacts.arxiv)}):")
+        for record in artifacts.arxiv:
+            title = record.get("title", "Untitled")
+            year = record.get("year") or "?"
+            typer.echo(f"- {title} ({year})")
+            summary = record.get("summary")
+            if summary:
+                typer.echo(f"  Summary: {summary[:160]}{'…' if len(summary) > 160 else ''}")
+
+    if artifacts.scopus:
+        typer.echo("")
+        typer.echo(f"Scopus results ({len(artifacts.scopus)}):")
+        for record in artifacts.scopus:
+            title = record.get("title", "Untitled")
+            year = record.get("year") or "?"
+            cites = record.get("cited_by_count", "?")
+            typer.echo(f"- {title} ({year}) — cited by {cites}")
+            doi = record.get("doi")
+            if doi:
+                typer.echo(f"  DOI: {doi}")
 
     if artifacts.notes:
         typer.echo("")

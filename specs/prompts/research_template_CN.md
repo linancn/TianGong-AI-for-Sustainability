@@ -37,9 +37,9 @@
    ```bash
    uv run tiangong-research research find-papers "<关键词>" --json
    ```
-   - 可选参数：`--openalex/--no-openalex`、`--citation-graph`、`--limit`。
-   - 默认从 Semantic Scholar 获取结果；如 OpenAlex 源启用，可补充引用次数与部分参考文献。
-   - 后续如具备 Scopus 凭据，可扩展相关适配器；暂时保持记录说明。
+   - 可选参数：`--openalex/--no-openalex`、`--arxiv/--no-arxiv`、`--scopus/--no-scopus`、`--citation-graph`、`--limit`。
+   - 默认从 Semantic Scholar 获取结果；如 OpenAlex 启用，可补充引用次数与部分参考文献。
+   - 本地 arXiv/Scopus 数据需分别通过 `TIANGONG_ARXIV_INDEX`、`TIANGONG_SCOPUS_INDEX` 或 `.cache/tiangong/<source>/index.jsonl` 提供。
    - 直接调用 `tiangong_ai_remote` 时，注意所有 `Search_*` 工具返回的都是 JSON 字符串，需先解析：
    ```python
     payload, _ = client.invoke_tool("tiangong_ai_remote", "Search_Sci_Tool", {...})

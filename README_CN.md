@@ -62,6 +62,7 @@ uv run tiangong-research research workflow simple --topic "生命周期评估"
 - `uv run tiangong-research sources verify <id>` — 检查指定数据源的连通性与配置。
 - `uv run tiangong-research research find-code "<主题>" --limit 5 --json` — 搜索可持续性相关开源仓库。
 - `uv run tiangong-research research map-sdg <文件>` — 调用 OSDG API 将文本映射到 SDG 目标（需配置可用的 OSDG 端点）。
+- `uv run tiangong-research research find-papers "<关键词>" --openalex --arxiv --scopus --citation-graph --limit 10 --json` — 聚合 Semantic Scholar 与可选的 OpenAlex、本地 arXiv、Scopus 数据。
 - `uv run --group 3rd tiangong-research research get-carbon-intensity <地区>` — 获取碳强度指标（如使用自定义 CLI，可设置 `GRID_INTENSITY_CLI` 环境变量）。
 - `uv run tiangong-research research synthesize "<问题>" --output reports/synthesis.md` — 先收集 SDG、代码、文献与碳强度，再由 LLM 生成综合分析。 
 - `uv run tiangong-research research visuals verify` — 确认 AntV MCP 图表服务器可达。
