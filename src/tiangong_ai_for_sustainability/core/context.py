@@ -34,11 +34,24 @@ class ExecutionOptions:
     observability_tags:
         Additional tags surfaced in logs and telemetry. Useful for downstream
         pipelines, e.g. when Codex wants to attribute work to a parent plan.
+    prompt_template:
+        Optional alias or filesystem path pointing to a reusable prompt template
+        under ``specs/prompts``. Shared by LLM-enabled commands to keep prompt
+        selection deterministic.
+    prompt_language:
+        Preferred language for prompt templates. Used to pick between English
+        and Chinese defaults when the caller does not provide a specific path.
+    prompt_variables:
+        Arbitrary placeholders that commands can apply when rendering prompts.
+        Each command decides how to interpret these variables.
     """
 
     dry_run: bool = False
     background_tasks: bool = False
     observability_tags: Sequence[str] = field(default_factory=tuple)
+    prompt_template: Optional[str] = None
+    prompt_language: Optional[str] = None
+    prompt_variables: Mapping[str, str] = field(default_factory=dict)
 
 
 @dataclass(slots=True)

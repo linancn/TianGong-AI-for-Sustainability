@@ -11,8 +11,9 @@ import subprocess
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from pathlib import Path
-from typing import Callable, Iterable, List, Optional, Sequence
+from typing import Callable, Iterable, List, Mapping, Optional, Sequence
 
+from ..adapters import AdapterError
 from ..core.logging import get_logger
 from ..deep_research import DeepResearchClient, DeepResearchResult, ResearchPrompt
 from ..services import ResearchServices
@@ -38,6 +39,9 @@ class DeepLCAWorkflowArtifacts:
     doc_variants: List[Path]
     conversion_warnings: List[str]
     lca_artifacts: LCACitationWorkflowArtifacts
+    prompt_template_identifier: Optional[str] = None
+    prompt_template_path: Optional[Path] = None
+    prompt_language: Optional[str] = None
 
 
 def run_deep_lca_report(
@@ -50,6 +54,8 @@ def run_deep_lca_report(
     deep_research: bool = True,
     deep_research_prompt: Optional[str] = None,
     deep_research_instructions: Optional[str] = None,
+    prompt_template: Optional[str] = None,
+    prompt_language: Optional[str] = None,
     lca_runner: Optional[Callable[..., LCACitationWorkflowArtifacts]] = None,
 ) -> DeepLCAWorkflowArtifacts:
     """
@@ -71,7 +77,13 @@ def run_deep_lca_report(
         Toggle for invoking the OpenAI Deep Research client. When ``False`` the
         workflow produces deterministic outputs only.
     deep_research_prompt / deep_research_instructions:
-        Overrides for the Deep Research request. Helpful for user customisation.
+        Direct overrides for the Deep Research request. Helpful for quick,
+        ad-hoc customisation without switching templates.
+    prompt_template / prompt_language:
+        Optional template selection parameters. When instructions are not
+        provided explicitly, the helper resolves the referenced template (alias
+        or path) and uses its contents as the Deep Research instruction block.
+        The language hint chooses between English/Chinese defaults.
     lca_runner:
         Dependency injection hook used by tests; defaults to
         :func:`run_lca_citation_workflow`.
@@ -135,6 +147,9 @@ def run_deep_lca_report(
             doc_variants=[],
             conversion_warnings=[],
             lca_artifacts=placeholder_artifacts,
+            prompt_template_identifier=None,
+            prompt_template_path=None,
+            prompt_language=prompt_language,
         )
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -165,15 +180,41 @@ def run_deep_lca_report(
 
     deep_summary: Optional[str] = None
     deep_response_path: Optional[Path] = None
+    loaded_prompt = None
+    prompt_variables = getattr(getattr(services, "context", None), "options", None)
+    prompt_variables_map = dict(getattr(prompt_variables, "prompt_variables", {}) if prompt_variables else {})
+    if prompt_variables_map:
+        workflow_logger.debug("Prompt variables provided", extra={"keys": sorted(prompt_variables_map)})
 
     if deep_research:
+        effective_instructions = deep_research_instructions
+        template_hint = prompt_template
+        language_hint = prompt_language
+        if effective_instructions is None:
+            try:
+                loaded_prompt = services.load_prompt_template(template_hint, language=language_hint)
+            except AdapterError as exc:
+                workflow_logger.warning(
+                    "Prompt template unavailable; falling back to default Deep Research instructions",
+                    extra={"error": str(exc)},
+                )
+            else:
+                effective_instructions = _apply_prompt_variables(loaded_prompt.content, prompt_variables_map)
+                workflow_logger.info(
+                    "Using prompt template for Deep Research instructions",
+                    extra={
+                        "identifier": loaded_prompt.identifier,
+                        "language": loaded_prompt.language,
+                        "path": loaded_prompt.path.as_posix(),
+                    },
+                )
         try:
             workflow_logger.info("Invoking Deep Research synthesis")
             result = _run_deep_research(
                 lca_artifacts=lca_artifacts,
                 years=years,
                 prompt_override=deep_research_prompt,
-                instructions_override=deep_research_instructions,
+                instructions_override=effective_instructions,
             )
         except Exception as exc:  # pragma: no cover - depends on runtime credentials
             deep_summary = f"Deep Research unavailable: {exc}"
@@ -226,6 +267,9 @@ def run_deep_lca_report(
         doc_variants=doc_variants,
         conversion_warnings=conversion_warnings,
         lca_artifacts=lca_artifacts,
+        prompt_template_identifier=getattr(loaded_prompt, "identifier", None),
+        prompt_template_path=getattr(loaded_prompt, "path", None),
+        prompt_language=getattr(loaded_prompt, "language", prompt_language),
     )
 
 
@@ -251,6 +295,15 @@ def _run_deep_research(
         ),
         max_tool_calls=30,
     )
+
+
+def _apply_prompt_variables(content: str, variables: Mapping[str, str]) -> str:
+    if not variables:
+        return content
+    rendered = content
+    for key, value in variables.items():
+        rendered = rendered.replace(f"{{{{{key}}}}}", value)
+    return rendered
 
 
 def _build_default_prompt(years: int) -> ResearchPrompt:

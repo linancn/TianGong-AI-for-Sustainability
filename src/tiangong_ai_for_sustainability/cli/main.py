@@ -135,6 +135,21 @@ def _parse_status(status: Optional[str]) -> Optional[DataSourceStatus]:
         raise typer.BadParameter(f"Unknown status '{status}'. Expected one of: " f"{', '.join(item.value for item in DataSourceStatus)}.") from None
 
 
+def _parse_prompt_variables(values: Optional[List[str]]) -> Dict[str, str]:
+    variables: Dict[str, str] = {}
+    if not values:
+        return variables
+    for entry in values:
+        if "=" not in entry:
+            raise typer.BadParameter(f"Prompt variable '{entry}' must use key=value format.")
+        key, value = entry.split("=", 1)
+        key = key.strip()
+        if not key:
+            raise typer.BadParameter(f"Prompt variable '{entry}' is missing a key.")
+        variables[key] = value
+    return variables
+
+
 @app.callback(invoke_without_command=False)
 def main(
     ctx: typer.Context,
@@ -155,6 +170,22 @@ def main(
     ),
     dry_run: bool = typer.Option(False, "--dry-run", help="Emit execution plans without performing actions."),
     background: bool = typer.Option(False, "--background", help="Enable background execution when supported."),
+    prompt_template: Optional[str] = typer.Option(
+        None,
+        "--prompt-template",
+        help="Default prompt template alias or path for LLM-enabled workflows.",
+    ),
+    prompt_language: Optional[str] = typer.Option(
+        None,
+        "--prompt-language",
+        help="Preferred language for prompt templates (e.g. 'en', 'zh').",
+    ),
+    prompt_variable: Optional[List[str]] = typer.Option(
+        None,
+        "--prompt-variable",
+        "-P",
+        help="Placeholder in the form key=value to substitute inside prompt templates. Can be repeated.",
+    ),
 ) -> None:
     """
     Configure global execution context.
@@ -168,9 +199,16 @@ def main(
     except RegistryLoadError as exc:
         raise typer.Exit(code=1) from typer.BadParameter(str(exc))
 
+    options = ExecutionOptions(
+        dry_run=dry_run,
+        background_tasks=background,
+        prompt_template=prompt_template,
+        prompt_language=prompt_language,
+        prompt_variables=_parse_prompt_variables(prompt_variable),
+    )
     context = ExecutionContext.build_default(
         cache_dir=cache_dir,
-        options=ExecutionOptions(dry_run=dry_run, background_tasks=background),
+        options=options,
     )
     # When an allowlist has not been specified, default to all non-blocked sources.
     context.enabled_sources.update(entry.source_id for entry in registry.iter_enabled())
@@ -590,12 +628,37 @@ def research_workflow_lca_deep_report(
         "--deep-instructions",
         help="Override the system instructions supplied to Deep Research.",
     ),
+    prompt_template: Optional[str] = typer.Option(
+        None,
+        "--prompt-template",
+        help="Prompt template alias or path applied to Deep Research instructions.",
+    ),
+    prompt_language: Optional[str] = typer.Option(
+        None,
+        "--prompt-language",
+        help="Language hint for prompt template selection (e.g. 'en', 'zh').",
+    ),
+    prompt_variable: Optional[List[str]] = typer.Option(
+        None,
+        "--prompt-variable",
+        "-P",
+        help="Template placeholder assignment in key=value form. Can be repeated.",
+    ),
 ) -> None:
     """Run the composite LCA + Deep Research workflow and save assets under output_dir."""
 
     registry = _require_registry(ctx)
     context = _require_context(ctx)
     services = ResearchServices(registry=registry, context=context)
+
+    if prompt_template:
+        context.options.prompt_template = prompt_template
+    if prompt_language:
+        context.options.prompt_language = prompt_language
+    if prompt_variable:
+        merged = dict(context.options.prompt_variables)
+        merged.update(_parse_prompt_variables(prompt_variable))
+        context.options.prompt_variables = merged
 
     artifacts = run_deep_lca_report(
         services,
@@ -606,6 +669,8 @@ def research_workflow_lca_deep_report(
         deep_research=not skip_deep_research,
         deep_research_prompt=deep_prompt,
         deep_research_instructions=deep_instructions,
+        prompt_template=prompt_template,
+        prompt_language=prompt_language,
     )
 
     if context.options.dry_run:
@@ -634,6 +699,10 @@ def research_workflow_lca_deep_report(
         typer.echo(f"Additional export created: {path}")
     for note in artifacts.conversion_warnings:
         typer.echo(f"Notice: {note}")
+    if artifacts.prompt_template_path:
+        typer.echo(f"Prompt template ({artifacts.prompt_template_identifier}) -> {artifacts.prompt_template_path}")
+    elif prompt_template or context.options.prompt_template:
+        typer.echo(f"Prompt template alias: {prompt_template or context.options.prompt_template}")
 
 
 @workflow_app.command("lca-citations")

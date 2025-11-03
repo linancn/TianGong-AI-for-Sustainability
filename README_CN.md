@@ -65,6 +65,17 @@ uv run tiangong-research research workflow simple --topic "生命周期评估"
 - `uv run --group 3rd tiangong-research research get-carbon-intensity <地区>` — 获取碳强度指标（如使用自定义 CLI，可设置 `GRID_INTENSITY_CLI` 环境变量）。
 - `uv run tiangong-research research visuals verify` — 确认 AntV MCP 图表服务器可达。
 
+## 提示模版与 Deep Research
+
+- CLI 提供全局参数 `--prompt-template`、`--prompt-language`、`--prompt-variable key=value`，用于选择驱动 LLM 综合分析的 Markdown 模版（当前作用于 Deep Research，未来亦将用于 `research synthesize`）。
+- 内置别名包括 `default`（英文）与 `default-cn`（中文），也可传入仓库相对或绝对路径以加载自定义模版。
+- 模版支持 `{{topic}}` 等占位符，可多次使用 `--prompt-variable` 按键值对替换内容。
+- 示例：
+  ```bash
+  uv run tiangong-research --prompt-template default-cn --prompt-variable topic="城市气候韧性" research workflow lca-deep-report --years 3
+  ```
+- 若仅需一次性覆盖，可继续使用 `--deep-prompt` 与 `--deep-instructions`；当未提供指令时，CLI 会自动回退至模版机制。
+
 ## 需要更专业的控制？
 
 如果你希望自行管理 Python 环境、在特殊平台部署，或需要详细排障说明，请阅读：

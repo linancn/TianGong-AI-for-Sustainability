@@ -418,5 +418,96 @@ def test_run_deep_lca_report(tmp_path, dummy_services, monkeypatch):
     assert "Plant-based plastics" in report_text
     assert "lca_trends.png" in report_text
     assert artifacts.citation_report_path.parent == output_dir
-    assert not artifacts.doc_variants
-    assert artifacts.conversion_warnings
+
+
+def test_run_deep_lca_report_applies_prompt_template(tmp_path, dummy_services, monkeypatch):
+    output_dir = tmp_path / "output"
+    template_path = tmp_path / "custom_template.md"
+    template_path.write_text("Summarise findings for {{topic}}", encoding="utf-8")
+
+    context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
+    context.options.prompt_variables = {"topic": "LCA digitisation"}
+    dummy_services.context = context
+
+    def fake_runner(
+        services,
+        *,
+        report_path,
+        chart_path,
+        raw_data_path=None,
+        years=5,
+        keyword_overrides=None,
+        max_records=200,
+    ) -> LCACitationWorkflowArtifacts:
+        report_path.write_text("Sample citation report", encoding="utf-8")
+        chart_path.write_bytes(b"fake-chart")
+        questions = [
+            CitationQuestion(
+                question="Question?",
+                citation_count=10,
+                publication_year=2024,
+                paper_title="Paper",
+                journal="Journal",
+                doi="10.1/abc",
+                url="https://example.com",
+                authors=["Author"],
+                keyword_hits={},
+            )
+        ]
+        return LCACitationWorkflowArtifacts(
+            report_path=report_path,
+            chart_path=chart_path,
+            chart_caption=None,
+            raw_data_path=raw_data_path,
+            questions=questions,
+            trending_topics=[],
+            research_gaps=[],
+            papers=[],
+        )
+
+    import tiangong_ai_for_sustainability.workflows.deep_lca as deep_lca_module
+
+    def fake_variants(markdown_path, output_dir):
+        return [], []
+
+    captured = {}
+
+    def fake_run(*, lca_artifacts, years, prompt_override, instructions_override):
+        captured["instructions"] = instructions_override
+
+        class DummyResult:
+            output_text = "Deep summary"
+
+            def to_dict(self):
+                return {"output": self.output_text}
+
+        return DummyResult()
+
+    def fake_load_prompt(template, language=None):
+        assert template == str(template_path)
+        return SimpleNamespace(
+            identifier="custom",
+            path=template_path,
+            language=language or "en",
+            content=template_path.read_text("utf-8"),
+        )
+
+    dummy_services.load_prompt_template = fake_load_prompt
+
+    monkeypatch.setattr(deep_lca_module, "_generate_document_variants", fake_variants)
+    monkeypatch.setattr(deep_lca_module, "_run_deep_research", fake_run)
+
+    artifacts = run_deep_lca_report(
+        dummy_services,
+        output_dir=output_dir,
+        prompt_template=str(template_path),
+        prompt_language="en",
+        lca_runner=fake_runner,
+    )
+
+    assert captured["instructions"] == "Summarise findings for LCA digitisation"
+    assert artifacts.prompt_template_path == template_path
+    assert artifacts.prompt_template_identifier == "custom"
+    assert artifacts.deep_research_summary == "Deep summary"
+    assert artifacts.doc_variants == []
+    assert artifacts.conversion_warnings == []

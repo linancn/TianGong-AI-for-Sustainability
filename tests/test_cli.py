@@ -267,6 +267,50 @@ def test_research_metrics_trending_cli_dry_run(cli_runner, registry_file):
     assert "Dry-run plan" in result.stdout
 
 
+def test_research_workflow_lca_deep_report_prompt_template(cli_runner, registry_file, tmp_path):
+    template_path = tmp_path / "template.md"
+    template_path.write_text("Instructions", encoding="utf-8")
+
+    artifacts = SimpleNamespace(
+        final_report_path=tmp_path / "deep_report.md",
+        citation_report_path=tmp_path / "citations.md",
+        chart_path=None,
+        chart_caption=None,
+        raw_data_path=None,
+        deep_research_summary="Deep summary",
+        deep_research_response_path=None,
+        doc_variants=[],
+        conversion_warnings=[],
+        lca_artifacts=None,
+        prompt_template_identifier="custom",
+        prompt_template_path=template_path,
+        prompt_language="en",
+    )
+
+    with patch(
+        "tiangong_ai_for_sustainability.cli.main.run_deep_lca_report",
+        return_value=artifacts,
+    ) as mocked:
+        result = invoke(
+            cli_runner,
+            [
+                "--registry",
+                str(registry_file),
+                "research",
+                "workflow",
+                "lca-deep-report",
+                "--prompt-template",
+                str(template_path),
+            ],
+        )
+
+    assert result.exit_code == 0
+    assert str(template_path) in result.stdout
+    assert mocked.call_count == 1
+    _, kwargs = mocked.call_args
+    assert kwargs["prompt_template"] == str(template_path)
+
+
 def test_research_visuals_verify_cli(cli_runner, registry_file):
     with patch(
         "tiangong_ai_for_sustainability.cli.main.ResearchServices.verify_chart_mcp",

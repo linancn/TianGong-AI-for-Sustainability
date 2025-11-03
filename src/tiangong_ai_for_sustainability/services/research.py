@@ -20,6 +20,7 @@ from ..adapters.environment import GridIntensityCLIAdapter
 from ..core import DataSourceDescriptor, DataSourceRegistry, DataSourceStatus, ExecutionContext, get_logger
 from ..core.mcp import MCPServerConfig, load_mcp_server_configs
 from ..core.mcp_client import MCPToolClient
+from ..core.prompts import LoadedPromptTemplate, PromptTemplateError, load_prompt_template
 
 
 @dataclass(slots=True)
@@ -255,3 +256,40 @@ class ResearchServices:
         if not config:
             raise AdapterError(f"MCP server '{source_id}' is not configured.")
         return config
+
+    # -- Prompt templates ------------------------------------------------------
+
+    def load_prompt_template(
+        self,
+        template: Optional[str] = None,
+        *,
+        language: Optional[str] = None,
+    ) -> LoadedPromptTemplate:
+        """
+        Resolve a prompt template using the execution context defaults.
+
+        Parameters
+        ----------
+        template:
+            Optional alias or path. When omitted the execution options'
+            ``prompt_template`` value (if any) is used.
+        language:
+            Optional override for the language hint. Falls back to
+            ``ExecutionOptions.prompt_language`` when not provided.
+        """
+
+        chosen_template = template or getattr(self.context.options, "prompt_template", None)
+        chosen_language = language or getattr(self.context.options, "prompt_language", None)
+        try:
+            loaded = load_prompt_template(chosen_template, language=chosen_language)
+        except PromptTemplateError as exc:
+            raise AdapterError(str(exc)) from exc
+        self.logger.debug(
+            "Loaded prompt template",
+            extra={
+                "identifier": loaded.identifier,
+                "path": loaded.path.as_posix(),
+                "language": loaded.language,
+            },
+        )
+        return loaded

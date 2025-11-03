@@ -65,6 +65,17 @@ Missing a feature? Just re-run your installer (`install_macos.sh`, `install_ubun
 - `uv run --group 3rd tiangong-research research get-carbon-intensity <location>` — fetch grid intensity metrics (set the `GRID_INTENSITY_CLI` env var if you use a non-default executable).
 - `uv run tiangong-research research visuals verify` — make sure the AntV MCP chart server is reachable.
 
+## Prompt Templates & Deep Research
+
+- Global flags `--prompt-template`, `--prompt-language`, and `--prompt-variable key=value` control which Markdown template feeds LLM synthesis steps (currently the Deep Research workflow, future `research synthesize`).
+- Built-in aliases: `default` (English) and `default-cn` (Chinese). You can also pass an absolute or project-relative path to a custom template.
+- Templates accept simple placeholders such as `{{topic}}`; combine multiple `--prompt-variable` arguments to substitute values.
+- Example:
+  ```bash
+  uv run tiangong-research --prompt-template default --prompt-variable topic="urban climate resilience" research workflow lca-deep-report --years 3
+  ```
+- `--deep-prompt` and `--deep-instructions` remain available for one-off overrides; templates apply only when instructions are omitted.
+
 ## Need Advanced Control?
 
 Power users who prefer to manage Python environments manually or run the CLI on atypical platforms should read:
