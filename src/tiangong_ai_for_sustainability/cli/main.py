@@ -20,7 +20,13 @@ from ..adapters import AdapterError
 from ..adapters.api.base import APIError
 from ..core import DataSourceDescriptor, DataSourceRegistry, DataSourceStatus, ExecutionContext, ExecutionOptions, RegistryLoadError
 from ..services import ResearchServices
-from ..workflows import run_deep_lca_report, run_lca_citation_workflow, run_simple_workflow, run_trending_metrics_workflow
+from ..workflows import (
+    run_deep_lca_report,
+    run_lca_citation_workflow,
+    run_simple_workflow,
+    run_synthesis_workflow,
+    run_trending_metrics_workflow,
+)
 from .adapters import resolve_adapter
 
 app = typer.Typer(no_args_is_help=True, add_completion=False, help="TianGong sustainability research CLI.")
@@ -859,6 +865,81 @@ def research_metrics_trending(
 
     if artifacts.output_path:
         typer.echo(f"Metrics written to {artifacts.output_path}")
+
+
+@research_app.command("synthesize")
+def research_synthesize(
+    ctx: typer.Context,
+    question: str = typer.Argument(..., help="Primary research question to explore."),
+    topic: Optional[str] = typer.Option(None, "--topic", "-t", help="Optional topic override for repository/paper discovery."),
+    sdg_text: Optional[Path] = typer.Option(None, "--sdg-text", resolve_path=True, help="Path to a text or PDF file used for SDG alignment."),
+    repo_limit: int = typer.Option(5, "--repo-limit", help="Maximum number of repositories to include."),
+    paper_limit: int = typer.Option(5, "--paper-limit", help="Maximum number of papers to include."),
+    carbon_location: Optional[str] = typer.Option(None, "--carbon-location", help="Grid intensity location identifier."),
+    output: Path = typer.Option(Path("reports") / "synthesis.md", "--output", "-o", resolve_path=True, help="Destination path for the Markdown synthesis report."),
+    instructions: Optional[str] = typer.Option(None, "--instructions", help="Override LLM instructions directly (bypasses templates)."),
+    skip_llm: bool = typer.Option(False, "--skip-llm", help="Skip the LLM synthesis step and emit deterministic findings only."),
+    prompt_template: Optional[str] = typer.Option(None, "--prompt-template", help="Prompt template alias or path applied to LLM instructions."),
+    prompt_language: Optional[str] = typer.Option(None, "--prompt-language", help="Language hint for prompt template selection."),
+    prompt_variable: Optional[List[str]] = typer.Option(None, "--prompt-variable", "-P", help="Template placeholder assignment in key=value form. Can be repeated."),
+) -> None:
+    """Run an orchestration workflow that combines deterministic evidence and LLM synthesis."""
+
+    registry = _require_registry(ctx)
+    context = _require_context(ctx)
+    services = ResearchServices(registry=registry, context=context)
+
+    if prompt_template:
+        context.options.prompt_template = prompt_template
+    if prompt_language:
+        context.options.prompt_language = prompt_language
+    if prompt_variable:
+        merged = dict(context.options.prompt_variables)
+        merged.update(_parse_prompt_variables(prompt_variable))
+        context.options.prompt_variables = merged
+
+    sdg_context_text: Optional[str] = None
+    if sdg_text:
+        sdg_context_text = _read_text_file(sdg_text)
+
+    artifacts = run_synthesis_workflow(
+        services,
+        question=question,
+        report_path=output,
+        topic=topic,
+        sdg_context=sdg_context_text,
+        repository_limit=repo_limit,
+        paper_limit=paper_limit,
+        carbon_location=carbon_location,
+        prompt_template=prompt_template,
+        prompt_language=prompt_language,
+        instructions_override=instructions,
+        skip_llm=skip_llm,
+    )
+
+    if context.options.dry_run and artifacts.plan:
+        typer.echo("Dry-run: generated execution plan; no artefacts were created.")
+        for step in artifacts.plan:
+            typer.echo(f"- {step}")
+        typer.echo(f"Planned report location: {output}")
+        return
+
+    typer.echo(f"Synthesis report written to {artifacts.report_path}")
+    if artifacts.llm_response_path:
+        typer.echo(f"LLM response saved to {artifacts.llm_response_path}")
+    elif artifacts.llm_summary and artifacts.llm_summary.startswith("Deep Research unavailable"):
+        typer.echo(artifacts.llm_summary)
+    elif skip_llm:
+        typer.echo("LLM synthesis skipped; report contains deterministic findings only.")
+
+    if artifacts.llm_summary and not skip_llm:
+        typer.echo("\nLLM synthesis summary:")
+        typer.echo(artifacts.llm_summary)
+
+    if artifacts.prompt_template_path:
+        typer.echo(f"Prompt template ({artifacts.prompt_template_identifier}) -> {artifacts.prompt_template_path}")
+    elif prompt_template or context.options.prompt_template:
+        typer.echo(f"Prompt template alias: {prompt_template or context.options.prompt_template}")
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -11,7 +11,7 @@ import subprocess
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from pathlib import Path
-from typing import Callable, Iterable, List, Mapping, Optional, Sequence
+from typing import Callable, Iterable, List, Optional, Sequence
 
 from ..adapters import AdapterError
 from ..core.logging import get_logger
@@ -199,7 +199,7 @@ def run_deep_lca_report(
                     extra={"error": str(exc)},
                 )
             else:
-                effective_instructions = _apply_prompt_variables(loaded_prompt.content, prompt_variables_map)
+                effective_instructions = loaded_prompt.render(prompt_variables_map)
                 workflow_logger.info(
                     "Using prompt template for Deep Research instructions",
                     extra={
@@ -295,15 +295,6 @@ def _run_deep_research(
         ),
         max_tool_calls=30,
     )
-
-
-def _apply_prompt_variables(content: str, variables: Mapping[str, str]) -> str:
-    if not variables:
-        return content
-    rendered = content
-    for key, value in variables.items():
-        rendered = rendered.replace(f"{{{{{key}}}}}", value)
-    return rendered
 
 
 def _build_default_prompt(years: int) -> ResearchPrompt:

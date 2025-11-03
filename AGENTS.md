@@ -96,7 +96,7 @@ Services should normalise these entities into graph-friendly structures (Network
 | `research query-kg` | Phase 1 | Planned wrapper around `wdq`/`wikidata-dl` for SPARQL queries. |
 | `research find-papers` | Phase 1 | Planned aggregator across Semantic Scholar, arXiv index (when available), Scopus fallback. |
 | `research map-gri` | Phase 2 | Parse reports with PDF extractors, align against GRI ontology, optionally delegate to LLM scoring. |
-| `research synthesize` | Phase 3 | LLM controller orchestrating other commands according to user prompts. |
+| `research synthesize` | Phase 3 | LLM controller orchestrating other commands according to user prompts. **Implemented** (template-aware). |
 | `research visuals verify` | Phase 2 | Confirms AntV MCP chart server availability prior to visualization workflows. **Implemented**. |
 | `research workflow simple` | Phase 2 | Automates a compact multi-source study (SDG matches, repos, papers, carbon snapshot, AntV chart). **Implemented**. |
 | `research workflow lca-deep-report` | Phase 3 | Deterministic LCA citation scan plus Deep Research synthesis. **Implemented** (supports prompt template selection). |
@@ -131,6 +131,7 @@ Phase progression must honour dependencies encoded in `tasks/blueprint.yaml`.
 - Implemented Phase 1 commands: `research map-sdg`, `research find-code`, `research get-carbon-intensity`.
 - Test suite (`uv run pytest`) covers core modules and CLI operations.
 - Next priorities: ingest SDG/GRI ontologies into structured storage, implement remaining Phase 1 commands, and broaden citation/graph tooling.
+- Phase 3 synthesis command now available with prompt template support.
 
 ## Environment & System Requirements
 

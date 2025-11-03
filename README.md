@@ -63,11 +63,12 @@ Missing a feature? Just re-run your installer (`install_macos.sh`, `install_ubun
 - `uv run tiangong-research research find-code "<topic>" --limit 5 --json` — discover sustainability repositories.
 - `uv run tiangong-research research map-sdg <file>` — align a document with SDG goals (requires OSDG access).
 - `uv run --group 3rd tiangong-research research get-carbon-intensity <location>` — fetch grid intensity metrics (set the `GRID_INTENSITY_CLI` env var if you use a non-default executable).
+- `uv run tiangong-research research synthesize "<question>" --output reports/synthesis.md` — orchestrate SDG, code, literature, carbon checks, then compile an LLM-guided summary.
 - `uv run tiangong-research research visuals verify` — make sure the AntV MCP chart server is reachable.
 
 ## Prompt Templates & Deep Research
 
-- Global flags `--prompt-template`, `--prompt-language`, and `--prompt-variable key=value` control which Markdown template feeds LLM synthesis steps (currently the Deep Research workflow, future `research synthesize`).
+- Global flags `--prompt-template`, `--prompt-language`, and `--prompt-variable key=value` control which Markdown template feeds LLM synthesis steps (Deep Research workflows and `research synthesize`).
 - Built-in aliases: `default` (English) and `default-cn` (Chinese). You can also pass an absolute or project-relative path to a custom template.
 - Templates accept simple placeholders such as `{{topic}}`; combine multiple `--prompt-variable` arguments to substitute values.
 - Example:

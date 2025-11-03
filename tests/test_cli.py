@@ -267,6 +267,47 @@ def test_research_metrics_trending_cli_dry_run(cli_runner, registry_file):
     assert "Dry-run plan" in result.stdout
 
 
+def test_research_synthesize_cli(cli_runner, registry_file, tmp_path):
+    report_path = tmp_path / "synthesis.md"
+    llm_path = tmp_path / "synthesis.llm.json"
+    artifacts = SimpleNamespace(
+        report_path=report_path,
+        sdg_matches=[],
+        repositories=[],
+        papers=[],
+        carbon_snapshot=None,
+        llm_summary="Summary",
+        llm_response_path=llm_path,
+        prompt_template_identifier="custom",
+        prompt_template_path=tmp_path / "template.md",
+        prompt_language="en",
+        plan=None,
+    )
+
+    with patch(
+        "tiangong_ai_for_sustainability.cli.main.run_synthesis_workflow",
+        return_value=artifacts,
+    ) as mocked:
+        result = invoke(
+            cli_runner,
+            [
+                "--registry",
+                str(registry_file),
+                "research",
+                "synthesize",
+                "How can AI reduce supply-chain emissions?",
+                "--output",
+                str(report_path),
+            ],
+        )
+
+    assert result.exit_code == 0
+    assert str(report_path) in result.stdout
+    assert mocked.call_count == 1
+    _, kwargs = mocked.call_args
+    assert kwargs["question"] == "How can AI reduce supply-chain emissions?"
+
+
 def test_research_workflow_lca_deep_report_prompt_template(cli_runner, registry_file, tmp_path):
     template_path = tmp_path / "template.md"
     template_path.write_text("Instructions", encoding="utf-8")

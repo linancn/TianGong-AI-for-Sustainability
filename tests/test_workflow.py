@@ -7,6 +7,7 @@ import pytest
 
 from tiangong_ai_for_sustainability.adapters.base import VerificationResult
 from tiangong_ai_for_sustainability.core import ExecutionContext, ExecutionOptions
+from tiangong_ai_for_sustainability.deep_research import ResearchPrompt
 from tiangong_ai_for_sustainability.workflows.deep_lca import run_deep_lca_report
 from tiangong_ai_for_sustainability.workflows.lca_citations import (
     CitationQuestion,
@@ -18,6 +19,7 @@ from tiangong_ai_for_sustainability.workflows.lca_citations import (
 )
 from tiangong_ai_for_sustainability.workflows.metrics import TRENDING_METRIC_CONFIGS, run_trending_metrics_workflow
 from tiangong_ai_for_sustainability.workflows.simple import run_simple_workflow
+from tiangong_ai_for_sustainability.workflows.synthesize import run_synthesis_workflow
 
 
 class DummyServices:
@@ -489,7 +491,7 @@ def test_run_deep_lca_report_applies_prompt_template(tmp_path, dummy_services, m
             identifier="custom",
             path=template_path,
             language=language or "en",
-            content=template_path.read_text("utf-8"),
+            render=lambda variables: template_path.read_text("utf-8").replace("{{topic}}", variables.get("topic", "")),
         )
 
     dummy_services.load_prompt_template = fake_load_prompt
@@ -511,3 +513,98 @@ def test_run_deep_lca_report_applies_prompt_template(tmp_path, dummy_services, m
     assert artifacts.deep_research_summary == "Deep summary"
     assert artifacts.doc_variants == []
     assert artifacts.conversion_warnings == []
+
+
+def test_run_synthesis_workflow_dry_run(tmp_path, dummy_services):
+    context = ExecutionContext.build_default(
+        cache_dir=tmp_path / "cache",
+        options=ExecutionOptions(dry_run=True),
+    )
+    dummy_services.context = context
+
+    artifacts = run_synthesis_workflow(
+        dummy_services,
+        question="How can AI reduce supply-chain emissions?",
+        report_path=tmp_path / "synthesis.md",
+        topic="ai sustainability",
+        carbon_location="CAISO_NORTH",
+    )
+
+    assert artifacts.plan
+    assert "Match SDG goals" in artifacts.plan[0]
+    assert not artifacts.report_path.exists()
+
+
+def test_run_synthesis_workflow_with_llm(tmp_path, dummy_services, monkeypatch):
+    context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
+    context.options.prompt_variables = {"audience": "engineers"}
+    dummy_services.context = context
+
+    template_path = tmp_path / "template.md"
+    template_path.write_text("Summarise for {{topic}}", encoding="utf-8")
+
+    captured = {}
+
+    class FakeResult:
+        output_text = "LLM summary"
+
+        def to_dict(self):
+            return {"output": self.output_text}
+
+    class FakeClient:
+        def run(self, prompt, instructions=None, max_tool_calls=None):
+            captured["prompt"] = prompt
+            captured["instructions"] = instructions
+            return FakeResult()
+
+    def fake_load_prompt(template, language=None):
+        assert template == "custom"
+        return SimpleNamespace(
+            identifier="custom",
+            path=template_path,
+            language=language or "en",
+            render=lambda variables: template_path.read_text("utf-8").replace("{{topic}}", variables.get("topic", "")),
+        )
+
+    dummy_services.load_prompt_template = fake_load_prompt
+    monkeypatch.setattr(
+        "tiangong_ai_for_sustainability.workflows.synthesize.DeepResearchClient",
+        lambda: FakeClient(),
+    )
+
+    artifacts = run_synthesis_workflow(
+        dummy_services,
+        question="How can AI reduce supply-chain emissions?",
+        report_path=tmp_path / "synthesis.md",
+        topic="green software",
+        carbon_location="CAISO_NORTH",
+        prompt_template="custom",
+        prompt_language="en",
+    )
+
+    assert artifacts.llm_summary == "LLM summary"
+    assert artifacts.report_path.exists()
+    assert artifacts.llm_response_path and artifacts.llm_response_path.exists()
+    assert artifacts.prompt_template_path == template_path
+    assert captured["instructions"] == "Summarise for green software"
+    assert isinstance(captured["prompt"], ResearchPrompt)
+
+
+def test_run_synthesis_workflow_skip_llm(tmp_path, dummy_services, monkeypatch):
+    context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
+    dummy_services.context = context
+
+    monkeypatch.setattr(
+        "tiangong_ai_for_sustainability.workflows.synthesize.DeepResearchClient",
+        lambda: (_ for _ in ()).throw(AssertionError("LLM should not run")),
+    )
+
+    artifacts = run_synthesis_workflow(
+        dummy_services,
+        question="How can AI reduce supply-chain emissions?",
+        report_path=tmp_path / "synthesis.md",
+        skip_llm=True,
+    )
+
+    assert artifacts.llm_summary is None
+    assert artifacts.report_path.exists()

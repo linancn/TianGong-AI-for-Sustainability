@@ -96,7 +96,7 @@
 | `research query-kg` | Phase 1 | 计划封装 `wdq`/`wikidata-dl` 执行 SPARQL。 |
 | `research find-papers` | Phase 1 | 计划聚合 Semantic Scholar、arXiv、本地索引与 Scopus。 |
 | `research map-gri` | Phase 2 | 解析报告、比对 GRI 本体，可结合 LLM 进行评分。 |
-| `research synthesize` | Phase 3 | LLM 控制器按用户需求协调其它命令。 |
+| `research synthesize` | Phase 3 | LLM 控制器按用户需求协调其它命令。**已实现**（支持提示模版）。 |
 | `research visuals verify` | Phase 2 | 检查 AntV MCP 图表服务器可用性。**已实现**。 |
 | `research workflow simple` | Phase 2 | 自动化执行 SDG 匹配、代码/文献检索、碳强度采集与 AntV 图表生成。**已实现**。 |
 | `research workflow lca-deep-report` | Phase 3 | 确定性 LCA 引文扫描与 Deep Research 综合输出。**已实现**（支持提示模版选择）。 |
@@ -130,6 +130,7 @@
 - 已完成注册表、执行上下文与数据源验证命令。
 - Phase 1 命令 `research map-sdg`、`research find-code`、`research get-carbon-intensity` 已上线。
 - `uv run pytest` 覆盖核心模块与 CLI 操作。
+- Phase 3 的 `research synthesize` 已上线，并支持提示模版驱动的 LLM 综合分析。
 - 下一步重点：摄取 SDG/GRI 本体数据、完善其余 Phase 1 命令，并扩展引文/图谱工具。
 
 ## 环境与系统要求

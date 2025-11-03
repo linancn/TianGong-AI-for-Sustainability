@@ -28,6 +28,24 @@ class LoadedPromptTemplate:
     language: str
     content: str
 
+    def render(self, variables: Mapping[str, str] | None = None) -> str:
+        """
+        Apply simple ``{{placeholder}}`` substitutions to the template content.
+
+        Parameters
+        ----------
+        variables:
+            Key-value pairs used to replace placeholders. Missing keys are left
+            untouched.
+        """
+
+        if not variables:
+            return self.content
+        rendered = self.content
+        for key, value in variables.items():
+            rendered = rendered.replace(f"{{{{{key}}}}}", value)
+        return rendered
+
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _PROMPT_DIR = _REPO_ROOT / "specs" / "prompts"
