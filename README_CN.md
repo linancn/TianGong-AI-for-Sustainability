@@ -84,7 +84,7 @@ uv run tiangong-research research workflow simple --topic "生命周期评估"
 - 模版支持 `{{topic}}` 等占位符，可多次使用 `--prompt-variable` 按键值对替换内容。
 - 示例：
   ```bash
-  uv run tiangong-research --prompt-template default --prompt-variable topic="城市气候韧性" research workflow lca-deep-report --years 3
+  uv run tiangong-research --prompt-template default --prompt-variable topic="城市气候韧性" research workflow deep-report --profile lca --years 3
   ```
 - 若仅需一次性覆盖，可继续使用 `--deep-prompt` 与 `--deep-instructions`；当未提供指令时，CLI 会自动回退至模版机制。
 

@@ -101,7 +101,8 @@ Services should normalise these entities into graph-friendly structures (Network
 | `research synthesize` | Phase 3 | LLM controller orchestrating other commands according to user prompts. **Implemented** (template-aware). |
 | `research visuals verify` | Phase 2 | Confirms AntV MCP chart server availability prior to visualization workflows. **Implemented**. |
 | `research workflow simple` | Phase 2 | Automates a compact multi-source study (SDG matches, repos, papers, carbon snapshot, AntV chart). **Implemented**. |
-| `research workflow lca-deep-report` | Phase 3 | Deterministic LCA citation scan plus Deep Research synthesis. **Implemented** (supports prompt template selection). |
+| `research workflow citation-scan --profile <slug>` | Phase 2 | Deterministic citation workflow templated by profile metadata (default `lca`). **Implemented**. |
+| `research workflow deep-report --profile <slug>` | Phase 3 | Extends the citation template with Deep Research synthesis; LCA profile ships first, additional profiles plug into the same scaffold. **Implemented**. |
 
 Phase progression must honour dependencies encoded in `tasks/blueprint.yaml`.
 
@@ -112,6 +113,7 @@ Phase progression must honour dependencies encoded in `tasks/blueprint.yaml`.
 3. **Dry-Run Support** — services and CLI commands should surface dry-run plans rather than performing side effects when `context.options.dry_run` is true.
 4. **Missing Dependencies** — if a command depends on external binaries or credentials (e.g., OSDG token, `grid-intensity` CLI, Node.js for the chart server), surface clear instructions rather than failing silently.
 5. **Prompt Templates** — default to `specs/prompts/default.md` when no explicit instructions are provided. The loader resolves aliases through `ResearchServices.load_prompt_template`, supports `{{placeholder}}` substitution from `ExecutionOptions.prompt_variables`, and is configured via CLI flags (`--prompt-template`, `--prompt-language`, `--prompt-variable`). The Chinese file `specs/prompts/default_CN.md` is for humans only and must not be routed to Codex.
+6. **Workflow Profiles** — reusable templates power both citation scans and deep-report orchestration. Add new domains by registering a `CitationProfile`/`DeepResearchProfile` (see `workflows/profiles.py`) and rely on `--profile <slug>` without forking CLI commands.
 
 ### Testing Strategy
 

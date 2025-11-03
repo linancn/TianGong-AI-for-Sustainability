@@ -11,7 +11,7 @@ from tiangong_ai_for_sustainability.deep_research import ResearchPrompt
 from tiangong_ai_for_sustainability.workflows.deep_lca import run_deep_lca_report
 from tiangong_ai_for_sustainability.workflows.lca_citations import (
     CitationQuestion,
-    LCACitationWorkflowArtifacts,
+    CitationWorkflowArtifacts,
     PaperRecord,
     ResearchGap,
     TrendingTopic,
@@ -378,7 +378,7 @@ def test_run_lca_citation_workflow(tmp_path, monkeypatch, dummy_services):
 
     assert report_path.exists()
     report_text = report_path.read_text("utf-8")
-    assert "LCA Citation Intelligence" in report_text
+    assert "LCA × Planetary Boundaries Citation Intelligence" in report_text
     assert "Top citation questions" in report_text
 
     assert artifacts.chart_path == chart_path
@@ -397,13 +397,14 @@ def test_run_deep_lca_report(tmp_path, dummy_services, monkeypatch):
     def fake_runner(
         services,
         *,
+        profile=None,
         report_path,
         chart_path,
         raw_data_path=None,
         years=5,
         keyword_overrides=None,
         max_records=200,
-    ) -> LCACitationWorkflowArtifacts:
+    ) -> CitationWorkflowArtifacts:
         report_path.write_text("Sample citation report", encoding="utf-8")
         chart_path.write_bytes(b"fake-chart")
         if raw_data_path:
@@ -453,7 +454,7 @@ def test_run_deep_lca_report(tmp_path, dummy_services, monkeypatch):
             extra={},
         )
 
-        return LCACitationWorkflowArtifacts(
+        return CitationWorkflowArtifacts(
             report_path=report_path,
             chart_path=chart_path,
             chart_caption="Top LCA questions by citation count",
@@ -499,13 +500,14 @@ def test_run_deep_lca_report_applies_prompt_template(tmp_path, dummy_services, m
     def fake_runner(
         services,
         *,
+        profile=None,
         report_path,
         chart_path,
         raw_data_path=None,
         years=5,
         keyword_overrides=None,
         max_records=200,
-    ) -> LCACitationWorkflowArtifacts:
+    ) -> CitationWorkflowArtifacts:
         report_path.write_text("Sample citation report", encoding="utf-8")
         chart_path.write_bytes(b"fake-chart")
         questions = [
@@ -521,7 +523,7 @@ def test_run_deep_lca_report_applies_prompt_template(tmp_path, dummy_services, m
                 keyword_hits={},
             )
         ]
-        return LCACitationWorkflowArtifacts(
+        return CitationWorkflowArtifacts(
             report_path=report_path,
             chart_path=chart_path,
             chart_caption=None,
@@ -539,8 +541,9 @@ def test_run_deep_lca_report_applies_prompt_template(tmp_path, dummy_services, m
 
     captured = {}
 
-    def fake_run(*, lca_artifacts, years, prompt_override, instructions_override):
+    def fake_run(*, profile, citation_artifacts, years, prompt_override, instructions_override):
         captured["instructions"] = instructions_override
+        captured["profile"] = profile.slug
 
         class DummyResult:
             output_text = "Deep summary"
@@ -573,6 +576,7 @@ def test_run_deep_lca_report_applies_prompt_template(tmp_path, dummy_services, m
     )
 
     assert captured["instructions"] == "Summarise findings for LCA digitisation"
+    assert captured["profile"] == "lca"
     assert artifacts.prompt_template_path == template_path
     assert artifacts.prompt_template_identifier == "custom"
     assert artifacts.deep_research_summary == "Deep summary"

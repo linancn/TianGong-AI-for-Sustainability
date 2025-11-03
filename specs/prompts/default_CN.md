@@ -114,7 +114,7 @@
 | `uv run tiangong-research research synthesize "<QUESTION>"` | 综合确定性证据。 | `--prompt-template default`、可选 `--prompt-language en`、可重复 `-P 键=值`、可选 `--deep-research`。 |
 | `uv run tiangong-research research visuals verify` | 检查 AntV 图表服务。 | 可配合 `npx -y @antv/mcp-server-chart --transport streamable --version` 排查。 |
 | `uv run tiangong-research research workflow simple --topic "<TOPIC>"` | 运行阶段二组合流程。 | `--report-output <PATH>`、`--chart-output <PATH>`、可选 `--prompt-language en`。 |
-| `uv run tiangong-research research workflow lca-deep-report --prompt-template default` | 执行 LCA + 深度调研工作流。 | 可重复 `-P 键=值`、可选 `--prompt-language en`，记录综合报告路径。 |
+| `uv run tiangong-research research workflow deep-report --profile lca --prompt-template default` | 运行 LCA 领域的深度调研工作流。 | 可重复 `-P 键=值`、可选 `--prompt-language en`，记录综合报告路径。 |
 
 ---
 

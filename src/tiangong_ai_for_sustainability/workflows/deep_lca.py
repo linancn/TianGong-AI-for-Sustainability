@@ -19,15 +19,17 @@ from ..deep_research import DeepResearchClient, DeepResearchResult, ResearchProm
 from ..services import ResearchServices
 from .lca_citations import (
     CitationQuestion,
-    LCACitationWorkflowArtifacts,
+    CitationWorkflowArtifacts,
     TrendingTopic,
+    run_citation_template_workflow,
     run_lca_citation_workflow,
 )
+from .profiles import DeepResearchProfile, get_deep_research_profile
 
 
 @dataclass(slots=True)
-class DeepLCAWorkflowArtifacts:
-    """Bundle of outputs produced by the deep LCA workflow."""
+class DeepResearchWorkflowArtifacts:
+    """Bundle of outputs produced by a deep research workflow."""
 
     final_report_path: Path
     citation_report_path: Path
@@ -38,15 +40,18 @@ class DeepLCAWorkflowArtifacts:
     deep_research_response_path: Optional[Path]
     doc_variants: List[Path]
     conversion_warnings: List[str]
-    lca_artifacts: LCACitationWorkflowArtifacts
+    citation_artifacts: CitationWorkflowArtifacts
     prompt_template_identifier: Optional[str] = None
     prompt_template_path: Optional[Path] = None
     prompt_language: Optional[str] = None
+    profile_slug: Optional[str] = None
+    profile_display_name: Optional[str] = None
 
 
-def run_deep_lca_report(
+def run_deep_research_template(
     services: ResearchServices,
     *,
+    profile: DeepResearchProfile,
     output_dir: Path,
     years: int = 5,
     max_records: int = 200,
@@ -56,15 +61,17 @@ def run_deep_lca_report(
     deep_research_instructions: Optional[str] = None,
     prompt_template: Optional[str] = None,
     prompt_language: Optional[str] = None,
-    lca_runner: Optional[Callable[..., LCACitationWorkflowArtifacts]] = None,
-) -> DeepLCAWorkflowArtifacts:
+    citation_runner: Optional[Callable[..., CitationWorkflowArtifacts]] = None,
+) -> DeepResearchWorkflowArtifacts:
     """
-    Run the end-to-end deep LCA workflow.
+    Run the end-to-end deep research workflow for the provided profile.
 
     Parameters
     ----------
     services:
         Shared :class:`ResearchServices` instance.
+    profile:
+        Domain configuration that determines keywords, prompts, and artefact naming.
     output_dir:
         Directory where all artefacts (reports, charts, datasets) will be stored.
     years:
@@ -93,14 +100,17 @@ def run_deep_lca_report(
     options = getattr(context, "options", None)
     is_dry_run = bool(getattr(options, "dry_run", False))
 
+    logger_name = f"workflow.deep_research.{profile.slug}"
     if hasattr(services, "context") and hasattr(services.context, "get_logger"):
-        workflow_logger = services.context.get_logger("workflow.deep_lca")
+        workflow_logger = services.context.get_logger(logger_name)
     else:  # pragma: no cover - defensive fallback
-        workflow_logger = get_logger("workflow.deep_lca")
+        workflow_logger = get_logger(logger_name)
 
     workflow_logger.info(
-        "Starting deep LCA workflow",
+        "Starting deep research workflow",
         extra={
+            "profile": profile.slug,
+            "display_name": profile.display_name,
             "output_dir": output_dir.as_posix(),
             "years": years,
             "max_records": max_records,
@@ -112,22 +122,23 @@ def run_deep_lca_report(
     output_dir = output_dir.resolve()
 
     if is_dry_run:
-        lca_report_path = output_dir / "lca_citations.md"
-        chart_path = output_dir / "lca_trends.png"
-        final_report_path = output_dir / "deep_lca_report.md"
+        citation_report_path = output_dir / profile.citation_report_filename()
+        chart_path = output_dir / profile.chart_filename()
+        final_report_path = output_dir / profile.final_report_filename()
         workflow_logger.info(
             "Dry-run plan generated",
             extra={
                 "output_dir": output_dir.as_posix(),
                 "steps": [
-                    "Run LCA citation workflow and derive questions, trends, gaps.",
+                    "Run citation template workflow and derive questions, trends, gaps.",
                     "Invoke Deep Research (optional) for synthesis.",
                     "Generate Markdown report and optional document variants.",
                 ],
+                "profile": profile.slug,
             },
         )
-        placeholder_artifacts = LCACitationWorkflowArtifacts(
-            report_path=lca_report_path,
+        placeholder_artifacts = CitationWorkflowArtifacts(
+            report_path=citation_report_path,
             chart_path=None,
             chart_caption=None,
             raw_data_path=None,
@@ -136,9 +147,9 @@ def run_deep_lca_report(
             research_gaps=[],
             papers=[],
         )
-        return DeepLCAWorkflowArtifacts(
+        return DeepResearchWorkflowArtifacts(
             final_report_path=final_report_path,
-            citation_report_path=lca_report_path,
+            citation_report_path=citation_report_path,
             chart_path=None,
             chart_caption=None,
             raw_data_path=None,
@@ -146,23 +157,26 @@ def run_deep_lca_report(
             deep_research_response_path=None,
             doc_variants=[],
             conversion_warnings=[],
-            lca_artifacts=placeholder_artifacts,
+            citation_artifacts=placeholder_artifacts,
             prompt_template_identifier=None,
             prompt_template_path=None,
             prompt_language=prompt_language,
+            profile_slug=profile.slug,
+            profile_display_name=profile.display_name,
         )
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    lca_report_path = output_dir / "lca_citations.md"
-    chart_path = output_dir / "lca_trends.png"
-    raw_data_path = output_dir / "lca_citations.json"
+    citation_report_path = output_dir / profile.citation_report_filename()
+    chart_path = output_dir / profile.chart_filename()
+    raw_data_path = output_dir / profile.dataset_filename()
 
-    lca_runner = lca_runner or run_lca_citation_workflow
-    workflow_logger.info("Running LCA citation workflow")
-    lca_artifacts = lca_runner(
+    citation_runner = citation_runner or run_citation_template_workflow
+    workflow_logger.info("Running citation workflow", extra={"profile": profile.slug})
+    citation_artifacts = citation_runner(
         services,
-        report_path=lca_report_path,
+        profile=profile,
+        report_path=citation_report_path,
         chart_path=chart_path,
         raw_data_path=raw_data_path,
         years=years,
@@ -170,11 +184,12 @@ def run_deep_lca_report(
         keyword_overrides=keywords,
     )
     workflow_logger.debug(
-        "LCA citation workflow completed",
+        "Citation workflow completed",
         extra={
-            "report_path": lca_artifacts.report_path.as_posix(),
-            "chart_path": lca_artifacts.chart_path.as_posix() if lca_artifacts.chart_path else None,
-            "paper_count": len(lca_artifacts.papers),
+            "profile": profile.slug,
+            "report_path": citation_artifacts.report_path.as_posix(),
+            "chart_path": citation_artifacts.chart_path.as_posix() if citation_artifacts.chart_path else None,
+            "paper_count": len(citation_artifacts.papers),
         },
     )
 
@@ -211,7 +226,8 @@ def run_deep_lca_report(
         try:
             workflow_logger.info("Invoking Deep Research synthesis")
             result = _run_deep_research(
-                lca_artifacts=lca_artifacts,
+                profile=profile,
+                citation_artifacts=citation_artifacts,
                 years=years,
                 prompt_override=deep_research_prompt,
                 instructions_override=effective_instructions,
@@ -230,10 +246,11 @@ def run_deep_lca_report(
     else:
         workflow_logger.info("Deep Research disabled for this run")
 
-    final_report_path = output_dir / "deep_lca_report.md"
+    final_report_path = output_dir / profile.final_report_filename()
     final_report_path.write_text(
         _render_final_report(
-            lca_artifacts=lca_artifacts,
+            profile=profile,
+            citation_artifacts=citation_artifacts,
             deep_summary=deep_summary,
             start_year=_derive_start_year(years),
             end_year=date.today().year,
@@ -248,80 +265,111 @@ def run_deep_lca_report(
     )
 
     workflow_logger.info(
-        "Generated deep LCA report",
+        "Generated deep research report",
         extra={
+            "profile": profile.slug,
             "final_report_path": final_report_path.as_posix(),
             "doc_variants": [item.as_posix() for item in doc_variants],
             "warnings": conversion_warnings,
         },
     )
 
-    return DeepLCAWorkflowArtifacts(
+    return DeepResearchWorkflowArtifacts(
         final_report_path=final_report_path,
-        citation_report_path=lca_artifacts.report_path,
-        chart_path=lca_artifacts.chart_path,
-        chart_caption=lca_artifacts.chart_caption,
-        raw_data_path=lca_artifacts.raw_data_path,
+        citation_report_path=citation_artifacts.report_path,
+        chart_path=citation_artifacts.chart_path,
+        chart_caption=citation_artifacts.chart_caption,
+        raw_data_path=citation_artifacts.raw_data_path,
         deep_research_summary=deep_summary,
         deep_research_response_path=deep_response_path,
         doc_variants=doc_variants,
         conversion_warnings=conversion_warnings,
-        lca_artifacts=lca_artifacts,
+        citation_artifacts=citation_artifacts,
         prompt_template_identifier=getattr(loaded_prompt, "identifier", None),
         prompt_template_path=getattr(loaded_prompt, "path", None),
         prompt_language=getattr(loaded_prompt, "language", prompt_language),
+        profile_slug=profile.slug,
+        profile_display_name=profile.display_name,
+    )
+
+
+def run_deep_lca_report(
+    services: ResearchServices,
+    *,
+    output_dir: Path,
+    years: int = 5,
+    max_records: int = 200,
+    keywords: Optional[Sequence[str]] = None,
+    deep_research: bool = True,
+    deep_research_prompt: Optional[str] = None,
+    deep_research_instructions: Optional[str] = None,
+    prompt_template: Optional[str] = None,
+    prompt_language: Optional[str] = None,
+    lca_runner: Optional[Callable[..., CitationWorkflowArtifacts]] = None,
+) -> DeepResearchWorkflowArtifacts:
+    """Backward-compatible entry that keeps the original LCA naming."""
+
+    profile = get_deep_research_profile("lca")
+    runner = lca_runner or run_lca_citation_workflow
+    return run_deep_research_template(
+        services,
+        profile=profile,
+        output_dir=output_dir,
+        years=years,
+        max_records=max_records,
+        keywords=keywords,
+        deep_research=deep_research,
+        deep_research_prompt=deep_research_prompt,
+        deep_research_instructions=deep_research_instructions,
+        prompt_template=prompt_template,
+        prompt_language=prompt_language,
+        citation_runner=runner,
     )
 
 
 def _run_deep_research(
     *,
-    lca_artifacts: LCACitationWorkflowArtifacts,
+    profile: DeepResearchProfile,
+    citation_artifacts: CitationWorkflowArtifacts,
     years: int,
     prompt_override: Optional[str],
     instructions_override: Optional[str],
 ) -> DeepResearchResult:
-    prompt = ResearchPrompt(question=prompt_override.strip()) if prompt_override else _build_default_prompt(years)
-    context = _build_prompt_context(lca_artifacts)
+    prompt = ResearchPrompt(question=prompt_override.strip()) if prompt_override else _build_default_prompt(profile, years)
+    context = _build_prompt_context(citation_artifacts)
     if context:
         prompt.context = context
+    elif profile.prompt_context_template:
+        prompt.context = profile.prompt_context_template.format(years=years)
     client = DeepResearchClient()
     return client.run(
         prompt,
-        instructions=instructions_override
-        or (
-            "Synthesize the findings into concise sections that complement the deterministic "
-            "citation scan provided in the context. Highlight citation leaders, accelerating "
-            "themes, and unanswered questions."
-        ),
+        instructions=instructions_override or profile.prompt_instructions,
         max_tool_calls=30,
     )
 
 
-def _build_default_prompt(years: int) -> ResearchPrompt:
+def _build_default_prompt(profile: DeepResearchProfile, years: int) -> ResearchPrompt:
     return ResearchPrompt(
-        question=("Investigate how recent peer-reviewed life cycle assessment (LCA) research " "connects planetary boundaries with the Sustainable Development Goals."),
-        follow_up_questions=[
-            "Which research questions attract the highest citation energy and why?",
-            "Which LCA sub-topics show accelerating citation trends in the last few years?",
-            "Where do clear research gaps remain that could yield high impact if addressed?",
-        ],
-        context=(f"Time horizon: last {years} years. Assume the deterministic citation scan has already " "filtered relevant journals and returns structured summaries."),
+        question=profile.prompt_question,
+        follow_up_questions=list(profile.prompt_follow_ups),
+        context=profile.prompt_context_template.format(years=years),
     )
 
 
-def _build_prompt_context(lca_artifacts: LCACitationWorkflowArtifacts) -> str:
+def _build_prompt_context(citation_artifacts: CitationWorkflowArtifacts) -> str:
     lines: List[str] = []
-    if lca_artifacts.questions:
+    if citation_artifacts.questions:
         lines.append("Top citation questions:")
-        for item in lca_artifacts.questions[:5]:
+        for item in citation_artifacts.questions[:5]:
             lines.append(f"- {item.paper_title} ({item.citation_count} citations, {item.publication_year}); DOI: {item.doi or 'N/A'}")
-    if lca_artifacts.trending_topics:
+    if citation_artifacts.trending_topics:
         lines.append("\nTrending concepts with positive citation slopes:")
-        for topic in lca_artifacts.trending_topics[:5]:
+        for topic in citation_artifacts.trending_topics[:5]:
             lines.append(f"- {topic.topic} (trend score {topic.trend_score:+.2f}, recent share {topic.recent_share*100:.1f}%)")
-    if lca_artifacts.research_gaps:
+    if citation_artifacts.research_gaps:
         lines.append("\nSparse but high-impact gaps:")
-        for gap in lca_artifacts.research_gaps[:5]:
+        for gap in citation_artifacts.research_gaps[:5]:
             lines.append(f"- {gap.topic} ({gap.paper_count} papers, {gap.avg_citations:.1f} average citations) — {gap.rationale}")
     return "\n".join(lines).strip()
 
@@ -333,14 +381,15 @@ def _derive_start_year(years: int) -> int:
 
 def _render_final_report(
     *,
-    lca_artifacts: LCACitationWorkflowArtifacts,
+    profile: DeepResearchProfile,
+    citation_artifacts: CitationWorkflowArtifacts,
     deep_summary: Optional[str],
     start_year: int,
     end_year: int,
     keywords: Optional[Sequence[str]],
 ) -> str:
     lines: List[str] = []
-    lines.append(f"# LCA × Planetary Boundaries Deep Research ({start_year}–{end_year})\n")
+    lines.append(f"# {profile.deep_report_title} ({start_year}–{end_year})\n")
     generated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     lines.append(f"_Generated {generated} by TianGong Sustainability CLI_\n")
 
@@ -351,31 +400,31 @@ def _render_final_report(
         lines.append("Deep Research synthesis was unavailable. See the deterministic citation scan and raw data sections below.\n")
 
     lines.append("## Citation Highlights\n")
-    keyword_label = ", ".join(keywords) if keywords else "life cycle assessment, sustainability, planetary boundaries, SDGs"
+    keyword_label = ", ".join(keywords) if keywords else ", ".join(profile.normalised_keywords())
     lines.append(f"- Rolling window: **{start_year}–{end_year}**")
     lines.append(f"- Keyword focus: **{keyword_label}**")
-    lines.append(f"- Processed papers: **{len(lca_artifacts.papers)}**\n")
-    lines.append(f"Full citation table: [`{lca_artifacts.report_path.name}`]({lca_artifacts.report_path.name}).\n")
-    if lca_artifacts.chart_path and lca_artifacts.chart_path.exists():
-        caption = lca_artifacts.chart_caption or "LCA citation visualisation"
-        relative = lca_artifacts.chart_path.name
+    lines.append(f"- Processed papers: **{len(citation_artifacts.papers)}**\n")
+    lines.append(f"Full citation table: [`{citation_artifacts.report_path.name}`]({citation_artifacts.report_path.name}).\n")
+    if citation_artifacts.chart_path and citation_artifacts.chart_path.exists():
+        caption = citation_artifacts.chart_caption or f"{profile.display_name} citation visualisation"
+        relative = citation_artifacts.chart_path.name
         lines.append(f"![{caption}]({relative})\n")
 
     lines.append("### Top Citation Questions\n")
-    if lca_artifacts.questions:
-        lines.extend(_render_question_table(lca_artifacts.questions[:8]))
+    if citation_artifacts.questions:
+        lines.extend(_render_question_table(citation_artifacts.questions[:8]))
     else:
         lines.append("- No citation questions were extracted.\n")
 
     lines.append("### Emerging Topics\n")
-    if lca_artifacts.trending_topics:
-        lines.extend(_render_trending_table(lca_artifacts.trending_topics[:8]))
+    if citation_artifacts.trending_topics:
+        lines.extend(_render_trending_table(citation_artifacts.trending_topics[:8]))
     else:
         lines.append("- No accelerating topic clusters detected in the rolling window.\n")
 
     lines.append("### Research Gaps with High Citation Potential\n")
-    if lca_artifacts.research_gaps:
-        for gap in lca_artifacts.research_gaps[:8]:
+    if citation_artifacts.research_gaps:
+        for gap in citation_artifacts.research_gaps[:8]:
             doi = f"https://doi.org/{gap.supporting_doi}" if gap.supporting_doi else "N/A"
             lines.append(f"- **{gap.topic}** — {gap.rationale} Representative study: *{gap.representative_title}* ({doi}).")
         lines.append("")
@@ -383,11 +432,11 @@ def _render_final_report(
         lines.append("- No high-leverage gaps identified.\n")
 
     lines.append("## Assets & Raw Data\n")
-    dataset_name = lca_artifacts.raw_data_path.name if lca_artifacts.raw_data_path else "N/A"
+    dataset_name = citation_artifacts.raw_data_path.name if citation_artifacts.raw_data_path else "N/A"
     lines.append(f"- Citation dataset: `{dataset_name}`")
-    lines.append(f"- Citation report: `{lca_artifacts.report_path.name}`")
-    if lca_artifacts.chart_path:
-        lines.append(f"- Chart: `{lca_artifacts.chart_path.name}`")
+    lines.append(f"- Citation report: `{citation_artifacts.report_path.name}`")
+    if citation_artifacts.chart_path:
+        lines.append(f"- Chart: `{citation_artifacts.chart_path.name}`")
     if deep_summary:
         lines.append("- Deep Research summary embedded above.")
     lines.append("")

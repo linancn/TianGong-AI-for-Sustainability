@@ -347,7 +347,7 @@ def test_research_synthesize_cli(cli_runner, registry_file, tmp_path):
     assert kwargs["question"] == "How can AI reduce supply-chain emissions?"
 
 
-def test_research_workflow_lca_deep_report_prompt_template(cli_runner, registry_file, tmp_path):
+def test_research_workflow_deep_report_prompt_template(cli_runner, registry_file, tmp_path):
     template_path = tmp_path / "template.md"
     template_path.write_text("Instructions", encoding="utf-8")
 
@@ -361,14 +361,16 @@ def test_research_workflow_lca_deep_report_prompt_template(cli_runner, registry_
         deep_research_response_path=None,
         doc_variants=[],
         conversion_warnings=[],
-        lca_artifacts=None,
+        citation_artifacts=None,
         prompt_template_identifier="custom",
         prompt_template_path=template_path,
         prompt_language="en",
+        profile_slug="lca",
+        profile_display_name="LCA × Planetary Boundaries",
     )
 
     with patch(
-        "tiangong_ai_for_sustainability.cli.main.run_deep_lca_report",
+        "tiangong_ai_for_sustainability.cli.main.run_deep_research_template",
         return_value=artifacts,
     ) as mocked:
         result = invoke(
@@ -378,7 +380,7 @@ def test_research_workflow_lca_deep_report_prompt_template(cli_runner, registry_
                 str(registry_file),
                 "research",
                 "workflow",
-                "lca-deep-report",
+                "deep-report",
                 "--prompt-template",
                 str(template_path),
             ],
@@ -389,6 +391,7 @@ def test_research_workflow_lca_deep_report_prompt_template(cli_runner, registry_
     assert mocked.call_count == 1
     _, kwargs = mocked.call_args
     assert kwargs["prompt_template"] == str(template_path)
+    assert kwargs["profile"].slug == "lca"
 
 
 def test_research_visuals_verify_cli(cli_runner, registry_file):

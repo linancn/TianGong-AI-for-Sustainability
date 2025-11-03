@@ -114,7 +114,7 @@ This template is the only prompt file that should be delivered to Codex. It prov
 | `uv run tiangong-research research synthesize "<QUESTION>"` | Generate evidence-backed synthesis. | `--prompt-template default`, optional `--prompt-language en`, repeatable `-P key=value`, `--deep-research`. |
 | `uv run tiangong-research research visuals verify` | Check AntV MCP chart readiness. | Pair with `npx -y @antv/mcp-server-chart --transport streamable --version` for diagnostics. |
 | `uv run tiangong-research research workflow simple --topic "<TOPIC>"` | Execute the Phase 2 workflow. | `--report-output <PATH>`, `--chart-output <PATH>`, optional `--prompt-language en`. |
-| `uv run tiangong-research research workflow lca-deep-report --prompt-template default` | Run the LCA + Deep Research workflow. | Repeatable `-P key=value`, optional `--prompt-language en`, capture synthesis path. |
+| `uv run tiangong-research research workflow deep-report --profile lca --prompt-template default` | Run the deep research workflow for the LCA profile. | Repeatable `-P key=value`, optional `--prompt-language en`, capture synthesis path. |
 
 ---
 

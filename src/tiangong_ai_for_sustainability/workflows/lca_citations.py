@@ -1,6 +1,5 @@
 """
-Workflow that performs deep literature analysis on life cycle assessment (LCA)
-papers intersecting planetary boundaries and the Sustainable Development Goals.
+Deterministic citation workflow template used by deep sustainability analyses.
 """
 
 from __future__ import annotations
@@ -17,16 +16,7 @@ from ..adapters.api.base import APIError
 from ..core.logging import get_logger
 from ..services import ResearchServices
 from .charting import ensure_chart_image
-
-LCA_CONCEPT_ID = "C2778706760"
-DEFAULT_KEYWORDS = [
-    "life cycle assessment",
-    "lca",
-    "sustainability",
-    "planetary boundaries",
-    "sustainable development goals",
-    "sdg",
-]
+from .profiles import CitationProfile, get_deep_research_profile
 
 logger = get_logger(__name__)
 
@@ -91,7 +81,7 @@ class ResearchGap:
 
 
 @dataclass(slots=True)
-class LCACitationWorkflowArtifacts:
+class CitationWorkflowArtifacts:
     """Workflow outputs returned to the caller."""
 
     report_path: Path
@@ -104,32 +94,36 @@ class LCACitationWorkflowArtifacts:
     papers: List[PaperRecord]
 
 
-def run_lca_citation_workflow(
+def run_citation_template_workflow(
     services: ResearchServices,
     *,
+    profile: CitationProfile,
     report_path: Path,
     chart_path: Path,
     raw_data_path: Optional[Path] = None,
     years: int = 5,
     keyword_overrides: Optional[Iterable[str]] = None,
     max_records: int = 300,
-) -> LCACitationWorkflowArtifacts:
+) -> CitationWorkflowArtifacts:
     """
-    Execute an end-to-end analysis of LCA literature focused on planetary boundaries and SDGs.
+    Execute an end-to-end deterministic citation analysis for a given profile.
     """
 
     context = getattr(services, "context", None)
     options = getattr(context, "options", None)
     is_dry_run = bool(getattr(options, "dry_run", False))
 
+    logger_name = f"workflow.citation.{profile.slug}"
     if hasattr(services, "context") and hasattr(services.context, "get_logger"):
-        workflow_logger = services.context.get_logger("workflow.lca_citations")
+        workflow_logger = services.context.get_logger(logger_name)
     else:  # pragma: no cover - defensive fallback
-        workflow_logger = get_logger("workflow.lca_citations")
+        workflow_logger = get_logger(logger_name)
 
     workflow_logger.info(
-        "Starting LCA citation workflow",
+        "Starting citation workflow",
         extra={
+            "profile": profile.slug,
+            "display_name": profile.display_name,
             "report_path": report_path.as_posix(),
             "chart_path": chart_path.as_posix(),
             "years": years,
@@ -142,7 +136,7 @@ def run_lca_citation_workflow(
     if is_dry_run:
         planned_keywords = list(keyword_overrides) if keyword_overrides else None
         plan_steps = [
-            f"Query OpenAlex for LCA works between the last {years} years using default keywords.",
+            f"Query OpenAlex for {profile.display_name} works covering the last {years} years using default keywords.",
             "Aggregate citation metrics and derive top questions, trending topics, and gaps.",
             "Persist raw dataset and Markdown report summarising findings.",
             "Render trend chart via AntV MCP chart server.",
@@ -154,7 +148,7 @@ def run_lca_citation_workflow(
                 "keywords": planned_keywords,
             },
         )
-        return LCACitationWorkflowArtifacts(
+        return CitationWorkflowArtifacts(
             report_path=report_path,
             chart_path=None,
             chart_caption=None,
@@ -170,12 +164,13 @@ def run_lca_citation_workflow(
     if raw_data_path:
         raw_data_path.parent.mkdir(parents=True, exist_ok=True)
 
-    keywords = _prepare_keywords(keyword_overrides)
+    keywords = _prepare_keywords(profile, keyword_overrides)
     start_year, end_year = _derive_year_window(years)
-    workflow_logger.info("Collecting OpenAlex papers")
+    workflow_logger.info("Collecting OpenAlex papers", extra={"profile": profile.slug})
     try:
         papers = _collect_openalex_papers(
             services,
+            profile=profile,
             keywords=keywords,
             start_year=start_year,
             end_year=end_year,
@@ -183,9 +178,9 @@ def run_lca_citation_workflow(
             logger=workflow_logger,
         )
     except APIError as exc:
-        _write_failure_report(report_path, start_year, end_year, str(exc))
+        _write_failure_report(report_path, profile, start_year, end_year, str(exc))
         workflow_logger.error("OpenAlex collection failed", extra={"error": str(exc)})
-        return LCACitationWorkflowArtifacts(
+        return CitationWorkflowArtifacts(
             report_path=report_path,
             chart_path=None,
             raw_data_path=None,
@@ -196,9 +191,9 @@ def run_lca_citation_workflow(
         )
 
     if not papers:
-        _write_empty_report(report_path, start_year, end_year)
+        _write_empty_report(report_path, profile, start_year, end_year)
         workflow_logger.warning("No papers returned from OpenAlex", extra={"start_year": start_year, "end_year": end_year})
-        return LCACitationWorkflowArtifacts(
+        return CitationWorkflowArtifacts(
             report_path=report_path,
             chart_path=None,
             raw_data_path=None,
@@ -212,9 +207,16 @@ def run_lca_citation_workflow(
 
     _enrich_with_semantic_scholar(services, papers)
 
-    questions = _derive_top_questions(papers, limit=8)
+    questions = _derive_top_questions(papers, profile=profile, limit=8)
     trending_topics, concept_series = _summarise_trending_topics(papers, start_year, end_year)
-    research_gaps = _identify_research_gaps(papers, concept_series, start_year, end_year, keywords)
+    research_gaps = _identify_research_gaps(
+        papers,
+        concept_series,
+        start_year,
+        end_year,
+        keywords,
+        profile,
+    )
 
     if raw_data_path:
         workflow_logger.info("Serialising raw dataset", extra={"raw_data_path": raw_data_path.as_posix()})
@@ -223,11 +225,11 @@ def run_lca_citation_workflow(
     chart_caption: Optional[str] = None
     chart_generated = False
     if trending_topics:
-        chart_caption = "Emerging LCA topics by citation momentum"
-        chart_generated = _render_trend_chart(services, trending_topics, chart_path)
+        chart_caption = profile.topic_chart_title()
+        chart_generated = _render_trend_chart(services, profile, trending_topics, chart_path)
     elif questions:
-        chart_caption = "Top LCA questions by citation count"
-        chart_generated = _render_question_chart(services, questions, chart_path)
+        chart_caption = profile.question_chart_title()
+        chart_generated = _render_question_chart(services, profile, questions, chart_path)
 
     if not chart_generated:
         workflow_logger.warning(
@@ -238,6 +240,7 @@ def run_lca_citation_workflow(
 
     _write_report(
         report_path=report_path,
+        profile=profile,
         questions=questions,
         trending_topics=trending_topics,
         research_gaps=research_gaps,
@@ -250,8 +253,9 @@ def run_lca_citation_workflow(
         raw_data_path=raw_data_path,
     )
     workflow_logger.info(
-        "LCA citation workflow completed",
+        "Citation workflow completed",
         extra={
+            "profile": profile.slug,
             "report_path": report_path.as_posix(),
             "chart_path": chart_path.as_posix() if chart_path else None,
             "question_count": len(questions),
@@ -260,7 +264,7 @@ def run_lca_citation_workflow(
         },
     )
 
-    return LCACitationWorkflowArtifacts(
+    return CitationWorkflowArtifacts(
         report_path=report_path,
         chart_path=chart_path,
         chart_caption=chart_caption,
@@ -272,14 +276,42 @@ def run_lca_citation_workflow(
     )
 
 
+def run_lca_citation_workflow(
+    services: ResearchServices,
+    *,
+    profile: Optional[CitationProfile] = None,
+    report_path: Path,
+    chart_path: Path,
+    raw_data_path: Optional[Path] = None,
+    years: int = 5,
+    keyword_overrides: Optional[Iterable[str]] = None,
+    max_records: int = 300,
+) -> CitationWorkflowArtifacts:
+    """Backward-compatible wrapper for the LCA profile."""
+
+    resolved_profile = profile or get_deep_research_profile("lca")
+    return run_citation_template_workflow(
+        services,
+        profile=resolved_profile,
+        report_path=report_path,
+        chart_path=chart_path,
+        raw_data_path=raw_data_path,
+        years=years,
+        keyword_overrides=keyword_overrides,
+        max_records=max_records,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Data collection
 
 
-def _prepare_keywords(keyword_overrides: Optional[Iterable[str]]) -> List[str]:
-    base = [kw.strip().lower() for kw in DEFAULT_KEYWORDS]
+def _prepare_keywords(profile: CitationProfile, keyword_overrides: Optional[Iterable[str]]) -> List[str]:
+    base = list(profile.normalised_keywords())
     if keyword_overrides:
         for kw in keyword_overrides:
+            if not isinstance(kw, str):
+                continue
             normalised = kw.strip().lower()
             if normalised and normalised not in base:
                 base.append(normalised)
@@ -296,6 +328,7 @@ def _derive_year_window(years: int) -> Tuple[int, int]:
 def _collect_openalex_papers(
     services: ResearchServices,
     *,
+    profile: CitationProfile,
     keywords: List[str],
     start_year: int,
     end_year: int,
@@ -305,11 +338,14 @@ def _collect_openalex_papers(
     client = services.openalex_client()
 
     filters = {
-        "concepts.id": f"https://openalex.org/{LCA_CONCEPT_ID}",
         "from_publication_date": f"{start_year}-01-01",
         "to_publication_date": f"{end_year}-12-31",
         "type": "article",
     }
+
+    if profile.concept_ids:
+        concept_filters = "|".join(f"https://openalex.org/{concept}" for concept in profile.concept_ids)
+        filters["concepts.id"] = concept_filters
 
     select_fields = [
         "id",
@@ -331,14 +367,14 @@ def _collect_openalex_papers(
     seen_ids: set[str] = set()
 
     for item in client.iterate_works(
-        search="life cycle assessment sustainability",
+        search=profile.search_phrase,
         filters=filters,
         sort="cited_by_count:desc",
         select=select_fields,
         per_page=200,
         max_pages=10,
     ):
-        paper = _paper_from_openalex(item, keywords)
+        paper = _paper_from_openalex(profile, item, keywords)
         if paper is None or paper.work_id in seen_ids:
             continue
         seen_ids.add(paper.work_id)
@@ -356,7 +392,11 @@ def _collect_openalex_papers(
     return records
 
 
-def _paper_from_openalex(payload: Mapping[str, Any], keywords: List[str]) -> Optional[PaperRecord]:
+def _paper_from_openalex(
+    profile: CitationProfile,
+    payload: Mapping[str, Any],
+    keywords: List[str],
+) -> Optional[PaperRecord]:
     work_id = str(payload.get("id") or "").strip()
     title = str(payload.get("display_name") or payload.get("title") or "").strip()
     year = payload.get("publication_year")
@@ -367,8 +407,9 @@ def _paper_from_openalex(payload: Mapping[str, Any], keywords: List[str]) -> Opt
 
     abstract = _decode_abstract(payload.get("abstract_inverted_index"))
     keyword_hits = _count_keyword_hits(title, abstract, keywords)
-    if keyword_hits.get("life cycle assessment", 0) == 0:
-        return None
+    for required in profile.required_keywords:
+        if keyword_hits.get(required.strip().lower(), 0) == 0:
+            return None
 
     total_hits = sum(keyword_hits.values())
     if total_hits < 2:
@@ -538,12 +579,17 @@ def _enrich_with_semantic_scholar(services: ResearchServices, papers: List[Paper
 # Analysis
 
 
-def _derive_top_questions(papers: List[PaperRecord], *, limit: int) -> List[CitationQuestion]:
+def _derive_top_questions(
+    papers: List[PaperRecord],
+    *,
+    profile: CitationProfile,
+    limit: int,
+) -> List[CitationQuestion]:
     ranked = sorted(papers, key=lambda item: item.citation_count, reverse=True)
     questions: List[CitationQuestion] = []
 
     for paper in ranked[:limit]:
-        question = _title_to_question(paper.title)
+        question = _title_to_question(paper.title, profile)
         questions.append(
             CitationQuestion(
                 question=question,
@@ -560,23 +606,24 @@ def _derive_top_questions(papers: List[PaperRecord], *, limit: int) -> List[Cita
     return questions
 
 
-def _title_to_question(title: str) -> str:
+def _title_to_question(title: str, profile: CitationProfile) -> str:
     clean = title.strip().rstrip(".")
     if clean.endswith("?"):
         return clean
 
+    context = profile.question_context or profile.display_name.lower()
     lower = clean.lower()
     if ":" in clean:
         lead, tail = [part.strip() for part in clean.split(":", 1)]
         if lead and tail:
-            return f"How does {lead.lower()} relate to {tail.lower()} within life cycle assessment?"
+            return f"How does {lead.lower()} relate to {tail.lower()} within {context}?"
 
     patterns = [
-        ("integrat", "How can {phrase} be integrated into mainstream life cycle assessment practice?"),
-        ("impact", "What is the impact of {phrase} on sustainability outcomes?"),
-        ("framework", "Which frameworks enable {phrase} in LCA studies?"),
-        ("method", "Which methodological advances address {phrase}?"),
-        ("policy", "How does policy guidance influence {phrase}?"),
+        ("integrat", f"How can {{phrase}} be integrated into mainstream {context} practice?"),
+        ("impact", f"What is the impact of {{phrase}} on sustainability outcomes within {context}?"),
+        ("framework", f"Which frameworks enable {{phrase}} in {context} studies?"),
+        ("method", f"Which methodological advances address {{phrase}} in {context}?"),
+        ("policy", f"How does policy guidance influence {{phrase}} in {context}?"),
     ]
 
     for marker, template in patterns:
@@ -584,7 +631,7 @@ def _title_to_question(title: str) -> str:
             phrase = _phrase_from_title(clean, marker)
             return template.format(phrase=phrase)
 
-    return f'What does "{clean}" reveal about advancing life cycle assessment?'
+    return f'What does "{clean}" reveal about advancing {context}?'
 
 
 def _phrase_from_title(title: str, marker: str) -> str:
@@ -662,6 +709,7 @@ def _identify_research_gaps(
     start_year: int,
     end_year: int,
     keywords: List[str],
+    profile: CitationProfile,
 ) -> List[ResearchGap]:
     concept_groups: Dict[str, List[PaperRecord]] = defaultdict(list)
     keyword_groups: Dict[str, List[PaperRecord]] = defaultdict(list)
@@ -714,11 +762,11 @@ def _identify_research_gaps(
             total_citations = sum(p.citation_count for p in group)
             if total_citations >= 40:
                 representative = max(group, key=lambda p: p.citation_count)
-                rationale = (
-                    f"Keyword '{keyword}' appears in {len(group)} papers but collects "
-                    f"{total_citations} citations (avg {total_citations/len(group):.1f}). "
-                    "This suggests demand for deeper investigation with LCA framing."
-                )
+                rationale = f"Keyword '{keyword}' appears in {len(group)} papers but collects " f"{total_citations} citations (avg {total_citations/len(group):.1f}). "
+                if profile.gap_suffix:
+                    rationale += " This suggests demand for deeper investigation" + profile.gap_suffix
+                else:
+                    rationale += " This suggests demand for deeper investigation."
                 candidates.append(
                     ResearchGap(
                         topic=f"Keyword focus: {keyword}",
@@ -739,7 +787,12 @@ def _identify_research_gaps(
 # Output rendering
 
 
-def _render_trend_chart(services: ResearchServices, topics: List[TrendingTopic], chart_path: Path) -> bool:
+def _render_trend_chart(
+    services: ResearchServices,
+    profile: CitationProfile,
+    topics: List[TrendingTopic],
+    chart_path: Path,
+) -> bool:
     endpoint = services.chart_mcp_endpoint()
     verification = services.verify_chart_mcp()
     if not verification.success:
@@ -748,7 +801,7 @@ def _render_trend_chart(services: ResearchServices, topics: List[TrendingTopic],
     data = [{"category": topic.topic[:60], "value": round(topic.trend_score, 2)} for topic in topics[:8]]
     arguments = {
         "data": data,
-        "title": "Emerging LCA topics by citation momentum",
+        "title": profile.topic_chart_title(),
         "width": 900,
         "height": 520,
         "format": "png",
@@ -756,7 +809,12 @@ def _render_trend_chart(services: ResearchServices, topics: List[TrendingTopic],
     return ensure_chart_image(endpoint, tool_name="generate_bar_chart", arguments=arguments, destination=chart_path)
 
 
-def _render_question_chart(services: ResearchServices, questions: List[CitationQuestion], chart_path: Path) -> bool:
+def _render_question_chart(
+    services: ResearchServices,
+    profile: CitationProfile,
+    questions: List[CitationQuestion],
+    chart_path: Path,
+) -> bool:
     endpoint = services.chart_mcp_endpoint()
     verification = services.verify_chart_mcp()
     if not verification.success:
@@ -765,7 +823,7 @@ def _render_question_chart(services: ResearchServices, questions: List[CitationQ
     data = [{"category": item.question[:60], "value": int(item.citation_count)} for item in sorted(questions, key=lambda x: x.citation_count, reverse=True)[:8]]
     arguments = {
         "data": data,
-        "title": "Top LCA questions by citation count",
+        "title": profile.question_chart_title(),
         "width": 900,
         "height": 520,
         "format": "png",
@@ -792,6 +850,7 @@ def _serialise_raw_dataset(
 def _write_report(
     *,
     report_path: Path,
+    profile: CitationProfile,
     questions: List[CitationQuestion],
     trending_topics: List[TrendingTopic],
     research_gaps: List[ResearchGap],
@@ -804,10 +863,10 @@ def _write_report(
     raw_data_path: Optional[Path],
 ) -> None:
     lines: List[str] = []
-    lines.append(f"# LCA Citation Intelligence ({start_year}–{end_year})\n")
+    lines.append(f"# {profile.display_name} Citation Intelligence ({start_year}–{end_year})\n")
 
     lines.append("## Why it matters\n")
-    lines.append("- Focus: peer-reviewed LCA journals intersecting planetary boundaries and SDGs, filtered via OpenAlex (concept-driven) with Semantic Scholar enrichment when available.")
+    lines.append(f"- Focus: {profile.focus_description}")
     lines.append(f"- Query keywords: {', '.join(sorted(set(keywords)))}.")
     lines.append(f"- Corpus size: {len(papers)} papers within the last {end_year - start_year + 1} years.\n")
 
@@ -858,7 +917,7 @@ def _write_report(
     lines.append("## Visualization\n")
     if chart_path and chart_path.exists():
         rel_path = chart_path.as_posix()
-        caption = chart_caption or "LCA citation chart"
+        caption = chart_caption or f"{profile.display_name} citation chart"
         lines.append(f"![{caption}]({rel_path})\n")
     else:
         lines.append("- Chart generation unavailable. Ensure the AntV MCP chart server is reachable.\n")
@@ -875,11 +934,16 @@ def _write_report(
     report_path.write_text("\n".join(lines), encoding="utf-8")
 
 
-def _write_empty_report(report_path: Path, start_year: int, end_year: int) -> None:
+def _write_empty_report(
+    report_path: Path,
+    profile: CitationProfile,
+    start_year: int,
+    end_year: int,
+) -> None:
     report_path.write_text(
         "\n".join(
             [
-                f"# LCA Citation Intelligence ({start_year}–{end_year})",
+                f"# {profile.display_name} Citation Intelligence ({start_year}–{end_year})",
                 "",
                 "No qualifying papers were retrieved. Verify that OpenAlex is reachable and that the query window contains relevant publications.",
             ]
@@ -888,11 +952,17 @@ def _write_empty_report(report_path: Path, start_year: int, end_year: int) -> No
     )
 
 
-def _write_failure_report(report_path: Path, start_year: int, end_year: int, message: str) -> None:
+def _write_failure_report(
+    report_path: Path,
+    profile: CitationProfile,
+    start_year: int,
+    end_year: int,
+    message: str,
+) -> None:
     report_path.write_text(
         "\n".join(
             [
-                f"# LCA Citation Intelligence ({start_year}–{end_year})",
+                f"# {profile.display_name} Citation Intelligence ({start_year}–{end_year})",
                 "",
                 "The workflow failed to collect literature from OpenAlex.",
                 f"Error detail: {message}",

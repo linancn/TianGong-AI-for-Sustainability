@@ -84,7 +84,7 @@ Missing a feature? Just re-run your installer (`install_macos.sh`, `install_ubun
 - Templates accept simple placeholders such as `{{topic}}`; combine multiple `--prompt-variable` arguments to substitute values.
 - Example:
   ```bash
-  uv run tiangong-research --prompt-template default --prompt-variable topic="urban climate resilience" research workflow lca-deep-report --years 3
+  uv run tiangong-research --prompt-template default --prompt-variable topic="urban climate resilience" research workflow deep-report --profile lca --years 3
   ```
 - `--deep-prompt` and `--deep-instructions` remain available for one-off overrides; templates apply only when instructions are omitted.
 

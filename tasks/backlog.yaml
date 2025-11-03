@@ -1,50 +1,49 @@
 version: "0.1"
 description: >
-  Backlog items derived from recent literature analysis. Each entry maps a
-  documented research gap to a concrete follow-up action that can be handled
-  by deterministic adapters or shared prompt packs.
+  Backlog items derived from recent workflow reviews. Each entry maps an
+  identified automation gap to concrete follow-up actions that can be handled
+  by deterministic adapters, services, or shared prompt packs.
 
 backlog:
-  - id: backlog.exante_lcsa_scenarios
-    summary: "Deterministic templates for ex-ante life cycle sustainability scenarios."
+  - id: backlog.workflow_simple_batch_support
+    summary: "Extend workflow.simple to support batch execution across multiple prompts."
     rationale: >
-      The systematic review on future scenarios in LCA highlights missing,
-      reusable blueprints for ex-ante assessments. Automating scenario template
-      generation would help codify best practices and reduce reliance on ad-hoc
-      prompts.
+      Operators frequently need to run the simple workflow for several regions
+      or scenarios in one invocation. Batch-mode orchestration keeps runs
+      deterministic and avoids ad-hoc shell scripting.
     action_items:
-      - Build a scenario template adapter that accepts sector, geography, and time-horizon inputs and emits structured LCSA scenario stubs (JSON/YAML).
-      - Package companion prompts under specs/prompts/ to support hybrid workflows when LLM-based synthesis is required.
+      - Add CLI flags (`--batch-config`, `--batch-variable`) to load structured execution matrices.
+      - Update workflow.simple services to iterate deterministically with per-run caching and consolidated reporting.
     dependencies:
-      - ontology.sdgfetch
-      - ontology.gri
-    tags: ["lca", "scenarios", "templates", "adapter"]
+      - workflow.simple
+      - cli.command.visuals_verify
+    tags: ["workflow", "automation", "batch"]
     status: proposed
 
-  - id: backlog.heritage_restoration_indicators
-    summary: "Indicator catalog for cultural heritage restoration sustainability assessments."
+  - id: backlog.workflow_visuals_resilience
+    summary: "Harden visualization steps inside workflow.simple and downstream orchestrations."
     rationale: >
-      Current studies note the lack of comparable, multi-dimensional indicators
-      when evaluating heritage restoration projects. Encoding a deterministic
-      indicator catalog would enable reproducible scoring outside of bespoke case studies.
+      AntV MCP outages should not block sustainability assessments. A resilience
+      layer ensures workflows degrade gracefully and surface remediation steps.
     action_items:
-      - Assemble indicator metadata (environmental, social, economic) into a reusable registry (YAML/Parquet) with traceable sources.
-      - Expose a service method that cross-walks indicators with SDG/GHG ontologies for CLI reporting.
+      - Detect chart-server availability ahead of visualization sub-steps and emit actionable guidance when unreachable.
+      - Provide Markdown/CSV fallbacks for chart data so reports stay reproducible without MCP output.
     dependencies:
-      - ontology.sdgfetch
-      - ontology.ghgparse
-    tags: ["heritage", "indicators", "registry"]
+      - workflow.simple
+      - tools.chart_mcp_server
+    tags: ["workflow", "visuals", "resilience"]
     status: proposed
 
-  - id: backlog.gold_mining_lcsa_dataset
-    summary: "Curated corpus and prompt pack for LCSA in the gold mining sector."
+  - id: backlog.workflow_deep_research_template_evaluation
+    summary: "Create deterministic evaluation harness for workflow.template.deep_research."
     rationale: >
-      The LCSA gold mining review calls out under-documented social and environmental impact pathways. A focused corpus and prompt pack can bootstrap replication studies.
+      The deep research template blends deterministic retrieval with synthesis.
+      An evaluation harness verifies evidence coverage and prompt-template
+      adherence as the pipeline evolves across domains.
     action_items:
-      - Use collect_mcp_corpus.py to seed an initial dataset, then normalise key variables (region, mining process, impact category) into tabular form.
-      - Publish a matching prompt template (EN/ZH) that orchestrates deterministic lookups before any synthesis.
+      - Record canonical fixture inputs/outputs and build pytest regressions with mocked adapters.
+      - Add observability tags and structured metrics for evidence provenance and token usage.
     dependencies:
-      - tiangong_ai_remote
-      - openalex
-    tags: ["lca", "mining", "prompt-pack"]
+      - workflow.template.deep_research
+    tags: ["workflow", "evaluation", "testing"]
     status: proposed

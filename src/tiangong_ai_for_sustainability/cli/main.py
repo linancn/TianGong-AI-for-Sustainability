@@ -21,12 +21,18 @@ from ..adapters.api.base import APIError
 from ..core import DataSourceDescriptor, DataSourceRegistry, DataSourceStatus, ExecutionContext, ExecutionOptions, RegistryLoadError
 from ..services import ResearchServices
 from ..workflows import (
-    run_deep_lca_report,
-    run_lca_citation_workflow,
+    run_citation_template_workflow,
+    run_deep_research_template,
     run_paper_search,
     run_simple_workflow,
     run_synthesis_workflow,
     run_trending_metrics_workflow,
+)
+from ..workflows.profiles import (
+    CITATION_PROFILES,
+    DEEP_RESEARCH_PROFILES,
+    get_citation_profile,
+    get_deep_research_profile,
 )
 from .adapters import resolve_adapter
 
@@ -41,6 +47,8 @@ workflow_app = typer.Typer(help="Predefined multi-step research workflows")
 research_app.add_typer(workflow_app, name="workflow")
 
 _CURRENT_YEAR = datetime.now(UTC).year
+_DEEP_PROFILE_CHOICES = tuple(sorted(DEEP_RESEARCH_PROFILES))
+_CITATION_PROFILE_CHOICES = tuple(sorted(CITATION_PROFILES))
 
 
 def _load_registry(registry_file: Optional[Path]) -> DataSourceRegistry:
@@ -608,9 +616,17 @@ def research_workflow_simple(
         typer.echo("Chart generation skipped or failed; see report for details.")
 
 
-@workflow_app.command("lca-deep-report")
-def research_workflow_lca_deep_report(
+@workflow_app.command("deep-report")
+def research_workflow_deep_report(
     ctx: typer.Context,
+    profile: str = typer.Option(
+        "lca",
+        "--profile",
+        "-p",
+        case_sensitive=False,
+        help=f"Domain profile slug. Available: {', '.join(_DEEP_PROFILE_CHOICES)}.",
+        show_default=True,
+    ),
     output_dir: Path = typer.Option(Path("output"), "--output-dir", help="Directory to store all generated artefacts."),
     years: int = typer.Option(5, "--years", help="Number of years to include in the lookback window."),
     max_records: int = typer.Option(200, "--max-records", help="Maximum number of OpenAlex papers to ingest."),
@@ -652,11 +668,22 @@ def research_workflow_lca_deep_report(
         help="Template placeholder assignment in key=value form. Can be repeated.",
     ),
 ) -> None:
-    """Run the composite LCA + Deep Research workflow and save assets under output_dir."""
+    """Run the deep research workflow for the selected domain profile."""
 
     registry = _require_registry(ctx)
     context = _require_context(ctx)
     services = ResearchServices(registry=registry, context=context)
+
+    try:
+        profile_cfg = get_deep_research_profile(profile.lower())
+    except KeyError as exc:
+        choices = ", ".join(_DEEP_PROFILE_CHOICES)
+        raise typer.BadParameter(f"{exc}. Available profiles: {choices}.") from exc
+
+    resolved_output_dir = output_dir
+    if output_dir == Path("output"):
+        resolved_output_dir = output_dir / profile_cfg.slug
+    resolved_output_dir = resolved_output_dir.resolve()
 
     if prompt_template:
         context.options.prompt_template = prompt_template
@@ -667,9 +694,10 @@ def research_workflow_lca_deep_report(
         merged.update(_parse_prompt_variables(prompt_variable))
         context.options.prompt_variables = merged
 
-    artifacts = run_deep_lca_report(
+    artifacts = run_deep_research_template(
         services,
-        output_dir=output_dir,
+        profile=profile_cfg,
+        output_dir=resolved_output_dir,
         years=years,
         max_records=max_records,
         keywords=keyword,
@@ -682,16 +710,19 @@ def research_workflow_lca_deep_report(
 
     if context.options.dry_run:
         typer.echo("Dry-run: generated execution plan; no artefacts were created.")
-        typer.echo(f"Planned output directory: {output_dir}")
+        typer.echo(f"Planned profile: {profile_cfg.display_name} ({profile_cfg.slug})")
+        typer.echo(f"Planned output directory: {resolved_output_dir}")
         typer.echo("Planned steps:")
-        for step in (
-            "Run LCA citation scan (OpenAlex).",
-            "Optionally invoke Deep Research for synthesis.",
+        steps = [
+            f"Run citation scan for profile '{profile_cfg.slug}'.",
+            "Invoke Deep Research for synthesis." if not skip_deep_research else "Skip Deep Research synthesis (disabled via flag).",
             "Produce Markdown report and optional exports.",
-        ):
+        ]
+        for step in steps:
             typer.echo(f"- {step}")
         return
 
+    typer.echo(f"Profile: {artifacts.profile_display_name or profile_cfg.display_name} ({artifacts.profile_slug or profile_cfg.slug})")
     typer.echo(f"Final report written to {artifacts.final_report_path}")
     typer.echo(f"Citation scan stored at {artifacts.citation_report_path}")
     if artifacts.chart_path:
@@ -712,20 +743,20 @@ def research_workflow_lca_deep_report(
         typer.echo(f"Prompt template alias: {prompt_template or context.options.prompt_template}")
 
 
-@workflow_app.command("lca-citations")
-def research_workflow_lca_citations(
+@workflow_app.command("citation-scan")
+def research_workflow_citation_scan(
     ctx: typer.Context,
-    report_output: Path = typer.Option(Path("reports") / "lca_citations.md", "--report-output", help="Markdown report destination."),
-    chart_output: Path = typer.Option(
-        Path(".cache") / "tiangong" / "visuals" / "lca_citations.png",
-        "--chart-output",
-        help="Path for the generated trend chart PNG.",
+    profile: str = typer.Option(
+        "lca",
+        "--profile",
+        "-p",
+        case_sensitive=False,
+        help=f"Domain profile slug. Available: {', '.join(_CITATION_PROFILE_CHOICES)}.",
+        show_default=True,
     ),
-    raw_output: Optional[Path] = typer.Option(
-        Path(".cache") / "tiangong" / "data" / "lca_citations.json",
-        "--raw-output",
-        help="Optional path to persist the raw dataset as JSON.",
-    ),
+    report_output: Optional[Path] = typer.Option(None, "--report-output", help="Markdown report destination."),
+    chart_output: Optional[Path] = typer.Option(None, "--chart-output", help="Path for the generated trend chart PNG."),
+    raw_output: Optional[Path] = typer.Option(None, "--raw-output", help="Path to persist the raw dataset as JSON."),
     years: int = typer.Option(5, "--years", help="Number of years to include in the lookback window."),
     max_records: int = typer.Option(300, "--max-records", help="Maximum number of papers to ingest from OpenAlex."),
     keyword: Optional[List[str]] = typer.Option(
@@ -735,17 +766,28 @@ def research_workflow_lca_citations(
         help="Additional keyword filters (can be repeated).",
     ),
 ) -> None:
-    """Run the LCA citation intelligence workflow."""
+    """Run the deterministic citation workflow for the selected profile."""
 
     registry = _require_registry(ctx)
     context = _require_context(ctx)
     services = ResearchServices(registry=registry, context=context)
 
-    artifacts = run_lca_citation_workflow(
+    try:
+        profile_cfg = get_citation_profile(profile.lower())
+    except KeyError as exc:
+        choices = ", ".join(_CITATION_PROFILE_CHOICES)
+        raise typer.BadParameter(f"{exc}. Available profiles: {choices}.") from exc
+
+    report_path = (report_output or Path("reports") / f"{profile_cfg.slug}_citations.md").resolve()
+    chart_path = (chart_output or Path(".cache") / "tiangong" / "visuals" / f"{profile_cfg.slug}_citations.png").resolve()
+    raw_path = (raw_output or Path(".cache") / "tiangong" / "data" / f"{profile_cfg.slug}_citations.json").resolve()
+
+    artifacts = run_citation_template_workflow(
         services,
-        report_path=report_output,
-        chart_path=chart_output,
-        raw_data_path=raw_output,
+        profile=profile_cfg,
+        report_path=report_path,
+        chart_path=chart_path,
+        raw_data_path=raw_path,
         years=years,
         keyword_overrides=keyword,
         max_records=max_records,
@@ -753,13 +795,13 @@ def research_workflow_lca_citations(
 
     if context.options.dry_run:
         typer.echo("Dry-run: generated execution plan; no files were written.")
-        typer.echo(f"Planned report location: {report_output}")
-        if chart_output:
-            typer.echo(f"Planned chart location: {chart_output}")
-        if raw_output:
-            typer.echo(f"Planned dataset location: {raw_output}")
+        typer.echo(f"Planned profile: {profile_cfg.display_name} ({profile_cfg.slug})")
+        typer.echo(f"Planned report location: {report_path}")
+        typer.echo(f"Planned chart location: {chart_path}")
+        typer.echo(f"Planned dataset location: {raw_path}")
         return
 
+    typer.echo(f"Profile: {profile_cfg.display_name} ({profile_cfg.slug})")
     typer.echo(f"Report written to {artifacts.report_path}")
     if artifacts.chart_path:
         typer.echo(f"Chart saved to {artifacts.chart_path}")

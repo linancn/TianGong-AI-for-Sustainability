@@ -1,9 +1,9 @@
 version: "0.1"
 description: >
-  Declarative task graph describing high-level command dependencies. Codex can
-  read this file to determine prerequisite steps before executing research
-  workflows. The graph aligns with the architecture plan and will evolve as new
-  adapters are implemented.
+  Declarative task graph describing how workflow-centric capabilities depend on
+  foundational adapters and services. Codex can read this file to determine
+  prerequisite steps before executing research workflows. The graph aligns with
+  the architecture plan and will evolve as new adapters are implemented.
 
 tasks:
   ontology.griparse:
@@ -148,25 +148,35 @@ tasks:
       - docs.workflow.simple
     phase: 2
 
-  workflow.lca_citations:
-    summary: "Automate LCA citation intelligence covering planetary boundaries and SDGs."
+  workflow.citation_template:
+    summary: "Assemble a reusable deterministic citation sweep template for sustainability domains."
     requires:
       - corpus.openalex
+      - cli.command.find_papers
       - cli.command.visuals_verify
     provides:
-      - workflow.lca_citations
-      - docs.workflow.lca_citations
+      - workflow.template.citation
+      - docs.workflow.template.citation
     phase: 2
 
-  workflow.lca_deep_report:
-    summary: "Combine deterministic LCA citations with Deep Research synthesis and final reporting."
+  workflow.deep_research_template:
+    summary: "Extend the citation template with Deep Research synthesis scaffolding."
     requires:
-      - workflow.lca_citations
-      - cli.command.visuals_verify
+      - workflow.template.citation
       - deep_research.client
     provides:
-      - workflow.lca_deep_report
-      - docs.workflow.lca_deep_report
+      - workflow.template.deep_research
+      - docs.workflow.template.deep_research
+    phase: 3
+
+  workflow.profile.lca:
+    summary: "Apply deep research template with LCA-specific corpora, ontologies, and prompts."
+    requires:
+      - workflow.template.deep_research
+      - ontology.lca
+    provides:
+      - workflow.profile.lca
+      - docs.workflow.profile.lca
     phase: 3
 
   cli.find_papers:

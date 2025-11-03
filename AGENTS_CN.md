@@ -101,7 +101,8 @@
 | `research synthesize` | Phase 3 | LLM 控制器按用户需求协调其它命令。**已实现**（支持提示模版）。 |
 | `research visuals verify` | Phase 2 | 检查 AntV MCP 图表服务器可用性。**已实现**。 |
 | `research workflow simple` | Phase 2 | 自动化执行 SDG 匹配、代码/文献检索、碳强度采集与 AntV 图表生成。**已实现**。 |
-| `research workflow lca-deep-report` | Phase 3 | 确定性 LCA 引文扫描与 Deep Research 综合输出。**已实现**（支持提示模版选择）。 |
+| `research workflow citation-scan --profile <slug>` | Phase 2 | 基于 Profile 的确定性引文模版（默认 `lca`）。**已实现**。 |
+| `research workflow deep-report --profile <slug>` | Phase 3 | 在引文模版上叠加 Deep Research 综合；当前默认 profile 为 LCA，可扩展到其它领域。**已实现**。 |
 
 功能推进必须遵循 `tasks/blueprint.yaml` 中的依赖顺序。
 
@@ -112,6 +113,7 @@
 3. **Dry-Run 支持**：服务与 CLI 在 `dry_run` 模式下应返回执行计划而非真正操作。
 4. **前置依赖提示**：缺少外部工具或凭据时（如 OSDG 令牌、`grid-intensity` CLI、Node.js + MCP 图表服务器）需输出明确指导，不得默默失败。
 5. **提示模版配置**：当命令未显式提供指令时，应通过 `ResearchServices.load_prompt_template` 加载 `specs/prompts/default.md`。模版支持 `{{placeholder}}` 占位符替换（来自 `ExecutionOptions.prompt_variables`），CLI 可通过 `--prompt-template`、`--prompt-language`、`--prompt-variable` 设定参数，后续 `research synthesize` 亦复用相同机制。中文文件 `specs/prompts/default_CN.md` 仅供人工阅读，请勿传递给 Codex。
+6. **工作流 Profile**：引用扫描与深度报告工作流均采用“模版 + Profile”架构。新增领域时只需在 `workflows/profiles.py` 注册 `CitationProfile`/`DeepResearchProfile`，然后通过 `--profile <slug>` 复用现有 CLI。 
 
 ### 测试策略
 
