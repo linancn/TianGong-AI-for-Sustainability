@@ -17,7 +17,7 @@ from ..adapters import AdapterError
 from ..core.logging import get_logger
 from ..deep_research import DeepResearchClient, DeepResearchResult, ResearchPrompt
 from ..services import ResearchServices
-from .lca_citations import (
+from .citation_template import (
     CitationQuestion,
     CitationWorkflowArtifacts,
     TrendingTopic,

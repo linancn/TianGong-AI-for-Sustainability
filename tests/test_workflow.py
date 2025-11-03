@@ -8,8 +8,7 @@ import pytest
 from tiangong_ai_for_sustainability.adapters.base import VerificationResult
 from tiangong_ai_for_sustainability.core import ExecutionContext, ExecutionOptions
 from tiangong_ai_for_sustainability.deep_research import ResearchPrompt
-from tiangong_ai_for_sustainability.workflows.deep_lca import run_deep_lca_report
-from tiangong_ai_for_sustainability.workflows.lca_citations import (
+from tiangong_ai_for_sustainability.workflows.citation_template import (
     CitationQuestion,
     CitationWorkflowArtifacts,
     PaperRecord,
@@ -17,6 +16,7 @@ from tiangong_ai_for_sustainability.workflows.lca_citations import (
     TrendingTopic,
     run_lca_citation_workflow,
 )
+from tiangong_ai_for_sustainability.workflows.deep_research import run_deep_lca_report
 from tiangong_ai_for_sustainability.workflows.metrics import TRENDING_METRIC_CONFIGS, run_trending_metrics_workflow
 from tiangong_ai_for_sustainability.workflows.papers import run_paper_search
 from tiangong_ai_for_sustainability.workflows.simple import run_simple_workflow
@@ -364,7 +364,7 @@ def test_run_lca_citation_workflow(tmp_path, monkeypatch, dummy_services):
         return True
 
     monkeypatch.setattr(
-        "tiangong_ai_for_sustainability.workflows.lca_citations.ensure_chart_image",
+        "tiangong_ai_for_sustainability.workflows.citation_template.ensure_chart_image",
         fake_render,
     )
 
@@ -465,12 +465,12 @@ def test_run_deep_lca_report(tmp_path, dummy_services, monkeypatch):
             papers=[paper],
         )
 
-    import tiangong_ai_for_sustainability.workflows.deep_lca as deep_lca_module
+    import tiangong_ai_for_sustainability.workflows.deep_research as deep_research_module
 
     def fake_generate_variants(markdown_path, output_dir):
         return [], ["Pandoc not found"]
 
-    monkeypatch.setattr(deep_lca_module, "_generate_document_variants", fake_generate_variants)
+    monkeypatch.setattr(deep_research_module, "_generate_document_variants", fake_generate_variants)
 
     artifacts = run_deep_lca_report(
         dummy_services,
@@ -534,7 +534,7 @@ def test_run_deep_lca_report_applies_prompt_template(tmp_path, dummy_services, m
             papers=[],
         )
 
-    import tiangong_ai_for_sustainability.workflows.deep_lca as deep_lca_module
+    import tiangong_ai_for_sustainability.workflows.deep_research as deep_research_module
 
     def fake_variants(markdown_path, output_dir):
         return [], []
@@ -564,8 +564,8 @@ def test_run_deep_lca_report_applies_prompt_template(tmp_path, dummy_services, m
 
     dummy_services.load_prompt_template = fake_load_prompt
 
-    monkeypatch.setattr(deep_lca_module, "_generate_document_variants", fake_variants)
-    monkeypatch.setattr(deep_lca_module, "_run_deep_research", fake_run)
+    monkeypatch.setattr(deep_research_module, "_generate_document_variants", fake_variants)
+    monkeypatch.setattr(deep_research_module, "_run_deep_research", fake_run)
 
     artifacts = run_deep_lca_report(
         dummy_services,
