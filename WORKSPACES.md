@@ -4,7 +4,7 @@ title: Study Workspace Guide
 
 # Study Workspace Guide
 
-This document explains how to run TianGong research workflows inside the study cache (`.cache/tiangong/<STUDY_ID>/`). It complements `AGENTS.md`, which covers repository-level development practices.
+This document explains how to run TianGong research workflows inside the study cache (`.cache/tiangong/<STUDY_ID>/`). It complements `AGENTS.md`, which covers repository-level development practices, and the Codex briefing template in `specs/prompts/default.md`.
 
 ## 1. Workspace Bootstrapping
 

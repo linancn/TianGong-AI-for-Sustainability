@@ -21,8 +21,15 @@ AI operators must follow this document when working on the TianGong AI for Susta
 | Prompt Template (AI) | `specs/prompts/default.md` | English-only prompt delivered to Codex via CLI aliases. |
 | Prompt Template (CN, human) | `specs/prompts/default_CN.md` | Chinese translation for operators; do not send to Codex. |
 | Workflow scripts | `tiangong_ai_for_sustainability/workflows/` | Python workflows (e.g., `run_simple_workflow`) that automate multi-source studies. |
+| Study Workspace Guide | `WORKSPACES.md` | Procedures for managing `.cache/tiangong/<STUDY_ID>/` during research workflows. |
 
 Always consult these sources before planning or executing changes.
+
+### Document Roles
+
+- **AGENTS.md** – repository-level architecture, module boundaries, development workflow.
+- **WORKSPACES.md** – execution rules for study workspaces under `.cache/tiangong/<STUDY_ID>/`.
+- **specs/prompts/default.md** – operational briefing template sent to Codex; references the runbook and workspace artefacts.
 
 ## Operating Principles
 
@@ -30,7 +37,7 @@ Always consult these sources before planning or executing changes.
 2. **Deterministic Pipelines** — prefer rule-based adapters for data acquisition and reserve LLM prompting for synthesis as described in the spec.
 3. **CLI-First Commands** — invoke `uv run tiangong-research …` subcommands before reading or writing Python modules. Document any fallbacks when the CLI surface is incomplete and create backlog items to expose missing features.
 4. **Reversibility** — avoid destructive commands (`git reset --hard`, force pushes, etc.) unless explicitly authorised.
-5. **Bilingual Docs** — whenever `README*.md` or `AGENTS*.md` (including the Architecture Blueprint) are modified, update both English and Chinese versions in the same change set.
+5. **Bilingual Docs** — whenever `README*.md`, `AGENTS*.md`, `WORKSPACES*.md`, or `SETUP_GUIDE*.md` (including the Architecture Blueprint) are modified, update both English and Chinese versions under the same change set.
 6. **Tooling Dependencies** — chart-related tasks require Node.js and the AntV MCP chart server. Check for `node`/`npx` availability and surface installation guidance if missing.
 7. **Prompt Templates** — LLM-enabled workflows (Deep Research, future `research synthesize`) must load `specs/prompts/default.md` via the registered aliases (`default`, `default-en`, etc.). Keep AI-facing prompts in English only; `specs/prompts/default_CN.md` is for human use. Placeholders use `{{variable}}` syntax populated via CLI flags (`--prompt-template`, `--prompt-language`, `--prompt-variable`).
 8. **Study Workspaces** — when executing research workflows inside `.cache/tiangong/<STUDY_ID>/`, follow the operating rules in `WORKSPACES.md`. Keep topic-specific scripts in the workspace, not the repository.

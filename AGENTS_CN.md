@@ -21,8 +21,15 @@
 | 提示模板（AI） | `specs/prompts/default.md` | 仅供 Codex 使用的英文提示模版。 |
 | 提示模板（人工中文） | `specs/prompts/default_CN.md` | 面向人类操作员的中文翻译，禁止直接发送给 Codex。 |
 | 工作流脚本 | `tiangong_ai_for_sustainability/workflows/` | 自动化多源研究的 Python 工作流（如 `run_simple_workflow`）。 |
+| 课题工作区指南 | `WORKSPACES_CN.md` | 在 `.cache/tiangong/<STUDY_ID>/` 中执行研究工作时的流程与规范。 |
 
 > **更新要求**：凡涉及上述文档内容变更，必须同时更新对应的中文与英文版本，确保双语文档一致。
+
+### 文档分工
+
+- **AGENTS_CN.md / AGENTS.md**：仓库层面的架构、模块边界、开发规范。
+- **WORKSPACES_CN.md / WORKSPACES.md**：课题工作区的执行规则与产物管理。
+- **specs/prompts/default*.md**：提交给 Codex 的调研提示骨架，绑定 runbook 与工作区 artefacts。
 
 ## 操作原则
 
@@ -30,7 +37,7 @@
 2. **确定性优先** — 数据采集使用规则化适配器；仅在综合分析阶段引入 LLM 推理。
 3. **CLI 优先** — 优先调用 `uv run tiangong-research …` 子命令；仅在确认 CLI 尚未覆盖能力时，记录原因并说明拟访问的 Python 模块，同时创建待办以补全 CLI。
 4. **可回滚** — 未获授权不得执行破坏性 Git 命令（如 `git reset --hard`）。
-5. **双语维护** — 对 `README*.md` 或 `AGENTS*.md`（包括架构蓝图章节）的任何修改，必须同步更新英文与中文版本。
+5. **双语维护** — 对 `README*.md`、`AGENTS*.md`、`WORKSPACES*.md`、`SETUP_GUIDE*.md`（包括架构蓝图章节）的任何修改，必须同步更新英文与中文版本。
 6. **工具依赖** — 涉及图表的工作需确认 Node.js 与 AntV MCP 图表服务器已安装并可访问。
 7. **提示模版** — 所有包含 LLM 的工作流（如 Deep Research、`research synthesize`）需通过别名加载 `specs/prompts/default.md`（支持 `default`、`default-en` 等别名）；模版保持英文内容以避免多语言提示漂移。`specs/prompts/default_CN.md` 仅供人工参考，禁止直接发送给 Codex。模版占位符使用 `{{variable}}` 语法，并可通过 CLI 参数（`--prompt-template`、`--prompt-language`、`--prompt-variable`）填充，确保执行可复现。
 8. **课题工作区** — 在 `.cache/tiangong/<STUDY_ID>/` 内执行研究工作时，请遵循 `WORKSPACES_CN.md` 的操作规范；课题脚本、笔记和中间产物必须保存在工作区内，不得提交到仓库。

@@ -3,7 +3,7 @@
 此文档提供与 `specs/prompts/default.md` 对应的中文说明，方便人工理解与编辑。请勿将本文件直接发送给 Codex，所有交付给 AI 的提示应使用英文版本 `default.md`。
 
 ## 使用说明
-- 在编写提示前初始化或复用研究工作区：`uv run python scripts/ops/init_study_workspace.py --study-id <STUDY_ID>`。该命令会在 `.cache/tiangong/<STUDY_ID>/` 下生成目录与可编辑的 `docs/runbook.md`、`docs/study_brief.md`。
+- 在编写提示前初始化或复用研究工作区：`uv run python scripts/ops/init_study_workspace.py --study-id <STUDY_ID>`。该命令会在 `.cache/tiangong/<STUDY_ID>/` 下生成目录与可编辑的 `docs/runbook.md`、`docs/study_brief.md`。更多工作区操作规范请参阅 `WORKSPACES.md` / `WORKSPACES_CN.md`。
 - 在生成的 runbook / 蓝图中填入本次研究的命令队列、缓存路径，以及是否希望 Codex 在蓝图确认后自动继续（`auto_execute: true|false`）。
 - 复制下方 Markdown 骨架，发送前将占位符（`<…>`）替换为实际内容，可引用已编辑的 runbook 信息。
 - 先确认环境和凭据（数据源访问、AntV 图表服务、`grid-intensity`、缓存路径）已就绪。
