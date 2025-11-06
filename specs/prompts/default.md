@@ -3,7 +3,9 @@
 This template is the only prompt file that should be delivered to Codex. It provides the full study briefing scaffold, stage plan, and CLI quick reference in English so executions stay deterministic. A Chinese translation for human operators is available at `specs/prompts/default_CN.md`; do **not** feed that file to the AI.
 
 ## How to Use
-- Copy the Markdown skeleton below and replace every placeholder (`<...>`) with concrete details about your study.
+- Initialise (or reuse) a study workspace before drafting the prompt: `uv run python scripts/init_study_workspace.py --study-id <STUDY_ID>`. This provisions `.cache/tiangong/<STUDY_ID>/` along with editable `docs/runbook.md` and `docs/study_brief.md`.
+- Update the generated runbook/blueprint files with the study-specific command queue, cache locations, and whether Codex should continue automatically after blueprint confirmation (`auto_execute: true|false`).
+- Copy the Markdown skeleton below and replace every placeholder (`<...>`) with concrete details about your study, referencing the prepared runbook where helpful.
 - Check environment readiness (data-source credentials, AntV chart server, `grid-intensity`, cache paths) before sending the prompt.
 - List the CLI commands in the order they must run. Codex should remain on the `uv run tiangong-research ...` interface unless you explicitly authorise a deterministic Python fallback.
 - Store raw outputs under `.cache/tiangong/<STUDY_ID>/` (or another declared path) for reproducibility.
@@ -11,6 +13,12 @@ This template is the only prompt file that should be delivered to Codex. It prov
 ## Prompt Skeleton (Copy & Edit)
 ```markdown
 # TianGong Research Plan - Default Template
+
+## 0. Workspace Bootstrap (pre-prompt)
+- Study ID: `<STUDY_ID>`
+- Workspace init command: `uv run python scripts/init_study_workspace.py --study-id <STUDY_ID>` *(skip if already provisioned)*
+- Blueprint sources: `.cache/tiangong/<STUDY_ID>/docs/runbook.md`, `.cache/tiangong/<STUDY_ID>/docs/study_brief.md`
+- Auto execute after blueprint confirmation: `<true|false>` *(Codex proceeds immediately when true; otherwise pause for human sign-off)*
 
 ## 1. Environment & Readiness
 - [ ] Run `uv run tiangong-research sources list` and confirm availability.
@@ -29,6 +37,7 @@ This template is the only prompt file that should be delivered to Codex. It prov
 ### Stage 0 - Spec Alignment
 - Purpose: confirm alignment with `AGENTS.md` and `tasks/blueprint.yaml`.
 - CLI commands: `uv run tiangong-research sources list`, `uv run tiangong-research sources verify <id>`
+- Auto-execution guard: confirm `<true|false>` setting from workspace blueprint and state whether Codex should continue without further confirmation.
 - Outputs: readiness notes, blocked sources, escalation items.
 
 ### Stage 1 - Deterministic Acquisition
