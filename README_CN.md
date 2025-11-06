@@ -105,3 +105,9 @@ uv run tiangong-research research workflow simple --topic "生命周期评估"
 - 提示模板 — `specs/prompts/default.md`（AI 使用） / `specs/prompts/default_CN.md`（人工参考）
 
 可选组件缺失时，工作流会自动降级（例如无图表时输出纯文本）。如需访问受限数据源，请将所需密钥配置在环境变量或 `.secrets/secrets.toml` 文件中。
+
+## Codex
+```bash
+# 危险操作：直接执行转换后的内联prompt（请确保已了解风险）
+codex exec --dangerously-bypass-approvals-and-sandbox "$(cat specs/prompts/default.md)"
+```

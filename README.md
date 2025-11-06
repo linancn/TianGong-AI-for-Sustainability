@@ -105,3 +105,9 @@ Everyone else can simply rely on the platform installers—`install_macos.sh`, `
 - Prompt template — `specs/prompts/default.md` (AI) / `specs/prompts/default_CN.md` (human reference)
 
 Optional components degrade gracefully (for example, workflows fall back to text when charts are unavailable). Keep any required API keys in environment variables or `.secrets/secrets.toml` so the CLI can access protected sources.
+
+## Codex
+```bash
+# Dangerous: bypass approvals and sandboxing for quick tests
+codex exec --dangerously-bypass-approvals-and-sandbox "$(cat specs/prompts/default.md)"
+```
