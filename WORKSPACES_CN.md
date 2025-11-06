@@ -4,7 +4,7 @@ title: 课题工作区指南
 
 # 课题工作区指南
 
-本指南配合 `AGENTS_CN.md` 使用，专门说明如何在 `.cache/tiangong/<STUDY_ID>/` 内执行 TianGong 研究工作流。`AGENTS_CN.md` 负责仓库级开发规范；本文聚焦课题工作区的操作流程。
+本文档说明如何在课题缓存目录（`.cache/tiangong/<STUDY_ID>/`）内执行 TianGong 研究工作流。它是 `AGENTS_CN.md`（涵盖仓库级开发规范）和 `specs/prompts/default.md` 中 Codex 简报模板的补充。
 
 ## 1. 初始化工作区
 
@@ -44,24 +44,24 @@ title: 课题工作区指南
    ```
    若 CLI 尚不支持，方可在 `scripts/` 目录编写临时脚本，并在 runbook 备注原因，同时向 `tasks/backlog.yaml` 添加待办以补齐 CLI 能力。
 2. 所有输出（JSON/Markdown/图表/模型）应存放在 `.cache/tiangong/<STUDY_ID>/` 内的对应子目录。
-3. 课题专用脚本、Notebook、草稿不得提交至仓库，需留在工作区 `scripts/` 内。
+3. 课题专用脚本、Notebook 与输出不得提交至仓库；应保留在工作区 `scripts/` 目录内。
 4. 使用 LLM 综合分析时：
-   - 默认加载 `specs/prompts/default.md`（可用别名 `default`）。
-   - 通过 CLI 参数传入模版与变量（`--prompt-template`、`--prompt-language`、`--prompt-variable key=value`）。
-   - 将模型响应（JSON/Markdown）保存到 `docs/` 或 `processed/`，并注明其依赖的确定性输入。
+   - 默认使用 `specs/prompts/default.md`（别名 `default`）。
+   - 通过 CLI 参数传递提示变量（`--prompt-template`、`--prompt-language`、`--prompt-variable key=value`）。
+   - 将响应（JSON/Markdown）保存至 `docs/` 或 `processed/`，确保可追溯至确定性输入。
 
 ## 4. Dry-Run 与可观测性
 
-- 在计划阶段启用 `--dry-run` 或 `ExecutionOptions.dry_run`，并将输出步骤记录到 `logs/run_history.md`。
-- 对于速率限制、外部依赖缺失等问题，先写入 `logs/exceptions.md`，包含重试/降级策略。
-- 触发复杂工作流时，可在 `ExecutionOptions.observability_tags` 中写入标签，方便日志关联。
+- 规划阶段设置 `--dry-run`（或 `ExecutionOptions.dry_run`）；将生成的计划存储至 `logs/run_history.md`。
+- 使用 `logs/exceptions.md` 记录 API 速率限制、缺失凭据或降级行为，包含重试/退避说明。
+- 启动复杂工作流时填充 `ExecutionOptions.observability_tags`，以对齐自动化计划。
 
 ## 5. 收尾流程
 
-1. 确认所有报告、图表、数据集均已存放在工作区内，并在交付物中引用这些路径。
-2. 在 `docs/gaps.md` 梳理残留问题，如需后续开发，在仓库 PR 中更新 `tasks/backlog.yaml`。
-3. 仅在验证通过后，才将报告或数据推广至长期存储或其他文档。
-4. 保留完整工作区以支持复现；除非有保留政策要求，勿删除中间结果。
+1. 确保所有报告、图表和数据集的引用路径均指向工作区内的文件。
+2. 在 `docs/gaps.md` 更新待办事项，并通过仓库 PR 更新 `tasks/backlog.yaml`（如需后续工作）。
+3. 仅在验证后将经过验证的输出（报告、数据）推广至长期存储或文档。
+4. 保留完整工作区以支持可复现性；除非保留政策要求，否则不删除中间文件。
 
 ## 6. 快速参考
 
@@ -73,4 +73,4 @@ title: 课题工作区指南
 | 运行研究工作流 | `uv run tiangong-research research workflow <...>` |
 | 生成单行提示 | `uv run python scripts/tooling/compose_inline_prompt.py` |
 
-仓库级开发规范请参见 `AGENTS_CN.md`；本文档仅包含课题工作区的操作要求。
+仓库级开发指南请参阅 `AGENTS_CN.md`。本指南专门针对课题工作区操作。
