@@ -119,5 +119,5 @@ uv run tiangong-research research workflow simple --topic "生命周期评估"
 ## Codex
 ```bash
 # 危险操作：直接执行转换后的内联prompt（请确保已了解风险）
-codex exec --dangerously-bypass-approvals-and-sandbox "$(cat specs/prompts/default.md)"
+codex exec --dangerously-bypass-approvals-and-sandbox "$(cat inline_prompt.txt)"
 ```

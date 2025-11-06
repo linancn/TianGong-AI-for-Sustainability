@@ -119,5 +119,5 @@ Optional components degrade gracefully (for example, workflows fall back to text
 ## Codex
 ```bash
 # Dangerous: bypass approvals and sandboxing for quick tests
-codex exec --dangerously-bypass-approvals-and-sandbox "$(cat specs/prompts/default.md)"
+codex exec --dangerously-bypass-approvals-and-sandbox "$(cat inline_prompt.txt)"
 ```
