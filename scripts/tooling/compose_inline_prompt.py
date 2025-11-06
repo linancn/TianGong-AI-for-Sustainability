@@ -4,7 +4,7 @@ Compose an inline research prompt by combining the AI infrastructure brief
 with the staged workflow instructions from the default template.
 
 Example:
-    uv run python scripts/compose_inline_prompt.py
+    uv run python scripts/tooling/compose_inline_prompt.py
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ import argparse
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_USER_PROMPT = REPO_ROOT / "user_prompts" / "ai-infra.md"
 DEFAULT_TEMPLATE = REPO_ROOT / "specs" / "prompts" / "default.md"
 DEFAULT_OUTPUT_FILENAME = "inline_prompt.txt"

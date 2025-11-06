@@ -6,7 +6,7 @@ Before running ensure ``OPENAI_API_KEY`` is exported.
 
 Example usage::
 
-    uv run python scripts/run_deep_research.py \\
+    uv run python scripts/examples/run_deep_research.py \\
         "How can AI improve municipal recycling rates?" \\
         --context "Focus on medium-sized European cities." \\
         --follow-up "List the highest impact data integrations." \\

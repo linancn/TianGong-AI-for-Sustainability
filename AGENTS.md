@@ -230,6 +230,7 @@ When optional dependencies are unavailable:
 5. When visualization features are required, ensure the AntV MCP chart server is running (`npx -y @antv/mcp-server-chart --transport streamable`) and record the endpoint in `.secrets` or `TIANGONG_CHART_MCP_ENDPOINT`.
 6. When extending workflows, reuse helpers from `workflows/simple.py` or add new modules under `workflows/`, keeping corresponding tests up to date.
 7. Instrument new services and workflows with the centralized logging helper and add regression tests when behaviour depends on specific log outputs.
+8. Shared helper scripts live under `scripts/ops/`, `scripts/integrations/`, `scripts/tooling/`, and `scripts/examples/`; keep study-specific scripts inside `.cache/tiangong/<STUDY_ID>/scripts/`.
 
 ## Verification Checklist
 

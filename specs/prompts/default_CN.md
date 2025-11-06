@@ -3,7 +3,7 @@
 此文档提供与 `specs/prompts/default.md` 对应的中文说明，方便人工理解与编辑。请勿将本文件直接发送给 Codex，所有交付给 AI 的提示应使用英文版本 `default.md`。
 
 ## 使用说明
-- 在编写提示前初始化或复用研究工作区：`uv run python scripts/init_study_workspace.py --study-id <STUDY_ID>`。该命令会在 `.cache/tiangong/<STUDY_ID>/` 下生成目录与可编辑的 `docs/runbook.md`、`docs/study_brief.md`。
+- 在编写提示前初始化或复用研究工作区：`uv run python scripts/ops/init_study_workspace.py --study-id <STUDY_ID>`。该命令会在 `.cache/tiangong/<STUDY_ID>/` 下生成目录与可编辑的 `docs/runbook.md`、`docs/study_brief.md`。
 - 在生成的 runbook / 蓝图中填入本次研究的命令队列、缓存路径，以及是否希望 Codex 在蓝图确认后自动继续（`auto_execute: true|false`）。
 - 复制下方 Markdown 骨架，发送前将占位符（`<…>`）替换为实际内容，可引用已编辑的 runbook 信息。
 - 先确认环境和凭据（数据源访问、AntV 图表服务、`grid-intensity`、缓存路径）已就绪。
@@ -16,7 +16,7 @@
 
 ## 0. 工作区引导（发送提示前完成）
 - Study ID：`<STUDY_ID>`
-- 初始化命令：`uv run python scripts/init_study_workspace.py --study-id <STUDY_ID>`（若已存在可跳过）
+- 初始化命令：`uv run python scripts/ops/init_study_workspace.py --study-id <STUDY_ID>`（若已存在可跳过）
 - 蓝图文件：`.cache/tiangong/<STUDY_ID>/docs/runbook.md`、`.cache/tiangong/<STUDY_ID>/docs/study_brief.md`
 - 蓝图确认后自动继续：`<true|false>`（为 `true` 时 Codex 将直接继续；为 `false` 时需人工确认）
 

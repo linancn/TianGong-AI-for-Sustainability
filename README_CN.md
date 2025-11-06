@@ -91,7 +91,7 @@ uv run tiangong-research research workflow simple --topic "生命周期评估"
 
 ## 内联提示组合器
 
-- 生成一段单行提示，将 `user_prompts/ai-infra.md` 与分阶段工作流说明拼接在一起：`uv run python scripts/compose_inline_prompt.py`
+- 生成一段单行提示，将 `user_prompts/ai-infra.md` 与分阶段工作流说明拼接在一起：`uv run python scripts/tooling/compose_inline_prompt.py`
 - 如需自定义输入，可使用以下参数：
   - `--user-prompt path/to/file.md` 指定其他研究简报。
   - `--spec path/to/workflow.md`（`--template` 为别名）选择不同的工作流规范。

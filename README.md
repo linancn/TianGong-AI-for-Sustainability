@@ -91,7 +91,7 @@ Missing a feature? Just re-run your installer (`install_macos.sh`, `install_ubun
 
 ## Inline Prompt Composer
 
-- Generate a single-line Codex brief that merges `user_prompts/ai-infra.md` with the staged workflow instructions: `uv run python scripts/compose_inline_prompt.py`
+- Generate a single-line Codex brief that merges `user_prompts/ai-infra.md` with the staged workflow instructions: `uv run python scripts/tooling/compose_inline_prompt.py`
 - Override inputs when necessary:
   - `--user-prompt path/to/file.md` selects an alternate study brief.
   - `--spec path/to/workflow.md` (alias `--template`) points at a different staged workflow spec.

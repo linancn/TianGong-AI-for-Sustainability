@@ -230,6 +230,7 @@
 5. 执行可视化任务前，需启动 `npx -y @antv/mcp-server-chart --transport streamable` 并在 `.secrets` 的 `[chart_mcp] endpoint` 或环境变量 `TIANGONG_CHART_MCP_ENDPOINT` 中记录端点。
 6. 扩展自动化流程时，可复用或扩展 `workflows/simple.py`，并同步更新测试用例。
 7. 为新增的服务与工作流接入集中式日志工具，并在日志行为影响功能时补充回归测试。
+8. 通用脚本统一放在 `scripts/ops/`、`scripts/integrations/`、`scripts/tooling/`、`scripts/examples/` 下；课题专属脚本应保存在 `.cache/tiangong/<STUDY_ID>/scripts/`。
 
 ## 验证清单
 

@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 import pytest
 
-SCRIPT_PATH = Path(__file__).resolve().parent.parent / "scripts" / "collect_mcp_corpus.py"
+SCRIPT_PATH = Path(__file__).resolve().parent.parent / "scripts" / "integrations" / "collect_mcp_corpus.py"
 SPEC = importlib.util.spec_from_file_location("collect_mcp_corpus", SCRIPT_PATH)
 if SPEC is None or SPEC.loader is None:  # pragma: no cover - defensive
     raise RuntimeError(f"Unable to load collect_mcp_corpus module from {SCRIPT_PATH}")

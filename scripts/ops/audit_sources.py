@@ -3,7 +3,7 @@
 Convenience wrapper for ``tiangong-research sources audit``.
 
 This script exists for operators who prefer invoking a Python entry point via
-``uv run python scripts/audit_sources.py``. All arguments are forwarded to the
+``uv run python scripts/ops/audit_sources.py``. All arguments are forwarded to the
 CLI command so flags like ``--json`` or ``--no-fail-on-error`` can be used
 verbatim.
 """
