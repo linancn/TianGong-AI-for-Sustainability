@@ -165,5 +165,8 @@ package-lock.json
 
 /.tiangong
 
-/user_prompts
+# User prompts: ignore everything except example.md
+/user_prompts/*
+!/user_prompts/example.md
+
 inline_prompt.txt
