@@ -36,14 +36,39 @@ from ..workflows.profiles import (
 )
 from .adapters import resolve_adapter
 
-app = typer.Typer(no_args_is_help=True, add_completion=False, help="TianGong sustainability research CLI.")
-sources_app = typer.Typer(help="Inspect and validate external data source integrations.")
+app = typer.Typer(
+    no_args_is_help=True,
+    add_completion=False,
+    help=(
+        "Deterministic sustainability research CLI for TianGong.\n\n"
+        "Command groups:\n"
+        "- sources: catalogue, audit, and verify data integrations.\n"
+        "- research: run SDG/GRI mapping, code and paper discovery, synthesis, and tooling checks.\n"
+        "- research workflow: execute curated multi-step studies.\n"
+        "- research visuals: confirm AntV MCP chart server availability."
+    ),
+)
+sources_app = typer.Typer(
+    help=(
+        "Inspect and validate external data source integrations. Includes list, describe, audit, and"
+        " per-source verification commands."
+    )
+)
 app.add_typer(sources_app, name="sources")
-research_app = typer.Typer(help="Execute research workflows.")
+research_app = typer.Typer(
+    help=(
+        "Execute sustainability research commands such as SDG mapping, repository discovery, carbon"
+        " intensity lookups, literature search, synthesis, and MCP tooling checks."
+    )
+)
 app.add_typer(research_app, name="research")
-visuals_app = typer.Typer(help="Visualization tooling")
+visuals_app = typer.Typer(
+    help="Visualization tooling, including AntV MCP chart server verification."
+)
 research_app.add_typer(visuals_app, name="visuals")
-workflow_app = typer.Typer(help="Predefined multi-step research workflows")
+workflow_app = typer.Typer(
+    help="Predefined multi-step research workflows such as simple, citation-scan, and deep-report templates."
+)
 research_app.add_typer(workflow_app, name="workflow")
 
 _CURRENT_YEAR = datetime.now(UTC).year
