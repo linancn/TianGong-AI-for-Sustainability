@@ -33,6 +33,7 @@
 5. **双语维护** — 对 `README*.md` 或 `AGENTS*.md`（包括架构蓝图章节）的任何修改，必须同步更新英文与中文版本。
 6. **工具依赖** — 涉及图表的工作需确认 Node.js 与 AntV MCP 图表服务器已安装并可访问。
 7. **提示模版** — 所有包含 LLM 的工作流（如 Deep Research、`research synthesize`）需通过别名加载 `specs/prompts/default.md`（支持 `default`、`default-en` 等别名）；模版保持英文内容以避免多语言提示漂移。`specs/prompts/default_CN.md` 仅供人工参考，禁止直接发送给 Codex。模版占位符使用 `{{variable}}` 语法，并可通过 CLI 参数（`--prompt-template`、`--prompt-language`、`--prompt-variable`）填充，确保执行可复现。
+8. **课题工作区** — 在 `.cache/tiangong/<STUDY_ID>/` 内执行研究工作时，请遵循 `WORKSPACES_CN.md` 的操作规范；课题脚本、笔记和中间产物必须保存在工作区内，不得提交到仓库。
 
 ## 架构蓝图
 
@@ -230,7 +231,7 @@
 5. 执行可视化任务前，需启动 `npx -y @antv/mcp-server-chart --transport streamable` 并在 `.secrets` 的 `[chart_mcp] endpoint` 或环境变量 `TIANGONG_CHART_MCP_ENDPOINT` 中记录端点。
 6. 扩展自动化流程时，可复用或扩展 `workflows/simple.py`，并同步更新测试用例。
 7. 为新增的服务与工作流接入集中式日志工具，并在日志行为影响功能时补充回归测试。
-8. 通用脚本统一放在 `scripts/ops/`、`scripts/integrations/`、`scripts/tooling/`、`scripts/examples/` 下；课题专属脚本应保存在 `.cache/tiangong/<STUDY_ID>/scripts/`。
+8. 通用脚本统一放在 `scripts/ops/`、`scripts/integrations/`、`scripts/tooling/`、`scripts/examples/` 下；课题专属脚本应保存在 `.cache/tiangong/<STUDY_ID>/scripts/`，详细要求见 `WORKSPACES_CN.md`。
 
 ## 验证清单
 

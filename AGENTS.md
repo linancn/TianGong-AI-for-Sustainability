@@ -33,6 +33,7 @@ Always consult these sources before planning or executing changes.
 5. **Bilingual Docs** — whenever `README*.md` or `AGENTS*.md` (including the Architecture Blueprint) are modified, update both English and Chinese versions in the same change set.
 6. **Tooling Dependencies** — chart-related tasks require Node.js and the AntV MCP chart server. Check for `node`/`npx` availability and surface installation guidance if missing.
 7. **Prompt Templates** — LLM-enabled workflows (Deep Research, future `research synthesize`) must load `specs/prompts/default.md` via the registered aliases (`default`, `default-en`, etc.). Keep AI-facing prompts in English only; `specs/prompts/default_CN.md` is for human use. Placeholders use `{{variable}}` syntax populated via CLI flags (`--prompt-template`, `--prompt-language`, `--prompt-variable`).
+8. **Study Workspaces** — when executing research workflows inside `.cache/tiangong/<STUDY_ID>/`, follow the operating rules in `WORKSPACES.md`. Keep topic-specific scripts in the workspace, not the repository.
 
 ## Architecture Blueprint
 
@@ -230,7 +231,7 @@ When optional dependencies are unavailable:
 5. When visualization features are required, ensure the AntV MCP chart server is running (`npx -y @antv/mcp-server-chart --transport streamable`) and record the endpoint in `.secrets` or `TIANGONG_CHART_MCP_ENDPOINT`.
 6. When extending workflows, reuse helpers from `workflows/simple.py` or add new modules under `workflows/`, keeping corresponding tests up to date.
 7. Instrument new services and workflows with the centralized logging helper and add regression tests when behaviour depends on specific log outputs.
-8. Shared helper scripts live under `scripts/ops/`, `scripts/integrations/`, `scripts/tooling/`, and `scripts/examples/`; keep study-specific scripts inside `.cache/tiangong/<STUDY_ID>/scripts/`.
+8. Shared helper scripts live under `scripts/ops/`, `scripts/integrations/`, `scripts/tooling/`, and `scripts/examples/`; keep study-specific scripts inside `.cache/tiangong/<STUDY_ID>/scripts/` as outlined in `WORKSPACES.md`.
 
 ## Verification Checklist
 
