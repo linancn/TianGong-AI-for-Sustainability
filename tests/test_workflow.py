@@ -7,7 +7,7 @@ import pytest
 
 from tiangong_ai_for_sustainability.adapters.base import VerificationResult
 from tiangong_ai_for_sustainability.core import ExecutionContext, ExecutionOptions
-from tiangong_ai_for_sustainability.deep_research import ResearchPrompt
+from tiangong_ai_for_sustainability.llm import ResearchPrompt
 from tiangong_ai_for_sustainability.workflows.citation_template import (
     CitationQuestion,
     CitationWorkflowArtifacts,
@@ -16,7 +16,7 @@ from tiangong_ai_for_sustainability.workflows.citation_template import (
     TrendingTopic,
     run_lca_citation_workflow,
 )
-from tiangong_ai_for_sustainability.workflows.deep_research import run_deep_lca_report
+from tiangong_ai_for_sustainability.workflows.deep_research_workflow import run_deep_lca_report
 from tiangong_ai_for_sustainability.workflows.metrics import TRENDING_METRIC_CONFIGS, run_trending_metrics_workflow
 from tiangong_ai_for_sustainability.workflows.papers import run_paper_search
 from tiangong_ai_for_sustainability.workflows.simple import run_simple_workflow
@@ -465,7 +465,7 @@ def test_run_deep_lca_report(tmp_path, dummy_services, monkeypatch):
             papers=[paper],
         )
 
-    import tiangong_ai_for_sustainability.workflows.deep_research as deep_research_module
+    import tiangong_ai_for_sustainability.workflows.deep_research_workflow as deep_research_module
 
     def fake_generate_variants(markdown_path, output_dir):
         return [], ["Pandoc not found"]
@@ -534,7 +534,7 @@ def test_run_deep_lca_report_applies_prompt_template(tmp_path, dummy_services, m
             papers=[],
         )
 
-    import tiangong_ai_for_sustainability.workflows.deep_research as deep_research_module
+    import tiangong_ai_for_sustainability.workflows.deep_research_workflow as deep_research_module
 
     def fake_variants(markdown_path, output_dir):
         return [], []

@@ -15,7 +15,7 @@ from typing import Callable, Iterable, List, Optional, Sequence
 
 from ..adapters import AdapterError
 from ..core.logging import get_logger
-from ..deep_research import DeepResearchClient, DeepResearchResult, ResearchPrompt
+from ..llm import DeepResearchClient, DeepResearchResult, ResearchPrompt
 from ..services import ResearchServices
 from .citation_template import (
     CitationQuestion,

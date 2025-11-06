@@ -9,7 +9,7 @@ from typing import Dict, List, Optional
 
 from ..adapters import AdapterError
 from ..core.logging import get_logger
-from ..deep_research import DeepResearchClient, ResearchPrompt
+from ..llm import DeepResearchClient, ResearchPrompt
 from ..services import ResearchServices
 from .steps import discover_papers, discover_repositories, match_sdg_goals, retrieve_carbon_intensity
 

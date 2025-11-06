@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from tiangong_ai_for_sustainability.config import OpenAISettings, SecretsBundle
-from tiangong_ai_for_sustainability.deep_research import DeepResearchClient, DeepResearchConfig, ResearchPrompt
+from tiangong_ai_for_sustainability.llm import DeepResearchClient, DeepResearchConfig, ResearchPrompt
 
 
 class StubResponses:

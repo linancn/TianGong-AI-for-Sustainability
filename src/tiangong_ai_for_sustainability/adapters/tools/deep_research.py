@@ -2,7 +2,7 @@
 Adapter for verifying OpenAI Deep Research availability.
 
 The adapter focuses on static credential checks so that verification remains
-deterministic. Actual orchestration is handled by :mod:`tiangong_ai_for_sustainability.deep_research`.
+deterministic. Actual orchestration is handled by :mod:`tiangong_ai_for_sustainability.llm.openai_deep_research`.
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ from logging import LoggerAdapter
 
 from ...config import OpenAISettings
 from ...core.logging import get_logger
-from ...deep_research import DEFAULT_DEEP_RESEARCH_MODEL
+from ...llm import DEFAULT_DEEP_RESEARCH_MODEL
 from ..base import DataSourceAdapter, VerificationResult
 
 

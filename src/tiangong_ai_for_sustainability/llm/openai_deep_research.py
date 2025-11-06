@@ -30,8 +30,8 @@ from openai.types.responses import Response, ResponseStreamEvent
 from openai.types.responses.response_create_params import ToolChoice
 from openai.types.responses.tool_param import Mcp as McpToolParam
 
-from .config import SecretsBundle, load_secrets
-from .core import ExecutionContext
+from ..config import SecretsBundle, load_secrets
+from ..core import ExecutionContext
 
 MessageList = List[Dict[str, Any]]
 
