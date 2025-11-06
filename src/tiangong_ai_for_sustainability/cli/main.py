@@ -48,27 +48,15 @@ app = typer.Typer(
         "- research visuals: confirm AntV MCP chart server availability."
     ),
 )
-sources_app = typer.Typer(
-    help=(
-        "Inspect and validate external data source integrations. Includes list, describe, audit, and"
-        " per-source verification commands."
-    )
-)
+sources_app = typer.Typer(help=("Inspect and validate external data source integrations. Includes list, describe, audit, and" " per-source verification commands."))
 app.add_typer(sources_app, name="sources")
 research_app = typer.Typer(
-    help=(
-        "Execute sustainability research commands such as SDG mapping, repository discovery, carbon"
-        " intensity lookups, literature search, synthesis, and MCP tooling checks."
-    )
+    help=("Execute sustainability research commands such as SDG mapping, repository discovery, carbon" " intensity lookups, literature search, synthesis, and MCP tooling checks.")
 )
 app.add_typer(research_app, name="research")
-visuals_app = typer.Typer(
-    help="Visualization tooling, including AntV MCP chart server verification."
-)
+visuals_app = typer.Typer(help="Visualization tooling, including AntV MCP chart server verification.")
 research_app.add_typer(visuals_app, name="visuals")
-workflow_app = typer.Typer(
-    help="Predefined multi-step research workflows such as simple, citation-scan, and deep-report templates."
-)
+workflow_app = typer.Typer(help="Predefined multi-step research workflows such as simple, citation-scan, and deep-report templates.")
 research_app.add_typer(workflow_app, name="workflow")
 
 _CURRENT_YEAR = datetime.now(UTC).year

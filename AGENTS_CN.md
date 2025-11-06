@@ -114,6 +114,10 @@
 4. **前置依赖提示**：缺少外部工具或凭据时（如 OSDG 令牌、`grid-intensity` CLI、Node.js + MCP 图表服务器）需输出明确指导，不得默默失败。
 5. **提示模版配置**：当命令未显式提供指令时，应通过 `ResearchServices.load_prompt_template` 加载 `specs/prompts/default.md`。模版支持 `{{placeholder}}` 占位符替换（来自 `ExecutionOptions.prompt_variables`），CLI 可通过 `--prompt-template`、`--prompt-language`、`--prompt-variable` 设定参数，后续 `research synthesize` 亦复用相同机制。中文文件 `specs/prompts/default_CN.md` 仅供人工阅读，请勿传递给 Codex。
 6. **工作流 Profile**：引用扫描与深度报告工作流均采用“模版 + Profile”架构。新增领域时只需在 `workflows/profiles.py` 注册 `CitationProfile`/`DeepResearchProfile`，然后通过 `--profile <slug>` 复用现有 CLI。 
+7. **课题工作区规范**：课题专用的脚本、笔记、临时数据集和草稿必须存放在 `.cache/tiangong/<STUDY_ID>/` 及其下属目录（`acquisition/`、`processed/`、`docs/`、`models/`、`figures/`、`scripts/`、`logs/`）。仓库层面仅接受通用能力（CLI、services、workflows），不得将特定课题的代码或数据提交到仓库。
+8. **Runbook 真源**：所有命令队列、产出路径与重试策略须写入 `<study>/docs/runbook.md`。执行时严格按照 runbook 顺序推进，临时操作需先更新 runbook 再执行。
+9. **流程与溯源**：在 `<study>/processed/` 记录流水线清单、指标表和参考索引，deliverable 中必须引用这些确定性产物，确保可复现。
+10. **异常记录**：遭遇速率限制、凭据缺失或降级处理时，先在 `<study>/logs/exceptions.md` 记录情况，并在 `docs/gaps.md` 总结，再决定是否重试或切换数据源，避免在脚本中写死一次性逻辑。
 
 ### 测试策略
 

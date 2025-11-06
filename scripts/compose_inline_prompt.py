@@ -34,12 +34,7 @@ def compose_prompt(user_text: str, template_text: str) -> str:
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description=(
-            "Generate an inline prompt that embeds the AI infrastructure brief "
-            "alongside the default TianGong research workflow."
-        )
-    )
+    parser = argparse.ArgumentParser(description=("Generate an inline prompt that embeds the AI infrastructure brief " "alongside the default TianGong research workflow."))
     parser.add_argument(
         "--user-prompt",
         type=Path,
@@ -52,10 +47,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         dest="spec",
         type=Path,
         default=DEFAULT_TEMPLATE,
-        help=(
-            "Path to the staged workflow specification. Defaults to "
-            "specs/prompts/default.md. --template is kept as an alias."
-        ),
+        help=("Path to the staged workflow specification. Defaults to " "specs/prompts/default.md. --template is kept as an alias."),
     )
     parser.add_argument(
         "--output",
