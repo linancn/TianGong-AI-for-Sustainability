@@ -89,6 +89,16 @@ uv run tiangong-research research workflow simple --topic "生命周期评估"
   ```
 - 若仅需一次性覆盖，可继续使用 `--deep-prompt` 与 `--deep-instructions`；当未提供指令时，CLI 会自动回退至模版机制。
 
+## 内联提示组合器
+
+- 生成一段单行提示，将 `user_prompts/ai-infra.md` 与分阶段工作流说明拼接在一起：`uv run python scripts/compose_inline_prompt.py`
+- 如需自定义输入，可使用以下参数：
+  - `--user-prompt path/to/file.md` 指定其他研究简报。
+  - `--spec path/to/workflow.md`（`--template` 为别名）选择不同的工作流规范。
+- `--output path/to/prompt.txt` 可覆盖输出文件路径（脚本仍会在标准输出回显提示内容）。
+- 默认情况下脚本会在当前目录生成 `./inline_prompt.txt`，同时依然在标准输出回显单行提示，方便复制粘贴。
+- 脚本会规范化空白字符，并插入过渡语句 “By following the staged workflow strictly”，确保生成的提示简洁且具可重复性。
+
 ## 需要更专业的控制？
 
 如果你希望自行管理 Python 环境、在特殊平台部署，或需要详细排障说明，请阅读：

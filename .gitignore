@@ -164,3 +164,6 @@ uv.lock
 package-lock.json
 
 /.tiangong
+
+/user_prompts
+inline_prompt.txt

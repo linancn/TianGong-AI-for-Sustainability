@@ -89,6 +89,16 @@ Missing a feature? Just re-run your installer (`install_macos.sh`, `install_ubun
   ```
 - `--deep-prompt` and `--deep-instructions` remain available for one-off overrides; templates apply only when instructions are omitted.
 
+## Inline Prompt Composer
+
+- Generate a single-line Codex brief that merges `user_prompts/ai-infra.md` with the staged workflow instructions: `uv run python scripts/compose_inline_prompt.py`
+- Override inputs when necessary:
+  - `--user-prompt path/to/file.md` selects an alternate study brief.
+  - `--spec path/to/workflow.md` (alias `--template`) points at a different staged workflow spec.
+  - `--output path/to/prompt.txt` rewrites the destination file (stdout still echoes the prompt).
+- By default the script saves the prompt to `./inline_prompt.txt` and still echoes the inline text to stdout for quick copy/paste.
+- The script normalises whitespace and injects the bridge sentence “By following the staged workflow strictly” so the prompt stays compact and deterministic.
+
 ## Need Advanced Control?
 
 Power users who prefer to manage Python environments manually or run the CLI on atypical platforms should read:
