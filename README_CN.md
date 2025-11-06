@@ -42,6 +42,7 @@
 ```bash
 uv run tiangong-research --help
 uv run tiangong-research sources list
+uv run tiangong-research sources audit
 uv run tiangong-research sources verify un_sdg_api
 uv run tiangong-research research workflow simple --topic "生命周期评估"
 ```
