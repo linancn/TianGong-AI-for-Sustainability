@@ -69,8 +69,8 @@ Always consult these sources before planning or executing changes.
 | Priority | Examples | Status | Notes |
 |----------|----------|--------|-------|
 | **P0** | `tiangong_ai_remote` MCP knowledge base | Implemented | Primary corpus for sustainability research; use as first-line retrieval with comprehensive query payloads. |
-| **P1** | UN SDG API, Semantic Scholar, Crossref, GitHub Topics, Wikidata, grid-intensity CLI, `tiangong_lca_remote` MCP | Implemented | Provide core ontology, general retrieval, and micro-level LCA data when needed. |
-| **P1 (bulk)** | arXiv / Kaggle dumps | Partial | arxiv.py client now handles API search; bulk download and vector indexing remain planned. |
+| **P1** | UN SDG API, Semantic Scholar, Crossref, GitHub Topics, Kaggle Datasets API, Wikidata, grid-intensity CLI, `tiangong_lca_remote` MCP | Implemented | Provide core ontology, curated datasets, general retrieval, and micro-level LCA data when needed. |
+| **P1 (bulk)** | arXiv dumps / Kaggle mirrors | Partial | Kaggle API integration now enables authenticated dataset queries; bulk download and vector indexing remain planned. |
 | **P2** | Scopus, Web of Science, WattTime (via grid-intensity), AntV MCP chart server, Tavily Web MCP, OpenAI Deep Research | Conditional | Enable only when credentials, runtime dependencies (Node.js), or API quotas are available. |
 | **P3** | GRI taxonomy XLSX/XBRL, GHG protocol workbooks, Open Sustainable Tech CSV, life cycle assessment inventories (e.g., openLCA datasets) | Rolling | Parse via shared file ingestion layer. |
 | **P4** | Google Scholar, ACM Digital Library | Blocked | Enforce alternatives (Semantic Scholar, Crossref). |
@@ -81,6 +81,7 @@ Always consult these sources before planning or executing changes.
 2. HTTP adapters use `httpx` with Tenacity-backed retry logic; they must emit `AdapterError` on failures.
 3. CLI and MCP adapters should provide actionable install or access guidance when missing (e.g., `grid-intensity`, `mcp-server-chart --transport streamable`, MCP endpoints/API keys).
 4. Caching is deferred to services (e.g., storing SDG goals in DuckDB/Parquet) to keep adapters stateless.
+5. Kaggle dataset access relies on the official Kaggle SDK (1.7.4.5); surface clear credential requirements when `KAGGLE_USERNAME`/`KAGGLE_KEY` or `~/.kaggle/kaggle.json` are missing.
 
 > **MCP Usage Notes** — The `tiangong_ai_remote` MCP delivers the most authoritative sustainability literature coverage (≈70M chunks, 70B tokens). Always formulate queries with complete context so the hybrid retriever can yield high-quality passages. The `Search_*` tools (including `Search_Sci_Tool`) return a JSON string—decode it with `json.loads` before accessing fields and keep `topK` ≤ 50 to avoid oversized responses. Rate-limit follow-up enrichment calls (e.g., Semantic Scholar) or switch to `OpenAlex` when 429 throttling occurs. The `tiangong_lca_remote` MCP focuses on life-cycle assessment datasets; reserve it for micro-level LCA case studies or detailed footprint comparisons, and skip it for macro literature scans where `tiangong_ai_remote` and other P1 sources suffice. Use `tavily_web_mcp` when you need general web or news coverage that is outside the curated TianGong corpus, remembering that the Tavily server expects `Authorization: Bearer <API_KEY>`. When invoking TianGong search tools, set `extK` to control how many neighbouring chunks are returned (default `extK=2`, increase only when additional local context is required). Treat `openai_deep_research` as an analysis source triggered after deterministic evidence collection; ensure the OpenAI API key and the deep research model are configured before enabling it in workflows.
 
