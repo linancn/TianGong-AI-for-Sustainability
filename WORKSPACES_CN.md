@@ -35,6 +35,7 @@ title: 课题工作区指南
 - `logs/exceptions.md`：在重试前记录速率限制、凭据缺失等异常及缓解方案。
 - `docs/gaps.md`：汇总尚未解决的数据缺口与后续动作。
 - `processed/README.md`：维护处理后产物与对应来源命令/脚本的对照表。
+- `user_prompts/_markdown_prompt.md` 与 `_inline_prompt.txt`：仅作仓库模板使用，视为只读；课题相关的提示草稿须存放在 `.cache/tiangong/<STUDY_ID>/docs/`。
 
 ## 3. 执行规则
 

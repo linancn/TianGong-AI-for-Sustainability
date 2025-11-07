@@ -6,6 +6,7 @@
 - 在编写提示前初始化或复用研究工作区：`uv run python scripts/ops/init_study_workspace.py --study-id <STUDY_ID>`。该命令会在 `.cache/tiangong/<STUDY_ID>/` 下生成目录与可编辑的 `docs/runbook.md`、`docs/study_brief.md`。更多工作区操作规范请参阅 `WORKSPACES.md` / `WORKSPACES_CN.md`。
 - 在生成的 runbook / 蓝图中填入本次研究的命令队列、缓存路径，以及是否希望 Codex 在蓝图确认后自动继续（`auto_execute: true|false`）。
 - 复制下方 Markdown 骨架，发送前将占位符（`<…>`）替换为实际内容，可引用已编辑的 runbook 信息。
+- 定制后的提示与中间文档应保存在研究工作区（例如 `.cache/tiangong/<STUDY_ID>/docs/`）。`user_prompts/_markdown_prompt.md` 与 `_inline_prompt.txt` 仅作为模板，请勿覆盖为具体课题内容。
 - 先确认环境和凭据（数据源访问、AntV 图表服务、`grid-intensity`、缓存路径）已就绪。
 - 按执行顺序列出 CLI 命令。除非明确授权回退，否则 Codex 必须通过 `uv run tiangong-research …` 完成操作。
 - 原始输出建议保存到 `.cache/tiangong/<STUDY_ID>/` 或声明的路径，便于复现。

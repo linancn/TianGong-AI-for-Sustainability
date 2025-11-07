@@ -35,6 +35,7 @@ This document explains how to run TianGong research workflows inside the study c
 - `logs/exceptions.md` – log rate limits, missing credentials, and retry plans before re-running.
 - `docs/gaps.md` – summarise outstanding data gaps or follow-ups.
 - `processed/README.md` – maintain a table linking processed artefacts to source scripts/commands.
+- `user_prompts/_markdown_prompt.md` and `_inline_prompt.txt` – repository templates only; treat them as read-only references. Place all study-specific prompt drafts inside `.cache/tiangong/<STUDY_ID>/docs/`.
 
 ## 3. Command Execution Rules
 

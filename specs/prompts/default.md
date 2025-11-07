@@ -6,6 +6,7 @@ This template is the only prompt file that should be delivered to Codex. It prov
 - Initialise (or reuse) a study workspace before drafting the prompt: `uv run python scripts/ops/init_study_workspace.py --study-id <STUDY_ID>`. This provisions `.cache/tiangong/<STUDY_ID>/` along with editable `docs/runbook.md` and `docs/study_brief.md`. For workspace operating rules see `WORKSPACES.md` / `WORKSPACES_CN.md`.
 - Update the generated runbook/blueprint files with the study-specific command queue, cache locations, and whether Codex should continue automatically after blueprint confirmation (`auto_execute: true|false`).
 - Copy the Markdown skeleton below and replace every placeholder (`<...>`) with concrete details about your study, referencing the prepared runbook where helpful.
+- Save customised prompts and intermediate planning artefacts inside the study workspace (for example `.cache/tiangong/<STUDY_ID>/docs/`). Treat `user_prompts/_markdown_prompt.md` and `_inline_prompt.txt` as immutable templates; do **not** overwrite them with study-specific content.
 - Check environment readiness (data-source credentials, AntV chart server, `grid-intensity`, cache paths) before sending the prompt.
 - List the CLI commands in the order they must run. Codex should remain on the `uv run tiangong-research ...` interface unless you explicitly authorise a deterministic Python fallback.
 - Store raw outputs under `.cache/tiangong/<STUDY_ID>/` (or another declared path) for reproducibility.
