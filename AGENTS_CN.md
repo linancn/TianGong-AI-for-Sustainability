@@ -68,7 +68,7 @@
 
 | 优先级 | 示例 | 状态 | 说明 |
 |--------|------|------|------|
-| **P0** | `tiangong_ai_remote` MCP 知识库 | 已实现 | 可持续性研究的首选语料；需提供完整上下文以获取高质量检索结果。 |
+| **P0** | `tiangong_ai_remote` MCP 知识库；`dify_knowledge_base_mcp` 私有 MCP 语料库 | 已实现 | 可持续性研究的首选语料；优先查询这两项并提供完整上下文，再级联到其它数据源。 |
 | **P1** | UN SDG API、Semantic Scholar、Crossref、GitHub Topics、Kaggle 数据集 API、Wikidata、grid-intensity CLI、`tiangong_lca_remote` MCP | 已实现 | 构成本体、精选数据集与通用检索基础，同时按需提供细粒度 LCA 数据。 |
 | **P1（批量）** | arXiv 批量数据 / Kaggle 镜像 | 部分上线 | 已集成 Kaggle API，可进行鉴权后的数据集检索；批量下载与向量索引仍在规划中。 |
 | **P2** | Scopus、Web of Science、WattTime（通过 grid-intensity）、AntV MCP 图表服务器、Tavily Web MCP、OpenAI Deep Research | 视凭据/环境启用 | 需提供密钥、运行时依赖（如 Node.js）或足够的 API 配额。 |

@@ -68,7 +68,7 @@ Always consult these sources before planning or executing changes.
 
 | Priority | Examples | Status | Notes |
 |----------|----------|--------|-------|
-| **P0** | `tiangong_ai_remote` MCP knowledge base | Implemented | Primary corpus for sustainability research; use as first-line retrieval with comprehensive query payloads. |
+| **P0** | `tiangong_ai_remote` MCP knowledge base; `dify_knowledge_base_mcp` personal MCP corpus | Implemented | Primary corpora for sustainability research; query these first with comprehensive context before cascading to other sources. |
 | **P1** | UN SDG API, Semantic Scholar, Crossref, GitHub Topics, Kaggle Datasets API, Wikidata, grid-intensity CLI, `tiangong_lca_remote` MCP | Implemented | Provide core ontology, curated datasets, general retrieval, and micro-level LCA data when needed. |
 | **P1 (bulk)** | arXiv dumps / Kaggle mirrors | Partial | Kaggle API integration now enables authenticated dataset queries; bulk download and vector indexing remain planned. |
 | **P2** | Scopus, Web of Science, WattTime (via grid-intensity), AntV MCP chart server, Tavily Web MCP, OpenAI Deep Research | Conditional | Enable only when credentials, runtime dependencies (Node.js), or API quotas are available. |

@@ -201,7 +201,7 @@
 - id: tiangong_ai_remote
   name: "TianGong AI Remote MCP"
   category: automation
-  priority: P2
+  priority: P0
   description: "Managed MCP endpoint exposing curated TianGong automation tools."
   protocols: ["MCP", "streamable-http"]
   base_urls:
@@ -210,15 +210,31 @@
   requires_credentials: true
   status: trial
   capabilities: ["tool-dispatch", "automation"]
-  tags: ["mcp", "remote", "automation"]
+  tags: ["mcp", "remote", "automation", "p0"]
   notes: "Requires API key. Configure credentials in .secrets under [tiangong_ai_remote]."
   references:
     - "https://mcp.tiangong.earth/docs"
 
+- id: dify_knowledge_base_mcp
+  name: "Dify Knowledge Base MCP"
+  category: knowledge-base
+  priority: P0
+  description: "Personal curated Dify knowledge base exposed via MCP for high-priority sustainability evidence."
+  protocols: ["MCP", "streamable-http"]
+  base_urls: []
+  authentication: "api-key"
+  requires_credentials: true
+  status: active
+  capabilities: ["knowledge-retrieval", "curated-content"]
+  tags: ["mcp", "knowledge-base", "p0"]
+  notes: "Configure credentials in .secrets under [dify_knowledge_base_mcp]; uses Authorization: Bearer <API_KEY> headers."
+  references:
+    - "https://docs.dify.ai/"
+
 - id: tiangong_lca_remote
   name: "TianGong LCA Remote MCP"
   category: automation
-  priority: P2
+  priority: P1
   description: "Remote MCP endpoint specialising in life-cycle assessment tooling."
   protocols: ["MCP", "streamable-http"]
   base_urls:
@@ -227,7 +243,7 @@
   requires_credentials: true
   status: trial
   capabilities: ["tool-dispatch", "lca", "automation"]
-  tags: ["mcp", "remote", "lca"]
+  tags: ["mcp", "remote", "lca", "p1"]
   notes: "Requires API key. Configure credentials in .secrets under [tiangong_lca_remote]."
   references:
     - "https://lcamcp.tiangong.earth/docs"
