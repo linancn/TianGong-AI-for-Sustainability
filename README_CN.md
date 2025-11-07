@@ -128,6 +128,10 @@ uv run tiangong-research research workflow simple --topic "生命周期评估"
 - 未加参数时脚本会把 Markdown 提示写入 `user_prompts/_markdown_prompt.md`，并在标准输出回显同样的内容。只有显式请求时才会生成 `_inline_prompt.txt`。
 - 该 Markdown 提示引用规范文档而非逐字拷贝全文，请在发送前补充 “Study-Specific Notes” 与 “Workspace Notes” 中的研究细节。
 
+```bash
+uv run python scripts/tooling/compose_inline_prompt.py --user-prompt user_prompts/example.md
+``` 
+
 ## Codex
 ```bash
 # 危险操作：直接执行转换后的内联prompt（请确保已了解风险）

@@ -100,6 +100,10 @@ Missing a feature? Just re-run your installer (`install_macos.sh`, `install_ubun
 - Without flags the script writes the Markdown prompt to `user_prompts/_markdown_prompt.md` and prints the same content to stdout. Inline output is created only when requested.
 - The Markdown prompt cites the canonical specs instead of inlining them. Fill the “Study-Specific Notes” and “Workspace Notes” blocks before handing the prompt to Codex.
 
+```bash
+uv run python scripts/tooling/compose_inline_prompt.py --user-prompt user_prompts/example.md
+``` 
+
 ## Need Advanced Control?
 
 Power users who prefer to manage Python environments manually or run the CLI on atypical platforms should read:
