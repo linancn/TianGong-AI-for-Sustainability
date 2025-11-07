@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Compose the TianGong research prompt from the study brief and specs.
+"""Compose a TianGong research prompt by stitching core references together.
 
-By default the script emits a Markdown prompt that references the canonical
-workflow and workspace guides instead of inlining their full contents. Pass
-``--emit-inline`` to generate the single-line prompt alongside the Markdown
-output.
+The generated Markdown keeps only the essentials: the study brief plus direct
+links to the staged workflow and workspace specifications. Headings from the
+canonical documents are summarised so humans and Codex see which sections to
+consult without copying their full text. Pass ``--emit-inline`` to emit the
+single-line prompt alongside the Markdown output.
 
 Example:
     uv run python scripts/tooling/compose_inline_prompt.py
@@ -72,57 +73,66 @@ def extract_headings(markdown: str, max_items: int = 8) -> list[str]:
 
 
 def compose_prompt(user_text: str, template_text: str, workspace_text: str) -> tuple[str, str]:
-    """Combine the user prompt with summary references to specs and guides."""
+    """Combine the study brief with concise workflow and workspace references."""
     workspace_clean = strip_front_matter(workspace_text).strip()
     template_clean = template_text.strip()
     user_clean = user_text.strip()
 
     user_inline = inline_text(user_clean)
-    template_inline = inline_text(template_clean)
-    workspace_inline = inline_text(workspace_clean)
-
     template_headings = extract_headings(template_clean)
     workspace_headings = extract_headings(workspace_clean)
-    template_summary = "; ".join(template_headings) if template_headings else template_inline
-    workspace_summary = "; ".join(workspace_headings) if workspace_headings else workspace_inline
 
-    workflow_bullets = "\n".join(f"- {heading}" for heading in template_headings) if template_headings else "- Refer to `specs/prompts/default.md`."
-    workspace_bullets = "\n".join(f"- {heading}" for heading in workspace_headings) if workspace_headings else "- Refer to `WORKSPACES.md`."
+    template_summary = "; ".join(template_headings) if template_headings else inline_text(template_clean)
+    workspace_summary = "; ".join(workspace_headings) if workspace_headings else inline_text(workspace_clean)
 
     inline_prompt = (
-        f"[StudyBrief] {user_inline} | " f"[WorkflowSpec] Reference specs/prompts/default.md ({template_summary}) | " f"[WorkspaceRules] Reference WORKSPACES.md ({workspace_summary})"
+        f"[StudyBrief] {user_inline} | "
+        f"[WorkflowSpec] Reference specs/prompts/default.md ({template_summary}) | "
+        f"[WorkspaceRules] Reference WORKSPACES.md ({workspace_summary})"
+    )
+
+    workflow_bullets = (
+        "\n".join(f"- {heading}" for heading in template_headings)
+        if template_headings
+        else "- Refer to `specs/prompts/default.md`."
+    )
+    workspace_bullets = (
+        "\n".join(f"- {heading}" for heading in workspace_headings)
+        if workspace_headings
+        else "- Refer to `WORKSPACES.md`."
     )
 
     markdown_sections = [
-        "# TianGong Research Prompt",
-        "## 1. Study Brief",
+        "## Study Brief",
         user_clean,
         "---",
-        "## 2. Workflow Specification (specs/prompts/default.md)",
+        "## Workflow Specification (specs/prompts/default.md)",
         f"{BRIDGE_PHRASE}. Reference the canonical workflow at `specs/prompts/default.md`.",
         "### Key Sections",
         workflow_bullets,
         "### Study-Specific Notes",
-        "- Document deterministic command queues, required sources, and overrides here.",
+        "- Document deterministic command queues, required sources, overrides, and prompt storage paths under `.cache/tiangong/<STUDY_ID>/docs/`.",
         "---",
-        "## 3. Workspace Operations (WORKSPACES.md)",
-        f"{WORKSPACE_BRIDGE_PHRASE}. Reference `WORKSPACES.md` for canonical workspace rules.",
+        "## Workspace Operations (WORKSPACES.md)",
+        f"{WORKSPACE_BRIDGE_PHRASE}. Reference `WORKSPACES.md` for canonical rules.",
         "### Key Sections",
         workspace_bullets,
         "### Workspace Notes",
-        "- Record cache paths, logging requirements, and outstanding exceptions here.",
+        "- Record cache locations, logging expectations, dry-run flags, and escalation items per `WORKSPACES.md`.",
     ]
     markdown_prompt = "\n\n".join(section for section in markdown_sections if section.strip())
     return inline_prompt, markdown_prompt
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=("Generate a Markdown prompt that combines the study brief with the " "TianGong workflow and workspace specifications."))
+    parser = argparse.ArgumentParser(
+        description="Generate a Markdown prompt that blends the study brief with embedded workflow and workspace guidance."
+    )
     parser.add_argument(
         "--user-prompt",
         type=Path,
         default=DEFAULT_USER_PROMPT,
-        help="Path to the human-authored AI infrastructure brief.",
+        help="Path to the human-authored study brief.",
     )
     parser.add_argument(
         "--spec",
@@ -130,7 +140,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         dest="spec",
         type=Path,
         default=DEFAULT_TEMPLATE,
-        help=("Path to the staged workflow specification. Defaults to " "specs/prompts/default.md. --template is kept as an alias."),
+        help="Path to the staged workflow specification (defaults to specs/prompts/default.md).",
     )
     parser.add_argument(
         "--markdown-output",
@@ -138,9 +148,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         dest="markdown_output",
         type=Path,
         help=(
-            "Path to write the Markdown prompt. Provide a directory to use the "
-            f"default filename ({MARKDOWN_OUTPUT_FILENAME}). Defaults to "
-            f"{DEFAULT_OUTPUT_DIR / MARKDOWN_OUTPUT_FILENAME}."
+            "Path to write the Markdown prompt. Provide a directory to use the default filename "
+            f"({MARKDOWN_OUTPUT_FILENAME}). Defaults to {DEFAULT_OUTPUT_DIR / MARKDOWN_OUTPUT_FILENAME}."
         ),
     )
     parser.add_argument(
@@ -151,7 +160,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--inline-output",
         type=Path,
-        help=("Path to write the inline prompt when --emit-inline is enabled. " f"Defaults to {DEFAULT_OUTPUT_DIR / INLINE_OUTPUT_FILENAME}."),
+        help=(
+            "Path to write the inline prompt when --emit-inline is enabled. "
+            f"Defaults to {DEFAULT_OUTPUT_DIR / INLINE_OUTPUT_FILENAME}."
+        ),
     )
     return parser.parse_args(argv)
 
@@ -198,17 +210,11 @@ def main(argv: list[str] | None = None) -> int:
         inline_path.parent.mkdir(parents=True, exist_ok=True)
         inline_path.write_text(inline_prompt, encoding="utf-8")
 
-    if args.markdown_output is None:
-        print(f"Saved markdown prompt to {markdown_path}", file=sys.stderr)
-        if inline_path:
-            print(f"Saved inline prompt to {inline_path}", file=sys.stderr)
-
-    if emit_inline:
-        print(inline_prompt)
-    else:
-        print(markdown_prompt)
+    print(markdown_prompt)
+    if inline_path:
+        print("\n[inline]", inline_prompt)
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())
