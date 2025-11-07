@@ -55,7 +55,9 @@ class CrossrefClient(BaseAPIClient):
         if query:
             params["query"] = query
         if filters:
-            params.update(self._serialise_filters(filters))
+            filter_expr = self._serialise_filters(filters)
+            if filter_expr:
+                params["filter"] = filter_expr
         if sort:
             params["sort"] = sort
         if order:
@@ -78,16 +80,17 @@ class CrossrefClient(BaseAPIClient):
         return message
 
     @staticmethod
-    def _serialise_filters(filters: Mapping[str, Any]) -> Dict[str, Any]:
-        params: Dict[str, Any] = {}
+    def _serialise_filters(filters: Mapping[str, Any]) -> str:
+        entries: list[str] = []
         for key, value in filters.items():
             if value is None:
                 continue
             if isinstance(value, (set, list, tuple)):
-                params[key] = ",".join(str(item) for item in value)
+                for item in value:
+                    entries.append(f"{key}:{item}")
             else:
-                params[key] = str(value)
-        return params
+                entries.append(f"{key}:{value}")
+        return ",".join(entries)
 
 
 @dataclass(slots=True)
@@ -98,6 +101,12 @@ class CrossrefAdapter(DataSourceAdapter):
     client: CrossrefClient = field(default_factory=CrossrefClient)
 
     def verify(self) -> VerificationResult:
+        if not getattr(self.client, "mailto", None):
+            return VerificationResult(
+                success=False,
+                message="Crossref API requires a contact email. Configure crossref.mailto or TIANGONG_CROSSREF_MAILTO.",
+                details={"reason": "missing-mailto"},
+            )
         try:
             payload = self.client.get_work(_VERIFICATION_DOI, select=["title", "issued"])
         except APIError as exc:

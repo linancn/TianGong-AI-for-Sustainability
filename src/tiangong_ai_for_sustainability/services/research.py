@@ -174,6 +174,10 @@ class ResearchServices:
         self._require_source_enabled("crossref")
         if self._crossref_client is None:
             mailto = self._get_secret("crossref", "mailto") or os.getenv("TIANGONG_CROSSREF_MAILTO")
+            if not mailto:
+                raise AdapterError(
+                    "Crossref requires a contact email. Set crossref.mailto in .secrets or TIANGONG_CROSSREF_MAILTO."
+                )
             self._crossref_client = CrossrefClient(mailto=mailto)
         return self._crossref_client
 
