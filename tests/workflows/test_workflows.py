@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from tiangong_ai_for_sustainability.adapters.base import VerificationResult
+from tiangong_ai_for_sustainability.adapters.base import AdapterError, VerificationResult
 from tiangong_ai_for_sustainability.core import ExecutionContext, ExecutionOptions
 from tiangong_ai_for_sustainability.llm import ResearchPrompt
 from tiangong_ai_for_sustainability.workflows.citation_template import (
@@ -49,6 +49,17 @@ class DummyServices:
             get_paper=lambda paper_id, fields=None: {"citationCount": 160, "url": "https://example.com/enriched"},
         )
         self._openalex = SimpleNamespace(iterate_works=lambda **kwargs: [])
+        self._arxiv = SimpleNamespace(
+            search_papers=lambda query, max_results, sort_by=None: [
+                {
+                    "id": "A1",
+                    "title": "arXiv Sample Paper",
+                    "year": 2022,
+                    "summary": "Summary",
+                    "pdf_url": "https://arxiv.org/pdf/1234.56789.pdf",
+                }
+            ]
+        )
 
     # Client factories
     def un_sdg_client(self):
@@ -62,6 +73,9 @@ class DummyServices:
 
     def openalex_client(self):
         return self._openalex
+
+    def arxiv_client(self):
+        return self._arxiv
 
     def osdg_client(self):
         raise RuntimeError("Not used in tests")
@@ -170,6 +184,7 @@ def test_run_paper_search(tmp_path, dummy_services):
         query="ai sustainability",
         sdg_context="Artificial intelligence for sustainability",
         include_openalex=True,
+        include_arxiv=True,
         include_citations=True,
         limit=5,
     )
@@ -178,6 +193,44 @@ def test_run_paper_search(tmp_path, dummy_services):
     assert artifacts.semantic_scholar[0]["paper_id"] == "S1"
     assert artifacts.openalex[0]["id"] == "W1"
     assert artifacts.citation_edges and artifacts.citation_edges[0]["source"] == "W1"
+    assert artifacts.arxiv and artifacts.arxiv[0]["id"] == "A1"
+
+
+def test_run_paper_search_arxiv_local_fallback(tmp_path, dummy_services):
+    context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
+    dummy_services.context = context
+
+    def failing_search(*args, **kwargs):
+        raise AdapterError("API unavailable")
+
+    dummy_services._arxiv = SimpleNamespace(search_papers=failing_search)
+
+    arxiv_dir = context.cache_dir / "arxiv"
+    arxiv_dir.mkdir(parents=True, exist_ok=True)
+    index_path = arxiv_dir / "index.jsonl"
+    index_path.write_text(
+        json.dumps(
+            {
+                "id": "A2",
+                "title": "Cached arXiv Paper",
+                "year": 2021,
+                "summary": "Cached summary for offline use",
+                "pdf_url": "https://arxiv.org/pdf/1111.2222.pdf",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    artifacts = run_paper_search(
+        dummy_services,
+        query="offline arxiv",
+        include_arxiv=True,
+        include_openalex=False,
+    )
+
+    assert artifacts.arxiv and artifacts.arxiv[0]["id"] == "A2"
+    assert any("Fell back to local arXiv index." in note for note in artifacts.notes)
 
 
 def test_run_paper_search_dry_run(tmp_path, dummy_services):

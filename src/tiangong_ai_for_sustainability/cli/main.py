@@ -1004,7 +1004,11 @@ def research_find_papers(
     query: str = typer.Argument(..., help="Search query or keyword."),
     limit: int = typer.Option(10, "--limit", "-n", min=1, max=50, help="Maximum number of papers per source."),
     include_openalex: bool = typer.Option(True, "--openalex/--no-openalex", help="Toggle OpenAlex enrichment."),
-    include_arxiv: bool = typer.Option(False, "--arxiv/--no-arxiv", help="Toggle local arXiv dump enrichment (TIANGONG_ARXIV_INDEX or cache)."),
+    include_arxiv: bool = typer.Option(
+        False,
+        "--arxiv/--no-arxiv",
+        help="Toggle arXiv enrichment via arxiv.py (falls back to TIANGONG_ARXIV_INDEX or local cache).",
+    ),
     include_scopus: bool = typer.Option(False, "--scopus/--no-scopus", help="Toggle Scopus export enrichment (TIANGONG_SCOPUS_INDEX or cache)."),
     citation_graph: bool = typer.Option(False, "--citation-graph/--no-citation-graph", help="Emit citation edges derived from OpenAlex references."),
     output_json: bool = typer.Option(False, "--json", help="Emit aggregated results as JSON."),
@@ -1092,7 +1096,7 @@ def research_find_papers(
 
     if artifacts.arxiv:
         typer.echo("")
-        typer.echo(f"arXiv local results ({len(artifacts.arxiv)}):")
+        typer.echo(f"arXiv results ({len(artifacts.arxiv)}):")
         for record in artifacts.arxiv:
             title = record.get("title", "Untitled")
             year = record.get("year") or "?"
@@ -1100,6 +1104,9 @@ def research_find_papers(
             summary = record.get("summary")
             if summary:
                 typer.echo(f"  Summary: {summary[:160]}{'…' if len(summary) > 160 else ''}")
+            pdf_url = record.get("pdf_url")
+            if pdf_url:
+                typer.echo(f"  PDF: {pdf_url}")
 
     if artifacts.scopus:
         typer.echo("")

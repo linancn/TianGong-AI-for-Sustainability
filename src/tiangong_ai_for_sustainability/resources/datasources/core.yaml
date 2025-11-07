@@ -47,6 +47,23 @@
   references:
     - "https://docs.openalex.org/"
 
+- id: arxiv
+  name: "arXiv API"
+  category: academic
+  priority: P1
+  description: "Open-access preprint repository exposing Atom feeds for metadata retrieval."
+  protocols: ["REST"]
+  base_urls:
+    - "https://export.arxiv.org/api/"
+  authentication: "none"
+  requires_credentials: false
+  status: trial
+  capabilities: ["paper-search", "preprint-metadata"]
+  tags: ["literature", "preprints", "p1"]
+  notes: "Accessed via arxiv.py client; batch ingestion via S3 remains on the roadmap."
+  references:
+    - "https://github.com/lukasschwab/arxiv.py"
+
 - id: crossref
   name: "Crossref Works API"
   category: academic

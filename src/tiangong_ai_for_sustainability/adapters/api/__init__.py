@@ -8,6 +8,7 @@ Each submodule exposes two layers:
   implementations suitable for registry verification or higher-level orchestration.
 """
 
+from .arxiv import ArxivAdapter, ArxivAPIError, ArxivClient
 from .base import APIError, BaseAPIClient
 from .crossref import CrossrefAdapter, CrossrefClient
 from .github_topics import GitHubTopicsAdapter, GitHubTopicsClient
@@ -17,6 +18,9 @@ from .semantic_scholar import SemanticScholarAdapter, SemanticScholarClient
 from .un_sdg import UNSDGAdapter, UNSDGClient
 
 __all__ = [
+    "ArxivAdapter",
+    "ArxivAPIError",
+    "ArxivClient",
     "APIError",
     "BaseAPIClient",
     "CrossrefAdapter",

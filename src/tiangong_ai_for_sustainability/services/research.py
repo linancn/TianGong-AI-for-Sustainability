@@ -15,7 +15,7 @@ from logging import LoggerAdapter
 from typing import Any, Dict, Mapping, Optional, Sequence
 
 from ..adapters import AdapterError, ChartMCPAdapter, DataSourceAdapter, VerificationResult
-from ..adapters.api import CrossrefClient, GitHubTopicsClient, OpenAlexClient, OSDGClient, SemanticScholarClient, UNSDGClient
+from ..adapters.api import ArxivClient, CrossrefClient, GitHubTopicsClient, OpenAlexClient, OSDGClient, SemanticScholarClient, UNSDGClient
 from ..adapters.environment import GridIntensityCLIAdapter
 from ..core import DataSourceDescriptor, DataSourceRegistry, DataSourceStatus, ExecutionContext, get_logger
 from ..core.mcp import MCPServerConfig, load_mcp_server_configs
@@ -33,6 +33,7 @@ class ResearchServices:
     _un_sdg_client: Optional[UNSDGClient] = field(default=None, init=False, repr=False)
     _semantic_scholar_client: Optional[SemanticScholarClient] = field(default=None, init=False, repr=False)
     _openalex_client: Optional[OpenAlexClient] = field(default=None, init=False, repr=False)
+    _arxiv_client: Optional[ArxivClient] = field(default=None, init=False, repr=False)
     _github_topics_client: Optional[GitHubTopicsClient] = field(default=None, init=False, repr=False)
     _osdg_client: Optional[OSDGClient] = field(default=None, init=False, repr=False)
     _crossref_client: Optional[CrossrefClient] = field(default=None, init=False, repr=False)
@@ -155,6 +156,12 @@ class ResearchServices:
             mailto = self._get_secret("openalex", "mailto") or os.getenv("TIANGONG_OPENALEX_MAILTO") or "tiangong-cli@localhost"
             self._openalex_client = OpenAlexClient(mailto=mailto)
         return self._openalex_client
+
+    def arxiv_client(self) -> ArxivClient:
+        self._require_source_enabled("arxiv")
+        if self._arxiv_client is None:
+            self._arxiv_client = ArxivClient()
+        return self._arxiv_client
 
     def github_topics_client(self) -> GitHubTopicsClient:
         self._require_source_enabled("github_topics")

@@ -86,21 +86,11 @@ def compose_prompt(user_text: str, template_text: str, workspace_text: str) -> t
     workspace_summary = "; ".join(workspace_headings) if workspace_headings else inline_text(workspace_clean)
 
     inline_prompt = (
-        f"[StudyBrief] {user_inline} | "
-        f"[WorkflowSpec] Reference specs/prompts/default.md ({template_summary}) | "
-        f"[WorkspaceRules] Reference WORKSPACES.md ({workspace_summary})"
+        f"[StudyBrief] {user_inline} | " f"[WorkflowSpec] Reference specs/prompts/default.md ({template_summary}) | " f"[WorkspaceRules] Reference WORKSPACES.md ({workspace_summary})"
     )
 
-    workflow_bullets = (
-        "\n".join(f"- {heading}" for heading in template_headings)
-        if template_headings
-        else "- Refer to `specs/prompts/default.md`."
-    )
-    workspace_bullets = (
-        "\n".join(f"- {heading}" for heading in workspace_headings)
-        if workspace_headings
-        else "- Refer to `WORKSPACES.md`."
-    )
+    workflow_bullets = "\n".join(f"- {heading}" for heading in template_headings) if template_headings else "- Refer to `specs/prompts/default.md`."
+    workspace_bullets = "\n".join(f"- {heading}" for heading in workspace_headings) if workspace_headings else "- Refer to `WORKSPACES.md`."
 
     markdown_sections = [
         "## Study Brief",
@@ -125,9 +115,7 @@ def compose_prompt(user_text: str, template_text: str, workspace_text: str) -> t
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Generate a Markdown prompt that blends the study brief with embedded workflow and workspace guidance."
-    )
+    parser = argparse.ArgumentParser(description="Generate a Markdown prompt that blends the study brief with embedded workflow and workspace guidance.")
     parser.add_argument(
         "--user-prompt",
         type=Path,
@@ -148,8 +136,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         dest="markdown_output",
         type=Path,
         help=(
-            "Path to write the Markdown prompt. Provide a directory to use the default filename "
-            f"({MARKDOWN_OUTPUT_FILENAME}). Defaults to {DEFAULT_OUTPUT_DIR / MARKDOWN_OUTPUT_FILENAME}."
+            "Path to write the Markdown prompt. Provide a directory to use the default filename " f"({MARKDOWN_OUTPUT_FILENAME}). Defaults to {DEFAULT_OUTPUT_DIR / MARKDOWN_OUTPUT_FILENAME}."
         ),
     )
     parser.add_argument(
@@ -160,10 +147,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--inline-output",
         type=Path,
-        help=(
-            "Path to write the inline prompt when --emit-inline is enabled. "
-            f"Defaults to {DEFAULT_OUTPUT_DIR / INLINE_OUTPUT_FILENAME}."
-        ),
+        help=("Path to write the inline prompt when --emit-inline is enabled. " f"Defaults to {DEFAULT_OUTPUT_DIR / INLINE_OUTPUT_FILENAME}."),
     )
     return parser.parse_args(argv)
 

@@ -46,6 +46,14 @@ tasks:
       - corpus.arxiv
     phase: 2
 
+  corpus.arxiv_api_client:
+    summary: "Integrate arXiv Atom API via arxiv.py for deterministic search."
+    requires:
+      - net.arxiv_api
+    provides:
+      - corpus.arxiv_api
+    phase: 1
+
   corpus.semantic_scholar_client:
     summary: "Configure Semantic Scholar REST client with rate limiting."
     requires:

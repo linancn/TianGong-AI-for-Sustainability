@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
 from ..adapters.api.base import APIError
+from ..adapters.base import AdapterError
 from ..core.logging import get_logger
 from ..services import ResearchServices
 from .steps import discover_papers, match_sdg_goals
@@ -67,7 +68,10 @@ def run_paper_search(
         "Query Semantic Scholar for representative papers.",
     ]
     if include_arxiv:
-        plan_steps.append("Load local arXiv dump (TIANGONG_ARXIV_INDEX or cache/arxiv/index.jsonl).")
+        plan_steps.append("Query arXiv Atom API via arxiv.py client.")
+        plan_steps.append("Fallback to local arXiv dump when available (TIANGONG_ARXIV_INDEX or cache/arxiv/index.jsonl).")
+    else:
+        plan_steps.append("Skip arXiv enrichment (disabled).")
     if include_openalex:
         plan_steps.append("Query OpenAlex works API for complementary records.")
     else:
@@ -113,14 +117,29 @@ def run_paper_search(
             notes.append(f"Semantic Scholar lookup failed: {exc}")
 
     if include_arxiv:
-        arxiv_index = _resolve_local_index(context, "TIANGONG_ARXIV_INDEX", ("arxiv", "index.jsonl"))
-        if not arxiv_index:
-            notes.append("ArXiv enrichment skipped: local index not found. Set TIANGONG_ARXIV_INDEX or cache under .cache/tiangong/arxiv/index.jsonl.")
+        arxiv_notes: List[str] = []
+        arxiv_enabled = context is None or context.is_enabled("arxiv")
+        if not arxiv_enabled:
+            arxiv_notes.append("arXiv enrichment skipped: data source disabled in execution context.")
         else:
             try:
-                arxiv_results = _load_local_jsonl(arxiv_index, limit, source="arxiv")
-            except ValueError as exc:
-                notes.append(f"Failed to read arXiv index: {exc}")
+                arxiv_results = _collect_arxiv_records(services, query, limit, logger)
+            except AdapterError as exc:
+                arxiv_notes.append(f"arXiv API query failed: {exc}")
+
+        if not arxiv_results:
+            arxiv_index = _resolve_local_index(context, "TIANGONG_ARXIV_INDEX", ("arxiv", "index.jsonl"))
+            if not arxiv_index:
+                arxiv_notes.append("Local arXiv index not available. Set TIANGONG_ARXIV_INDEX or cache under .cache/tiangong/arxiv/index.jsonl.")
+            else:
+                try:
+                    arxiv_results = _load_local_jsonl(arxiv_index, limit, source="arxiv")
+                    if arxiv_notes:
+                        arxiv_notes.append("Fell back to local arXiv index.")
+                except ValueError as exc:
+                    arxiv_notes.append(f"Failed to read arXiv index: {exc}")
+
+        notes.extend(arxiv_notes)
 
     openalex_results: List[Dict[str, Any]] = []
     citation_edges: Optional[List[Dict[str, str]]] = None
@@ -209,6 +228,19 @@ def _collect_openalex_records(
             break
 
     logger.debug("Collected OpenAlex records", extra={"count": len(records)})
+    return records
+
+
+def _collect_arxiv_records(
+    services: ResearchServices,
+    query: str,
+    limit: int,
+    logger: LoggerAdapter,
+) -> List[Dict[str, Any]]:
+    logger.debug("Querying arXiv", extra={"query": query, "limit": limit})
+    client = services.arxiv_client()
+    records = client.search_papers(query, max_results=limit)
+    logger.debug("Collected arXiv records", extra={"count": len(records)})
     return records
 
 

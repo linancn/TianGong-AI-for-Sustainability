@@ -8,6 +8,8 @@ from typing import Optional
 
 from ..adapters import ChartMCPAdapter, DataSourceAdapter
 from ..adapters.api import (
+    ArxivAdapter,
+    ArxivClient,
     CrossrefAdapter,
     CrossrefClient,
     GitHubTopicsAdapter,
@@ -64,6 +66,7 @@ def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataS
         GridIntensityCLIAdapter(),
         UNSDGAdapter(client=UNSDGClient()),
         SemanticScholarAdapter(client=SemanticScholarClient(api_key=semantic_key)),
+        ArxivAdapter(client=ArxivClient()),
         GitHubTopicsAdapter(client=GitHubTopicsClient(token=github_token)),
         OSDGAdapter(client=OSDGClient(api_token=osdg_token)),
         CrossrefAdapter(client=CrossrefClient(mailto=crossref_mailto)),
