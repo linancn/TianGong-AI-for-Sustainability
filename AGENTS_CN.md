@@ -70,7 +70,7 @@
 |--------|------|------|------|
 | **P0** | `tiangong_ai_remote` MCP 知识库 | 已实现 | 可持续性研究的首选语料；需提供完整上下文以获取高质量检索结果。 |
 | **P1** | UN SDG API、Semantic Scholar、Crossref、GitHub Topics、Wikidata、grid-intensity CLI、`tiangong_lca_remote` MCP | 已实现 | 构成本体与通用检索基础，同时按需提供细粒度 LCA 数据。 |
-| **P1（批量）** | arXiv S3 / Kaggle | 部分上线 | 已通过 arxiv.py 打通 API 检索；批量下载与向量索引仍在规划中。 |
+| **P1（批量）** | arXiv / Kaggle | 部分上线 | 已通过 arxiv.py 打通 API 检索；批量下载与向量索引仍在规划中。 |
 | **P2** | Scopus、Web of Science、WattTime（通过 grid-intensity）、AntV MCP 图表服务器、Tavily Web MCP、OpenAI Deep Research | 视凭据/环境启用 | 需提供密钥、运行时依赖（如 Node.js）或足够的 API 配额。 |
 | **P3** | GRI taxonomy、GHG 工作簿、Open Sustainable Tech CSV、生命周期评估清单（如 openLCA 数据集） | 持续接入 | 通过统一的文件解析框架处理。 |
 | **P4** | Google Scholar、ACM Digital Library | 禁用 | 强制使用替代方案（如 Semantic Scholar、Crossref）。 |
