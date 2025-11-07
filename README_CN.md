@@ -91,13 +91,14 @@ uv run tiangong-research research workflow simple --topic "生命周期评估"
 
 ## 内联提示组合器
 
-- 生成一段单行提示，将 `user_prompts/ai-infra.md` 与分阶段工作流说明拼接在一起：`uv run python scripts/tooling/compose_inline_prompt.py`
-- 如需自定义输入，可使用以下参数：
+- 生成引用分阶段工作流规范的 Markdown 研究提示：`uv run python scripts/tooling/compose_inline_prompt.py`
+- 需要单行提示时追加 `--emit-inline`（默认仅生成 Markdown）。
+- 自定义输入参数：
   - `--user-prompt path/to/file.md` 指定其他研究简报。
   - `--spec path/to/workflow.md`（`--template` 为别名）选择不同的工作流规范。
-- `--output path/to/prompt.txt` 可覆盖输出文件路径（脚本仍会在标准输出回显提示内容）。
-- 默认情况下脚本会在当前目录生成 `./inline_prompt.txt`，同时依然在标准输出回显单行提示，方便复制粘贴。
-- 脚本会规范化空白字符，并插入过渡语句 “By following the staged workflow strictly”，确保生成的提示简洁且具可重复性。
+  - `--markdown-output path/to/prompt.md` 覆盖 Markdown 输出路径；配合 `--inline-output` 指定单行提示文件。
+- 未加参数时脚本会把 Markdown 提示写入 `user_prompts/_markdown_prompt.md`，并在标准输出回显同样的内容。只有显式请求时才会生成 `_inline_prompt.txt`。
+- 该 Markdown 提示引用规范文档而非逐字拷贝全文，请在发送前补充 “Study-Specific Notes” 与 “Workspace Notes” 中的研究细节。
 
 ## 需要更专业的控制？
 
@@ -116,8 +117,19 @@ uv run tiangong-research research workflow simple --topic "生命周期评估"
 
 可选组件缺失时，工作流会自动降级（例如无图表时输出纯文本）。如需访问受限数据源，请将所需密钥配置在环境变量或 `.secrets/secrets.toml` 文件中。
 
+## Prompt Generation
+
+- 生成引用分阶段工作流规范的 Markdown 研究提示：`uv run python scripts/tooling/compose_inline_prompt.py`
+- 需要单行提示时追加 `--emit-inline`（默认仅生成 Markdown）。
+- 自定义输入参数：
+  - `--user-prompt path/to/file.md` 指定其他研究简报。
+  - `--spec path/to/workflow.md`（`--template` 为别名）选择不同的工作流规范。
+  - `--markdown-output path/to/prompt.md` 覆盖 Markdown 输出路径；配合 `--inline-output` 指定单行提示文件。
+- 未加参数时脚本会把 Markdown 提示写入 `user_prompts/_markdown_prompt.md`，并在标准输出回显同样的内容。只有显式请求时才会生成 `_inline_prompt.txt`。
+- 该 Markdown 提示引用规范文档而非逐字拷贝全文，请在发送前补充 “Study-Specific Notes” 与 “Workspace Notes” 中的研究细节。
+
 ## Codex
 ```bash
 # 危险操作：直接执行转换后的内联prompt（请确保已了解风险）
-codex exec --dangerously-bypass-approvals-and-sandbox "$(cat inline_prompt.txt)"
+codex exec --dangerously-bypass-approvals-and-sandbox "$(cat user_prompts/_inline_prompt.txt)"
 ```

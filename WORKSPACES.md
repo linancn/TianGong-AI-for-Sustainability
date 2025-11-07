@@ -71,6 +71,6 @@ This document explains how to run TianGong research workflows inside the study c
 | List sources | `uv run tiangong-research sources list` |
 | Verify key sources | `uv run tiangong-research sources verify <id>` |
 | Run workflow | `uv run tiangong-research research workflow <...>` |
-| Compose inline prompt | `uv run python scripts/tooling/compose_inline_prompt.py` |
+| Compose research prompt | `uv run python scripts/tooling/compose_inline_prompt.py [--emit-inline]` |
 
 For repository-level development guidelines, refer to `AGENTS.md`. This guide focuses exclusively on study workspace operations.

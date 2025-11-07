@@ -91,13 +91,14 @@ Missing a feature? Just re-run your installer (`install_macos.sh`, `install_ubun
 
 ## Inline Prompt Composer
 
-- Generate a single-line Codex brief that merges `user_prompts/ai-infra.md` with the staged workflow instructions: `uv run python scripts/tooling/compose_inline_prompt.py`
+- Generate the Markdown research brief that references the staged workflow instructions: `uv run python scripts/tooling/compose_inline_prompt.py`
+- Pass `--emit-inline` to also save the single-line prompt (defaults to Markdown output only).
 - Override inputs when necessary:
   - `--user-prompt path/to/file.md` selects an alternate study brief.
   - `--spec path/to/workflow.md` (alias `--template`) points at a different staged workflow spec.
-  - `--output path/to/prompt.txt` rewrites the destination file (stdout still echoes the prompt).
-- By default the script saves the prompt to `./inline_prompt.txt` and still echoes the inline text to stdout for quick copy/paste.
-- The script normalises whitespace and injects the bridge sentence “By following the staged workflow strictly” so the prompt stays compact and deterministic.
+  - `--markdown-output path/to/prompt.md` rewrites the Markdown destination; pair with `--inline-output` when emitting the inline string.
+- Without flags the script writes the Markdown prompt to `user_prompts/_markdown_prompt.md` and prints the same content to stdout. Inline output is created only when requested.
+- The Markdown prompt cites the canonical specs instead of inlining them. Fill the “Study-Specific Notes” and “Workspace Notes” blocks before handing the prompt to Codex.
 
 ## Need Advanced Control?
 
@@ -119,5 +120,5 @@ Optional components degrade gracefully (for example, workflows fall back to text
 ## Codex
 ```bash
 # Dangerous: bypass approvals and sandboxing for quick tests
-codex exec --dangerously-bypass-approvals-and-sandbox "$(cat inline_prompt.txt)"
+codex exec --dangerously-bypass-approvals-and-sandbox "$(cat user_prompts/_inline_prompt.txt)"
 ```

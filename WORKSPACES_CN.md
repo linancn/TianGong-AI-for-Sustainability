@@ -71,6 +71,6 @@ title: 课题工作区指南
 | 列出数据源 | `uv run tiangong-research sources list` |
 | 验证关键数据源 | `uv run tiangong-research sources verify <id>` |
 | 运行研究工作流 | `uv run tiangong-research research workflow <...>` |
-| 生成单行提示 | `uv run python scripts/tooling/compose_inline_prompt.py` |
+| 生成研究提示 | `uv run python scripts/tooling/compose_inline_prompt.py [--emit-inline]` |
 
 仓库级开发指南请参阅 `AGENTS_CN.md`。本指南专门针对课题工作区操作。
