@@ -8,7 +8,7 @@ level services.
 """
 
 from .context import ExecutionContext, ExecutionOptions
-from .logging import bind_tags, configure_logging, get_logger
+from .logging import bind_tags, configure_logging, get_logger, log_progress, log_separator
 from .registry import (
     DataSourceDescriptor,
     DataSourcePriority,
@@ -28,4 +28,6 @@ __all__ = [
     "get_logger",
     "configure_logging",
     "bind_tags",
+    "log_progress",
+    "log_separator",
 ]
