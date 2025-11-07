@@ -14,6 +14,8 @@ from ..adapters.api import (
     CrossrefClient,
     GitHubTopicsAdapter,
     GitHubTopicsClient,
+    KaggleAdapter,
+    KaggleClient,
     OSDGAdapter,
     OSDGClient,
     SemanticScholarAdapter,
@@ -62,6 +64,17 @@ def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataS
         if isinstance(value, str) and value:
             crossref_mailto = value
 
+    kaggle_username: Optional[str] = None
+    kaggle_key: Optional[str] = None
+    kaggle_section = secrets.get("kaggle")
+    if isinstance(kaggle_section, dict):
+        username_value = kaggle_section.get("username")
+        key_value = kaggle_section.get("key")
+        if isinstance(username_value, str) and username_value:
+            kaggle_username = username_value
+        if isinstance(key_value, str) and key_value:
+            kaggle_key = key_value
+
     adapters = (
         GridIntensityCLIAdapter(),
         UNSDGAdapter(client=UNSDGClient()),
@@ -70,6 +83,7 @@ def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataS
         GitHubTopicsAdapter(client=GitHubTopicsClient(token=github_token)),
         OSDGAdapter(client=OSDGClient(api_token=osdg_token)),
         CrossrefAdapter(client=CrossrefClient(mailto=crossref_mailto)),
+        KaggleAdapter(client=KaggleClient(username=kaggle_username, key=kaggle_key)),
         ChartMCPAdapter(),
         OpenAIDeepResearchAdapter(settings=context.secrets.openai),
     )

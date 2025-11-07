@@ -64,6 +64,23 @@
   references:
     - "https://github.com/lukasschwab/arxiv.py"
 
+- id: kaggle
+  name: "Kaggle Datasets API"
+  category: datasets
+  priority: P1
+  description: "Crowdsourced dataset platform with sustainability and climate datasets."
+  protocols: ["REST", "CLI"]
+  base_urls:
+    - "https://www.kaggle.com/api/v1/"
+  authentication: "api-key"
+  requires_credentials: true
+  status: trial
+  capabilities: ["dataset-search", "dataset-download"]
+  tags: ["datasets", "p1", "bulk"]
+  notes: "Requires kaggle==1.7.4.5 with credentials via ~/.kaggle/kaggle.json or KAGGLE_USERNAME/KAGGLE_KEY."
+  references:
+    - "https://www.kaggle.com/docs/api"
+
 - id: crossref
   name: "Crossref Works API"
   category: academic

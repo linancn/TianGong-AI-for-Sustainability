@@ -15,7 +15,7 @@ from logging import LoggerAdapter
 from typing import Any, Dict, Mapping, Optional, Sequence
 
 from ..adapters import AdapterError, ChartMCPAdapter, DataSourceAdapter, VerificationResult
-from ..adapters.api import ArxivClient, CrossrefClient, GitHubTopicsClient, OpenAlexClient, OSDGClient, SemanticScholarClient, UNSDGClient
+from ..adapters.api import ArxivClient, CrossrefClient, GitHubTopicsClient, KaggleClient, OpenAlexClient, OSDGClient, SemanticScholarClient, UNSDGClient
 from ..adapters.environment import GridIntensityCLIAdapter
 from ..core import DataSourceDescriptor, DataSourceRegistry, DataSourceStatus, ExecutionContext, get_logger
 from ..core.mcp import MCPServerConfig, load_mcp_server_configs
@@ -37,6 +37,7 @@ class ResearchServices:
     _github_topics_client: Optional[GitHubTopicsClient] = field(default=None, init=False, repr=False)
     _osdg_client: Optional[OSDGClient] = field(default=None, init=False, repr=False)
     _crossref_client: Optional[CrossrefClient] = field(default=None, init=False, repr=False)
+    _kaggle_client: Optional[KaggleClient] = field(default=None, init=False, repr=False)
     _sdg_goal_cache: Optional[Dict[str, Dict[str, Any]]] = field(default=None, init=False, repr=False)
     _mcp_configs: Optional[Dict[str, MCPServerConfig]] = field(default=None, init=False, repr=False)
     _mcp_client: Optional[MCPToolClient] = field(default=None, init=False, repr=False)
@@ -185,6 +186,14 @@ class ResearchServices:
                 raise AdapterError("Crossref requires a contact email. Set crossref.mailto in .secrets or TIANGONG_CROSSREF_MAILTO.")
             self._crossref_client = CrossrefClient(mailto=mailto)
         return self._crossref_client
+
+    def kaggle_client(self) -> KaggleClient:
+        self._require_source_enabled("kaggle")
+        if self._kaggle_client is None:
+            username = self._get_secret("kaggle", "username") or os.getenv("KAGGLE_USERNAME")
+            key = self._get_secret("kaggle", "key") or os.getenv("KAGGLE_KEY")
+            self._kaggle_client = KaggleClient(username=username, key=key)
+        return self._kaggle_client
 
     def sdg_goal_map(self) -> Dict[str, Dict[str, Any]]:
         if self._sdg_goal_cache is None:

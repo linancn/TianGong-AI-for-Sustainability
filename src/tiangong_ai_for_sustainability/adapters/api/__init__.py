@@ -12,6 +12,7 @@ from .arxiv import ArxivAdapter, ArxivAPIError, ArxivClient
 from .base import APIError, BaseAPIClient
 from .crossref import CrossrefAdapter, CrossrefClient
 from .github_topics import GitHubTopicsAdapter, GitHubTopicsClient
+from .kaggle import KaggleAdapter, KaggleAPIError, KaggleClient
 from .openalex import OpenAlexAdapter, OpenAlexClient
 from .osdg import OSDGAdapter, OSDGClient
 from .semantic_scholar import SemanticScholarAdapter, SemanticScholarClient
@@ -27,6 +28,9 @@ __all__ = [
     "CrossrefClient",
     "GitHubTopicsAdapter",
     "GitHubTopicsClient",
+    "KaggleAdapter",
+    "KaggleAPIError",
+    "KaggleClient",
     "OpenAlexAdapter",
     "OpenAlexClient",
     "OSDGAdapter",
