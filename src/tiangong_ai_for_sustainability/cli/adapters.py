@@ -8,6 +8,8 @@ from typing import Optional
 
 from ..adapters import ChartMCPAdapter, DataSourceAdapter
 from ..adapters.api import (
+    CrossrefAdapter,
+    CrossrefClient,
     GitHubTopicsAdapter,
     GitHubTopicsClient,
     OSDGAdapter,
@@ -51,12 +53,20 @@ def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataS
         if isinstance(value, str) and value:
             osdg_token = value
 
+    crossref_mailto: Optional[str] = None
+    crossref_section = secrets.get("crossref")
+    if isinstance(crossref_section, dict):
+        value = crossref_section.get("mailto")
+        if isinstance(value, str) and value:
+            crossref_mailto = value
+
     adapters = (
         GridIntensityCLIAdapter(),
         UNSDGAdapter(client=UNSDGClient()),
         SemanticScholarAdapter(client=SemanticScholarClient(api_key=semantic_key)),
         GitHubTopicsAdapter(client=GitHubTopicsClient(token=github_token)),
         OSDGAdapter(client=OSDGClient(api_token=osdg_token)),
+        CrossrefAdapter(client=CrossrefClient(mailto=crossref_mailto)),
         ChartMCPAdapter(),
         OpenAIDeepResearchAdapter(settings=context.secrets.openai),
     )

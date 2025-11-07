@@ -47,6 +47,23 @@
   references:
     - "https://docs.openalex.org/"
 
+- id: crossref
+  name: "Crossref Works API"
+  category: academic
+  priority: P1
+  description: "Global scholarly metadata registry exposing DOI, citation, and funding records."
+  protocols: ["REST"]
+  base_urls:
+    - "https://api.crossref.org/"
+  authentication: "none"
+  requires_credentials: false
+  status: active
+  capabilities: ["works-search", "metadata", "citations"]
+  tags: ["literature", "citations", "p1"]
+  notes: "Include a contact email via the mailto query parameter to comply with Crossref etiquette."
+  references:
+    - "https://api.crossref.org/swagger-ui/index.html"
+
 - id: wikidata
   name: "Wikidata SPARQL"
   category: knowledge-graph

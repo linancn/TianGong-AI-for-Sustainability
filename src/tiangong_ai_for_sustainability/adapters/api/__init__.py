@@ -9,6 +9,7 @@ Each submodule exposes two layers:
 """
 
 from .base import APIError, BaseAPIClient
+from .crossref import CrossrefAdapter, CrossrefClient
 from .github_topics import GitHubTopicsAdapter, GitHubTopicsClient
 from .openalex import OpenAlexAdapter, OpenAlexClient
 from .osdg import OSDGAdapter, OSDGClient
@@ -18,6 +19,8 @@ from .un_sdg import UNSDGAdapter, UNSDGClient
 __all__ = [
     "APIError",
     "BaseAPIClient",
+    "CrossrefAdapter",
+    "CrossrefClient",
     "GitHubTopicsAdapter",
     "GitHubTopicsClient",
     "OpenAlexAdapter",
