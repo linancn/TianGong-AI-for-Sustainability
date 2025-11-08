@@ -8,23 +8,29 @@ def test_kaggle_adapter_verify_success():
         def __init__(self):
             self.calls = []
 
-        def dataset_view(self, dataset_ref: str):
-            self.calls.append(dataset_ref)
+        def dataset_overview(self, dataset_ref: str):
+            self.calls.append(("overview", dataset_ref))
             assert dataset_ref == "zynicide/wine-reviews"
             return {"ref": dataset_ref, "title": "Wine Reviews"}
+
+        def dataset_status(self, dataset_ref: str):
+            self.calls.append(("status", dataset_ref))
+            assert dataset_ref == "zynicide/wine-reviews"
+            return "ready"
 
     adapter = KaggleAdapter(client=DummyClient())
 
     result = adapter.verify()
 
     assert result.success is True
+    assert result.details["status"] == "ready"
     assert result.details["dataset"] == "zynicide/wine-reviews"
     assert result.details["title"] == "Wine Reviews"
 
 
 def test_kaggle_adapter_verify_failure():
     class FailingClient:
-        def dataset_view(self, dataset_ref: str):
+        def dataset_overview(self, dataset_ref: str):
             raise KaggleAPIError("authentication failed")
 
     adapter = KaggleAdapter(client=FailingClient())
@@ -33,3 +39,20 @@ def test_kaggle_adapter_verify_failure():
 
     assert result.success is False
     assert "authentication failed" in result.message
+
+
+def test_kaggle_adapter_verify_with_status_error():
+    class PartialClient:
+        def dataset_overview(self, dataset_ref: str):
+            return {"ref": dataset_ref}
+
+        def dataset_status(self, dataset_ref: str):
+            raise KaggleAPIError("404 Client Error")
+
+    adapter = KaggleAdapter(client=PartialClient())
+
+    result = adapter.verify()
+
+    assert result.success is True
+    assert result.details["dataset"] == "zynicide/wine-reviews"
+    assert "status_error" in result.details

@@ -12,7 +12,7 @@ from __future__ import annotations
 import importlib
 import os
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Optional
+from typing import Any, Iterable, Optional, Tuple
 
 from ..base import AdapterError, DataSourceAdapter, VerificationResult
 
@@ -56,15 +56,43 @@ class KaggleClient:
             raise KaggleAPIError(f"Failed to authenticate with Kaggle API: {exc}") from exc
         self._authenticated = True
 
-    def dataset_view(self, dataset_ref: str) -> Any:
-        """Return metadata for a dataset identified by ``owner/dataset``."""
+    def dataset_status(self, dataset_ref: str) -> str:
+        """Return the status string for a dataset identified by ``owner/dataset``."""
 
         self.authenticate()
         api = self._ensure_api()
         try:
-            return api.dataset_view(dataset_ref)
+            status = api.dataset_status(dataset_ref)
         except Exception as exc:
-            raise KaggleAPIError(f"Failed to retrieve Kaggle dataset '{dataset_ref}': {exc}") from exc
+            raise KaggleAPIError(f"Failed to retrieve status for Kaggle dataset '{dataset_ref}': {exc}") from exc
+
+        return status if isinstance(status, str) else str(status)
+
+    def dataset_overview(self, dataset_ref: str) -> Optional[Any]:
+        """
+        Best-effort metadata lookup for a dataset.
+
+        The Kaggle SDK does not expose a dedicated ``dataset_view`` helper, so
+        we query ``dataset_list`` and reconcile the entry manually.
+        """
+
+        self.authenticate()
+        api = self._ensure_api()
+        owner_slug, dataset_slug = self._split_dataset_ref(dataset_ref)
+        try:
+            results = api.dataset_list(search=dataset_slug, user=owner_slug)
+        except Exception as exc:
+            raise KaggleAPIError(f"Failed to search Kaggle dataset '{dataset_ref}': {exc}") from exc
+
+        if not results:
+            return None
+
+        for entry in results:
+            ref, _ = _extract_dataset_details(entry)
+            if ref == dataset_ref:
+                return entry
+
+        return None
 
     def list_datasets(
         self,
@@ -92,6 +120,15 @@ class KaggleClient:
             os.environ["KAGGLE_USERNAME"] = self.username
         if self.key:
             os.environ["KAGGLE_KEY"] = self.key
+
+    @staticmethod
+    def _split_dataset_ref(dataset_ref: str) -> Tuple[str, str]:
+        if "/" not in dataset_ref:
+            raise KaggleAPIError("Dataset reference must be in the form 'owner/dataset'.")
+        owner, dataset = dataset_ref.split("/", 1)
+        if not owner or not dataset:
+            raise KaggleAPIError("Dataset reference must include both owner and dataset slugs.")
+        return owner, dataset
 
     def _ensure_api(self) -> Any:
         if self._api is not None:
@@ -145,14 +182,33 @@ class KaggleAdapter(DataSourceAdapter):
 
     def verify(self) -> VerificationResult:
         try:
-            payload = self.client.dataset_view(self.verification_dataset)
+            payload = self.client.dataset_overview(self.verification_dataset)
         except KaggleAPIError as exc:
-            return VerificationResult(success=False, message=f"Kaggle API verification failed: {exc}")
+            return VerificationResult(
+                success=False,
+                message=f"Kaggle API verification failed: {exc}",
+            )
+
+        if not payload:
+            return VerificationResult(
+                success=False,
+                message=("Kaggle API verification failed: dataset '" f"{self.verification_dataset}' not found or inaccessible."),
+            )
 
         dataset_ref, dataset_title = _extract_dataset_details(payload)
         details = {"dataset": dataset_ref or self.verification_dataset}
         if dataset_title:
             details["title"] = dataset_title
+
+        try:
+            status = self.client.dataset_status(self.verification_dataset)
+        except KaggleAPIError as exc:
+            details["status_error"] = str(exc)
+        else:
+            details["status"] = status
+
+        if dataset_ref and dataset_ref != self.verification_dataset:
+            details["dataset"] = dataset_ref
 
         return VerificationResult(
             success=True,
