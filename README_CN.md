@@ -57,6 +57,21 @@ uv run tiangong-research research workflow simple --topic "生命周期评估"
 
 缺少某项功能时，重新运行对应的安装脚本（`install_macos.sh`、`install_ubuntu.sh`、`install_windows.ps1`），并选择合适的 `--with-*` 选项即可。
 
+### 使用 PM2 启动 MCP 图表服务器
+
+可以用 `pm2` 将 AntV MCP 图表服务器常驻后台：
+
+```bash
+mkdir -p local_mcp_logs
+pm2 start "npx --no-install -p @antv/mcp-server-chart mcp-server-chart --transport streamable --port 1122 --host 0.0.0.0" \
+  --name mcp-server-chart-remote \
+  --time \
+  --output ./local_mcp_logs/mcp-server-chart-remote-out.log \
+  --error ./local_mcp_logs/mcp-server-chart-remote-error.log
+```
+
+导出 `TIANGONG_CHART_MCP_ENDPOINT=http://127.0.0.1:1122/mcp` 让 CLI 连接到该服务，并通过 `pm2 status`、`pm2 logs mcp-server-chart-remote`、`pm2 stop mcp-server-chart-remote` 等命令管理进程。
+
 ## Codex Docker 工作流
 
 - 使用默认参数构建镜像即可自动安装 Codex：`docker build -t tiangong-ai-codex .`（若需精简，可传入 `--build-arg INSTALL_CODEX=false`、`INSTALL_NODE=false` 等关闭对应组件）。

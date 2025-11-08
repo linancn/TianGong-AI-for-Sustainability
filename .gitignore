@@ -170,3 +170,8 @@ package-lock.json
 !/user_prompts/example.md
 
 inline_prompt.txt
+
+.env
+node_modules
+package-lock.json
+local_mcp_logs/

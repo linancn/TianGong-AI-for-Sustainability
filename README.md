@@ -57,6 +57,21 @@ If you enabled charts, start the AntV MCP chart server before running workflows 
 
 Missing a feature? Just re-run your installer (`install_macos.sh`, `install_ubuntu.sh`, or `install_windows.ps1`) with the matching `--with-*` flag.
 
+### Start the MCP Chart Server with PM2
+
+Keep the AntV MCP chart server running in the background with `pm2`:
+
+```bash
+mkdir -p local_mcp_logs
+pm2 start "npx --no-install -p @antv/mcp-server-chart mcp-server-chart --transport streamable --port 1122 --host 0.0.0.0" \
+  --name mcp-server-chart-remote \
+  --time \
+  --output ./local_mcp_logs/mcp-server-chart-remote-out.log \
+  --error ./local_mcp_logs/mcp-server-chart-remote-error.log
+```
+
+Export `TIANGONG_CHART_MCP_ENDPOINT=http://127.0.0.1:1122/mcp` so the CLI can find the service. Use `pm2 status`, `pm2 logs mcp-server-chart-remote`, and `pm2 stop mcp-server-chart-remote` to manage the process.
+
 ## Codex Docker Workflow
 
 - Build the container with Codex enabled: `docker build -t tiangong-ai-codex .` (toggle extras with `--build-arg INSTALL_CODEX=false`, `INSTALL_NODE=false`, etc. if you need leaner images).

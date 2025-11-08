@@ -1,0 +1,16 @@
+{
+  "name": "local-mcp-launcher",
+  "version": "1.0.0",
+  "description": "A local runtime environment for running MCP (Model Context Protocol) servers using PM2",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["mcp", "tiangong", "launcher", "pm2", "model-context-protocol"],
+  "author": "Nan LI",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@antv/mcp-server-chart": "^0.9.4"
+  }
+}
