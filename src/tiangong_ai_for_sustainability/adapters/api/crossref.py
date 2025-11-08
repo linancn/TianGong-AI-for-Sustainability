@@ -70,8 +70,8 @@ class CrossrefClient(BaseAPIClient):
         return payload
 
     def get_work(self, doi: str, *, select: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        params = {"select": ",".join(select)} if select else {}
-        payload = self._get_json(f"/works/{doi}", params=self._augment_params(params))
+        # Note: Crossref's works/{doi} route does not accept the `select` parameter.
+        payload = self._get_json(f"/works/{doi}", params=self._augment_params({}))
         if not isinstance(payload, dict):
             raise APIError("Unexpected payload from Crossref work lookup.")
         message = payload.get("message")
@@ -108,7 +108,7 @@ class CrossrefAdapter(DataSourceAdapter):
                 details={"reason": "missing-mailto"},
             )
         try:
-            payload = self.client.get_work(_VERIFICATION_DOI, select=["title", "issued"])
+            payload = self.client.get_work(_VERIFICATION_DOI)
         except APIError as exc:
             return VerificationResult(success=False, message=f"Crossref API verification failed: {exc}")
 
