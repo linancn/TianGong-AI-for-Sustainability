@@ -4,6 +4,7 @@ Helpers for resolving data source adapters in CLI contexts.
 
 from __future__ import annotations
 
+import os
 from typing import Optional
 
 from ..adapters import ChartMCPAdapter, DataSourceAdapter
@@ -14,14 +15,29 @@ from ..adapters.api import (
     CrossrefClient,
     GitHubTopicsAdapter,
     GitHubTopicsClient,
+    ILOSTATAdapter,
+    ILOSTATClient,
+    IMFClimateAdapter,
+    IMFClimateClient,
+    IPBESAdapter,
+    IPCCDDCAdapter,
     KaggleAdapter,
     KaggleClient,
+    OpenAlexAdapter,
+    OpenAlexClient,
     OSDGAdapter,
     OSDGClient,
     SemanticScholarAdapter,
     SemanticScholarClient,
+    TransparencyCPIAdapter,
+    TransparencyCPIClient,
     UNSDGAdapter,
     UNSDGClient,
+    WikidataAdapter,
+    WikidataClient,
+    WorldBankAdapter,
+    WorldBankClient,
+    ZenodoCommunityClient,
 )
 from ..adapters.environment import GridIntensityCLIAdapter
 from ..adapters.tools import OpenAIDeepResearchAdapter, RemoteMCPAdapter
@@ -64,6 +80,19 @@ def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataS
         if isinstance(value, str) and value:
             crossref_mailto = value
 
+    openalex_mailto: Optional[str] = None
+    openalex_section = secrets.get("openalex")
+    if isinstance(openalex_section, dict):
+        value = openalex_section.get("mailto")
+        if isinstance(value, str) and value:
+            openalex_mailto = value
+    if not openalex_mailto:
+        env_mailto = os.getenv("TIANGONG_OPENALEX_MAILTO")
+        if env_mailto:
+            openalex_mailto = env_mailto
+    if not openalex_mailto:
+        openalex_mailto = crossref_mailto
+
     kaggle_username: Optional[str] = None
     kaggle_key: Optional[str] = None
     kaggle_section = secrets.get("kaggle")
@@ -77,8 +106,16 @@ def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataS
 
     adapters = (
         GridIntensityCLIAdapter(),
+        IPCCDDCAdapter(client=ZenodoCommunityClient()),
+        IPBESAdapter(client=ZenodoCommunityClient()),
         UNSDGAdapter(client=UNSDGClient()),
         SemanticScholarAdapter(client=SemanticScholarClient(api_key=semantic_key)),
+        OpenAlexAdapter(client=OpenAlexClient(mailto=openalex_mailto)),
+        ILOSTATAdapter(client=ILOSTATClient()),
+        IMFClimateAdapter(client=IMFClimateClient()),
+        TransparencyCPIAdapter(client=TransparencyCPIClient()),
+        WikidataAdapter(client=WikidataClient()),
+        WorldBankAdapter(client=WorldBankClient()),
         ArxivAdapter(client=ArxivClient()),
         GitHubTopicsAdapter(client=GitHubTopicsClient(token=github_token)),
         OSDGAdapter(client=OSDGClient(api_token=osdg_token)),
