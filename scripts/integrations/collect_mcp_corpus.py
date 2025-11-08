@@ -18,8 +18,8 @@ from pathlib import Path
 from typing import Dict, Mapping
 
 from tiangong_ai_for_sustainability.config import load_secrets
-from tiangong_ai_for_sustainability.core.mcp import load_mcp_server_configs
 from tiangong_ai_for_sustainability.core.mcp_client import MCPToolClient
+from tiangong_ai_for_sustainability.core.mcp_config import load_mcp_server_configs
 
 
 @dataclass(frozen=True)

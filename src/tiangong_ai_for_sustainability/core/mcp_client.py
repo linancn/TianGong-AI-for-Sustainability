@@ -18,7 +18,7 @@ from mcp import ClientSession, McpError, types
 from mcp.client.streamable_http import streamablehttp_client
 
 from ..core.logging import get_logger
-from .mcp import MCPServerConfig
+from .mcp_config import MCPServerConfig
 
 LOGGER = get_logger(__name__)
 

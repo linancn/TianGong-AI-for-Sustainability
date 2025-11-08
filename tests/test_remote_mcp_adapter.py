@@ -3,7 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from tiangong_ai_for_sustainability.adapters.tools.remote_mcp import RemoteMCPAdapter
-from tiangong_ai_for_sustainability.core.mcp import MCPServerConfig
+from tiangong_ai_for_sustainability.core.mcp_config import MCPServerConfig
 
 
 class DummyClient:

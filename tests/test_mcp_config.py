@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from tiangong_ai_for_sustainability.config import OpenAISettings, SecretsBundle
-from tiangong_ai_for_sustainability.core.mcp import MCPServerConfig, load_mcp_server_configs
+from tiangong_ai_for_sustainability.core.mcp_config import MCPServerConfig, load_mcp_server_configs
 
 
 def build_bundle(data: dict[str, dict[str, object]]) -> SecretsBundle:

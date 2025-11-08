@@ -9,8 +9,8 @@ from logging import LoggerAdapter
 from typing import Callable, Mapping, Sequence
 
 from ...core.logging import get_logger
-from ...core.mcp import MCPServerConfig
 from ...core.mcp_client import MCPToolClient
+from ...core.mcp_config import MCPServerConfig
 from ..base import DataSourceAdapter, VerificationResult
 
 ClientFactory = Callable[[Mapping[str, MCPServerConfig]], MCPToolClient]

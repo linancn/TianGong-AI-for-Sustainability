@@ -42,7 +42,7 @@ from ..adapters.api import (
 from ..adapters.environment import GridIntensityCLIAdapter
 from ..adapters.tools import OpenAIDeepResearchAdapter, RemoteMCPAdapter
 from ..core.context import ExecutionContext
-from ..core.mcp import load_mcp_server_configs
+from ..core.mcp_config import load_mcp_server_configs
 
 
 def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataSourceAdapter]:

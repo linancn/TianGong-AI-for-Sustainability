@@ -4,8 +4,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from tiangong_ai_for_sustainability.core.mcp import MCPServerConfig
 from tiangong_ai_for_sustainability.core.mcp_client import MCPToolClient
+from tiangong_ai_for_sustainability.core.mcp_config import MCPServerConfig
 
 
 class DummyPortal:

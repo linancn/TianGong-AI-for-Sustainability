@@ -18,8 +18,8 @@ from ..adapters import AdapterError, ChartMCPAdapter, DataSourceAdapter, Verific
 from ..adapters.api import ArxivClient, CrossrefClient, GitHubTopicsClient, KaggleClient, OpenAlexClient, OSDGClient, SemanticScholarClient, UNSDGClient
 from ..adapters.environment import GridIntensityCLIAdapter
 from ..core import DataSourceDescriptor, DataSourceRegistry, DataSourceStatus, ExecutionContext, get_logger
-from ..core.mcp import MCPServerConfig, load_mcp_server_configs
 from ..core.mcp_client import MCPToolClient
+from ..core.mcp_config import MCPServerConfig, load_mcp_server_configs
 from ..core.prompts import LoadedPromptTemplate, PromptTemplateError, load_prompt_template
 
 
