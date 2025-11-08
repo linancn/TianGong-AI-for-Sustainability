@@ -14,5 +14,3 @@ def test_registry_load_core_sources(registry_file):
     assert "repository" in github.tags
     crossref = registry.require("crossref")
     assert crossref.priority == DataSourcePriority.P2
-    blocked = registry.require("google_scholar")
-    assert blocked.status.name == "BLOCKED"

@@ -539,23 +539,6 @@
   references:
     - "https://github.com/tavily-ai/tavily-mcp"
 
-- id: google_scholar
-  name: "Google Scholar"
-  category: academic
-  priority: P4
-  description: "Consumer search portal without an official API; scraping violates terms of service."
-  protocols: ["HTML"]
-  base_urls:
-    - "https://scholar.google.com/"
-  authentication: "none"
-  requires_credentials: false
-  status: blocked
-  blocked_reason: "No public API. Automated access is prohibited; use Semantic Scholar or Crossref instead."
-  capabilities: []
-  tags: ["restricted", "p4"]
-  references:
-    - "design.md §2.2.6"
-
 - id: acm_digital_library
   name: "ACM Digital Library"
   category: academic
