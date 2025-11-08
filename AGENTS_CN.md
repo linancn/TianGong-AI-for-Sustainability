@@ -180,6 +180,7 @@
    ```bash
    uv run tiangong-research sources list
    uv run tiangong-research sources verify <source_id>
+   uv run tiangong-research sources verify all
    uv run tiangong-research sources audit [--json] [--show-blocked] [--no-fail-on-error]
    ```
    - `--json`：以 JSON 形式输出巡检汇总，便于 CI 或后续解析。

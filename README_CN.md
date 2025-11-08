@@ -44,6 +44,7 @@ uv run tiangong-research --help
 uv run tiangong-research sources list
 uv run tiangong-research sources audit
 uv run tiangong-research sources verify un_sdg_api
+uv run tiangong-research sources verify all
 uv run tiangong-research research workflow simple --topic "生命周期评估"
 ```
 
@@ -84,6 +85,7 @@ pm2 start "npx --no-install -p @antv/mcp-server-chart mcp-server-chart --transpo
 
 - `uv run tiangong-research sources list` — 查看数据源注册表。
 - `uv run tiangong-research sources verify <id>` — 检查指定数据源的连通性与配置。
+- `uv run tiangong-research sources verify all` — 自动遍历所有数据源并汇总通过/失败情况。
 - `uv run tiangong-research research find-code "<主题>" --limit 5 --json` — 搜索可持续性相关开源仓库。
 - `uv run tiangong-research research map-sdg <文件>` — 调用 OSDG API 将文本映射到 SDG 目标（需配置可用的 OSDG 端点）。
 - `uv run tiangong-research research find-papers "<关键词>" --openalex --arxiv --scopus --citation-graph --limit 10 --json` — 聚合 Semantic Scholar 与可选的 OpenAlex、本地 arXiv、Scopus 数据。

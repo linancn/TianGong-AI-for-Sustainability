@@ -44,6 +44,7 @@ uv run tiangong-research --help
 uv run tiangong-research sources list
 uv run tiangong-research sources audit
 uv run tiangong-research sources verify un_sdg_api
+uv run tiangong-research sources verify all
 uv run tiangong-research research workflow simple --topic "life cycle assessment"
 ```
 
@@ -84,6 +85,7 @@ Export `TIANGONG_CHART_MCP_ENDPOINT=http://127.0.0.1:1122/mcp` so the CLI can fi
 
 - `uv run tiangong-research sources list` — browse the registered data sources.
 - `uv run tiangong-research sources verify <id>` — confirm credentials/connectivity.
+- `uv run tiangong-research sources verify all` — iterate every registered source and summarise pass/fail.
 - `uv run tiangong-research research find-code "<topic>" --limit 5 --json` — discover sustainability repositories.
 - `uv run tiangong-research research map-sdg <file>` — align a document with SDG goals (requires OSDG access).
 - `uv run tiangong-research research find-papers "<keywords>" --openalex --arxiv --scopus --citation-graph --limit 10 --json` — aggregate Semantic Scholar plus optional OpenAlex/arXiv/Scopus enrichment.

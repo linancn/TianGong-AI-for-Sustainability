@@ -180,6 +180,7 @@ Before executing automated tasks, verify the deployment environment meets these 
    ```bash
    uv run tiangong-research sources list
    uv run tiangong-research sources verify <source_id>
+   uv run tiangong-research sources verify all
    uv run tiangong-research sources audit [--json] [--show-blocked] [--no-fail-on-error]
    ```
    - `--json` emits the aggregated report as JSON (useful for CI pipelines).

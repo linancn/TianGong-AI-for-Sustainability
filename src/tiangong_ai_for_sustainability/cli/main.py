@@ -12,7 +12,7 @@ import json
 from datetime import UTC, datetime
 from importlib import resources
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import typer
 
@@ -176,6 +176,45 @@ def _parse_prompt_variables(values: Optional[List[str]]) -> Dict[str, str]:
             raise typer.BadParameter(f"Prompt variable '{entry}' is missing a key.")
         variables[key] = value
     return variables
+
+
+def _verify_descriptor(
+    descriptor: DataSourceDescriptor,
+    context: ExecutionContext,
+    services: ResearchServices,
+) -> Tuple[bool, str, Optional[Dict[str, Any]]]:
+    """
+    Run the same verification flow for both single-source and multi-source commands.
+    """
+
+    if descriptor.status == DataSourceStatus.BLOCKED:
+        return (
+            False,
+            f"Source '{descriptor.source_id}' is blocked: {descriptor.blocked_reason}",
+            {"reason": "blocked"},
+        )
+
+    if descriptor.requires_credentials and not context.is_enabled(descriptor.source_id):
+        return (
+            False,
+            f"Source '{descriptor.source_id}' requires credentials. Provide API keys in .secrets or enable explicitly.",
+            {"reason": "credentials-missing"},
+        )
+
+    adapter = resolve_adapter(descriptor.source_id, context)
+    try:
+        result = services.verify_source(descriptor.source_id, adapter)
+    except AdapterError as exc:
+        return (
+            False,
+            f"Verification failed: {exc}",
+            {"reason": "adapter-error"},
+        )
+
+    details: Optional[Dict[str, Any]] = None
+    if result.details is not None:
+        details = dict(result.details)
+    return result.success, result.message, details
 
 
 @app.callback(invoke_without_command=False)
@@ -416,34 +455,54 @@ def sources_verify(
 
     registry = _require_registry(ctx)
     context = _require_context(ctx)
+    services = ResearchServices(registry=registry, context=context)
+
+    if source_id.lower() == "all":
+        descriptors = list(registry.iter_enabled(allow_blocked=True))
+        if not descriptors:
+            typer.echo("No data sources available for verification.")
+            raise typer.Exit(code=0)
+
+        header = f"{'ID':<22} {'Result':<7} Message"
+        typer.echo(header)
+        typer.echo("-" * len(header))
+        failures = 0
+        passed_records: List[Tuple[str, str]] = []
+        failed_records: List[Tuple[str, str]] = []
+        for descriptor in descriptors:
+            success, message, details = _verify_descriptor(descriptor, context, services)
+            result_label = "pass" if success else "fail"
+            typer.echo(f"{descriptor.source_id:<22} {result_label:<7} {message}")
+            if details:
+                typer.echo(f"  Details: {json.dumps(details, ensure_ascii=False)}")
+            if not success:
+                failures += 1
+                failed_records.append((descriptor.source_id, message))
+            else:
+                passed_records.append((descriptor.source_id, message))
+
+        passed = len(descriptors) - failures
+        typer.echo()
+        typer.echo("Summary:")
+        passed_ids = ", ".join(source_id for source_id, _ in passed_records) or "None"
+        failed_ids = ", ".join(source_id for source_id, _ in failed_records) or "None"
+        typer.echo(f"- Passed ({len(passed_records)}): {passed_ids}")
+        typer.echo(f"- Failed ({len(failed_records)}): {failed_ids}")
+        typer.echo(f"Verification complete: {len(descriptors)} source(s), {passed} passed, {failures} failed.")
+        if failures:
+            raise typer.Exit(code=1)
+        return
+
     descriptor = registry.get(source_id)
     if not descriptor:
         typer.echo(f"Data source '{source_id}' is not registered.", err=True)
         raise typer.Exit(code=1)
 
-    if descriptor.status == DataSourceStatus.BLOCKED:
-        typer.echo(f"Source '{source_id}' is blocked: {descriptor.blocked_reason}")
-        raise typer.Exit(code=1)
-
-    if descriptor.requires_credentials and source_id not in context.enabled_sources:
-        typer.echo(
-            f"Source '{source_id}' requires credentials. Provide API keys in .secrets or enable explicitly.",
-            err=True,
-        )
-        raise typer.Exit(code=1)
-
-    services = ResearchServices(registry=registry, context=context)
-    adapter = resolve_adapter(source_id, context)
-    try:
-        result = services.verify_source(source_id, adapter)
-    except AdapterError as exc:
-        typer.echo(f"Verification failed: {exc}", err=True)
-        raise typer.Exit(code=1)
-
-    typer.echo(result.message)
-    if result.details:
-        typer.echo(f"Details: {json.dumps(result.details, ensure_ascii=False)}")
-    if not result.success:
+    success, message, details = _verify_descriptor(descriptor, context, services)
+    typer.echo(message)
+    if details:
+        typer.echo(f"Details: {json.dumps(details, ensure_ascii=False)}")
+    if not success:
         raise typer.Exit(code=1)
 
 
