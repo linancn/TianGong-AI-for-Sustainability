@@ -1,7 +1,110 @@
+- id: ipcc_ddc
+  name: "IPCC Data Distribution Centre"
+  category: climate
+  priority: P0
+  description: "Authoritative climate scenarios, observations, and reference datasets curated by the IPCC."
+  protocols: ["REST", "OPeNDAP", "FTP"]
+  base_urls:
+    - "https://data.ipcc.ch/"
+    - "https://www.ipcc-data.org/"
+  authentication: "none"
+  requires_credentials: false
+  status: active
+  capabilities: ["climate-scenarios", "historical-observations"]
+  tags: ["climate", "baseline", "p0"]
+  notes: "Bulk downloads may require dataset-specific registration or requester-pays endpoints."
+  references:
+    - "https://www.ipcc-data.org/"
+
+- id: ipbes_data_portal
+  name: "IPBES Knowledge and Data Portal"
+  category: biodiversity
+  priority: P0
+  description: "Intergovernmental biodiversity assessments, indicators, and policy summaries."
+  protocols: ["REST", "CSV"]
+  base_urls:
+    - "https://ipbes.net/data"
+  authentication: "none"
+  requires_credentials: false
+  status: active
+  capabilities: ["biodiversity-indicators", "policy-assessments"]
+  tags: ["biodiversity", "baseline", "p0"]
+  notes: "Many datasets are downloadable as CSV/Excel; APIs expose metadata for assessments."
+  references:
+    - "https://ipbes.net/"
+
+- id: world_bank_sustainability
+  name: "World Bank Sustainability Indicators"
+  category: macroeconomics
+  priority: P0
+  description: "World Bank SDG, Worldwide Governance Indicators, and ESG datasets via the open data API."
+  protocols: ["REST", "SDMX"]
+  base_urls:
+    - "https://api.worldbank.org/v2/"
+  authentication: "none"
+  requires_credentials: false
+  status: active
+  capabilities: ["sdg-indicators", "governance-metrics", "esg-indicators"]
+  tags: ["macro", "governance", "p0"]
+  notes: "Use the format=json&per_page=<n> parameters for deterministic retrieval."
+  references:
+    - "https://data.worldbank.org/developers"
+
+- id: ilostat
+  name: "ILOSTAT SDMX API"
+  category: labour
+  priority: P0
+  description: "International Labour Organization employment and social indicators exposed via SDMX."
+  protocols: ["SDMX", "REST"]
+  base_urls:
+    - "https://www.ilo.org/ilostat/sdmx/ws/public/sdmxapi"
+  authentication: "none"
+  requires_credentials: false
+  status: active
+  capabilities: ["labour-indicators", "time-series"]
+  tags: ["labour", "social", "p0"]
+  notes: "Supports deterministic SDMX queries for country, indicator, and sex disaggregation."
+  references:
+    - "https://ilostat.ilo.org/resources/developers/"
+
+- id: imf_climate_dashboard
+  name: "IMF Climate Change Dashboard"
+  category: macroeconomics
+  priority: P0
+  description: "IMF macro-financial climate risk indicators and policy trackers."
+  protocols: ["REST", "CSV"]
+  base_urls:
+    - "https://climatedata.imf.org/"
+  authentication: "optional-api-key"
+  requires_credentials: false
+  status: trial
+  capabilities: ["climate-finance", "policy-tracker"]
+  tags: ["macro", "climate-finance", "p0"]
+  notes: "API endpoints require dataset registration; CSV downloads remain available without authentication."
+  references:
+    - "https://climatedata.imf.org/pages/developertool"
+
+- id: transparency_international_cpi
+  name: "Transparency International CPI"
+  category: governance
+  priority: P0
+  description: "Global corruption perception index scores used for governance baselining."
+  protocols: ["REST", "CSV"]
+  base_urls:
+    - "https://api.transparency.org/api/v3/"
+  authentication: "optional-api-key"
+  requires_credentials: false
+  status: trial
+  capabilities: ["governance-indicators"]
+  tags: ["governance", "baseline", "p0"]
+  notes: "Public CSV downloads are available; API access requires a developer token."
+  references:
+    - "https://www.transparency.org/en/cpi"
+
 - id: un_sdg_api
   name: "UN Sustainable Development Goals API"
   category: standard
-  priority: P1
+  priority: P0
   description: "Official UNSD v5 REST API providing machine-readable SDG goals, targets, and indicators."
   protocols: ["REST"]
   base_urls:
@@ -10,98 +113,14 @@
   requires_credentials: false
   status: active
   capabilities: ["list-goals", "list-targets", "list-indicators"]
-  tags: ["sdg", "standard", "p1"]
+  tags: ["sdg", "standard", "p0"]
   references:
     - "design.md §2.1.2"
-
-- id: semantic_scholar
-  name: "Semantic Scholar API"
-  category: academic
-  priority: P1
-  description: "Free scholarly search and citation network API maintained by AI2."
-  protocols: ["REST"]
-  base_urls:
-    - "https://api.semanticscholar.org/"
-  authentication: "optional-api-key"
-  requires_credentials: false
-  status: active
-  capabilities: ["paper-search", "citations", "references", "author-metadata"]
-  tags: ["literature", "citations", "p1"]
-  references:
-    - "design.md §2.2.2"
-
-- id: openalex
-  name: "OpenAlex Works API"
-  category: academic
-  priority: P1
-  description: "Open bibliometric graph with citation and concept metadata."
-  protocols: ["REST"]
-  base_urls:
-    - "https://api.openalex.org/"
-  authentication: "none"
-  requires_credentials: false
-  status: active
-  capabilities: ["work-search", "citations", "concepts"]
-  tags: ["literature", "citations", "p1"]
-  notes: "Deterministic fallback for scholarly queries when Semantic Scholar is rate limited."
-  references:
-    - "https://docs.openalex.org/"
-
-- id: arxiv
-  name: "arXiv API"
-  category: academic
-  priority: P1
-  description: "Open-access preprint repository exposing Atom feeds for metadata retrieval."
-  protocols: ["REST"]
-  base_urls:
-    - "https://export.arxiv.org/api/"
-  authentication: "none"
-  requires_credentials: false
-  status: trial
-  capabilities: ["paper-search", "preprint-metadata"]
-  tags: ["literature", "preprints", "p1"]
-  notes: "Accessed via arxiv.py client; batch ingestion via S3 remains on the roadmap."
-  references:
-    - "https://github.com/lukasschwab/arxiv.py"
-
-- id: kaggle
-  name: "Kaggle Datasets API"
-  category: datasets
-  priority: P1
-  description: "Crowdsourced dataset platform with sustainability and climate datasets."
-  protocols: ["REST", "CLI"]
-  base_urls:
-    - "https://www.kaggle.com/api/v1/"
-  authentication: "api-key"
-  requires_credentials: true
-  status: trial
-  capabilities: ["dataset-search", "dataset-download"]
-  tags: ["datasets", "p1", "bulk"]
-  notes: "Requires kaggle==1.7.4.5 with credentials via ~/.kaggle/kaggle.json or KAGGLE_USERNAME/KAGGLE_KEY."
-  references:
-    - "https://www.kaggle.com/docs/api"
-
-- id: crossref
-  name: "Crossref Works API"
-  category: academic
-  priority: P1
-  description: "Global scholarly metadata registry exposing DOI, citation, and funding records."
-  protocols: ["REST"]
-  base_urls:
-    - "https://api.crossref.org/"
-  authentication: "none"
-  requires_credentials: false
-  status: active
-  capabilities: ["works-search", "metadata", "citations"]
-  tags: ["literature", "citations", "p1"]
-  notes: "Include a contact email via the mailto query parameter to comply with Crossref etiquette."
-  references:
-    - "https://api.crossref.org/swagger-ui/index.html"
 
 - id: wikidata
   name: "Wikidata SPARQL"
   category: knowledge-graph
-  priority: P1
+  priority: P0
   description: "Collaborative knowledge graph with SPARQL endpoint suitable for semantic linking."
   protocols: ["SPARQL", "REST"]
   base_urls:
@@ -110,14 +129,182 @@
   requires_credentials: false
   status: active
   capabilities: ["sparql-query", "entity-lookup"]
-  tags: ["knowledge-graph", "semantic", "p1"]
+  tags: ["knowledge-graph", "semantic", "p0"]
   references:
     - "design.md §2.3.1"
+
+- id: google_earth_engine
+  name: "Google Earth Engine"
+  category: earth-observation
+  priority: P1
+  description: "Planetary-scale geospatial computation platform with climate and land datasets."
+  protocols: ["REST", "Python", "JavaScript"]
+  base_urls:
+    - "https://earthengine.googleapis.com/"
+  authentication: "oauth"
+  requires_credentials: true
+  status: trial
+  capabilities: ["satellite-imagery", "geospatial-compute"]
+  tags: ["earth-observation", "validation", "p1"]
+  notes: "Requires a service account or user token; integrate via the official Earth Engine SDK."
+  references:
+    - "https://developers.google.com/earth-engine"
+
+- id: esa_copernicus
+  name: "ESA Copernicus Open Access Hub"
+  category: earth-observation
+  priority: P1
+  description: "Sentinel imagery catalogue and APIs operated by the European Space Agency."
+  protocols: ["REST", "OpenSearch"]
+  base_urls:
+    - "https://scihub.copernicus.eu/"
+  authentication: "user-pass"
+  requires_credentials: true
+  status: trial
+  capabilities: ["satellite-imagery", "download"]
+  tags: ["earth-observation", "validation", "p1"]
+  notes: "Requires Copernicus SciHub credentials; supports deterministic searches via the OData API."
+  references:
+    - "https://scihub.copernicus.eu/userguide/"
+
+- id: nasa_earthdata
+  name: "NASA Earthdata"
+  category: earth-observation
+  priority: P1
+  description: "NASA Earth observing system data access and APIs for remote sensing verification."
+  protocols: ["REST", "OPeNDAP"]
+  base_urls:
+    - "https://earthdata.nasa.gov/"
+  authentication: "user-pass"
+  requires_credentials: true
+  status: trial
+  capabilities: ["satellite-imagery", "remote-sensing"]
+  tags: ["earth-observation", "validation", "p1"]
+  notes: "Requires Earthdata Login credentials; leverage DAAC-specific APIs for targeted products."
+  references:
+    - "https://urs.earthdata.nasa.gov/documentation"
+
+- id: grid_intensity_cli
+  name: "Grid Intensity CLI"
+  category: environment
+  priority: P1
+  description: "Wrapper CLI that proxies WattTime and other carbon intensity providers."
+  protocols: ["CLI"]
+  base_urls: []
+  authentication: "external-cli"
+  requires_credentials: false
+  status: active
+  capabilities: ["carbon-intensity"]
+  tags: ["realtime", "carbon", "p1"]
+  notes: "Requires grid-intensity to be installed on PATH."
+  references:
+    - "design.md §2.5.2"
+
+- id: openalex
+  name: "OpenAlex Works API"
+  category: academic
+  priority: P2
+  description: "Open bibliometric graph with citation and concept metadata."
+  protocols: ["REST"]
+  base_urls:
+    - "https://api.openalex.org/"
+  authentication: "none"
+  requires_credentials: false
+  status: active
+  capabilities: ["work-search", "citations", "concepts"]
+  tags: ["literature", "citations", "p2"]
+  notes: "Deterministic fallback for scholarly queries when Semantic Scholar is rate limited."
+  references:
+    - "https://docs.openalex.org/"
+
+- id: dimensions_ai
+  name: "Dimensions.ai Analytics API"
+  category: academic
+  priority: P2
+  description: "Subscription bibliometrics and research funding graph complementing open sources."
+  protocols: ["REST"]
+  base_urls:
+    - "https://app.dimensions.ai/api/dsl/v2"
+  authentication: "api-key"
+  requires_credentials: true
+  status: trial
+  capabilities: ["paper-search", "funding-data", "citation-graph"]
+  tags: ["literature", "bibliometrics", "p2"]
+  notes: "Requires institutional subscription; enforce DSL queries for deterministic exports."
+  references:
+    - "https://docs.dimensions.ai/dsl"
+
+- id: lens_org_api
+  name: "Lens.org Patents and Scholarly API"
+  category: academic
+  priority: P2
+  description: "Patent and publication metadata used for innovation mapping."
+  protocols: ["REST"]
+  base_urls:
+    - "https://api.lens.org/"
+  authentication: "api-key"
+  requires_credentials: true
+  status: trial
+  capabilities: ["paper-search", "patent-search", "citations"]
+  tags: ["literature", "patents", "p2"]
+  notes: "Commercial access requires an API token; free tier available for research usage."
+  references:
+    - "https://docs.lens.org/api/"
+
+- id: semantic_scholar
+  name: "Semantic Scholar API"
+  category: academic
+  priority: P2
+  description: "Free scholarly search and citation network API maintained by AI2."
+  protocols: ["REST"]
+  base_urls:
+    - "https://api.semanticscholar.org/"
+  authentication: "optional-api-key"
+  requires_credentials: false
+  status: active
+  capabilities: ["paper-search", "citations", "references", "author-metadata"]
+  tags: ["literature", "citations", "p2"]
+  references:
+    - "design.md §2.2.2"
+
+- id: crossref
+  name: "Crossref Works API"
+  category: academic
+  priority: P2
+  description: "Global scholarly metadata registry exposing DOI, citation, and funding records."
+  protocols: ["REST"]
+  base_urls:
+    - "https://api.crossref.org/"
+  authentication: "none"
+  requires_credentials: false
+  status: active
+  capabilities: ["works-search", "metadata", "citations"]
+  tags: ["literature", "citations", "p2"]
+  notes: "Include a contact email via the mailto query parameter to comply with Crossref etiquette."
+  references:
+    - "https://api.crossref.org/swagger-ui/index.html"
+
+- id: arxiv
+  name: "arXiv API"
+  category: academic
+  priority: P2
+  description: "Open-access preprint repository exposing Atom feeds for metadata retrieval."
+  protocols: ["REST"]
+  base_urls:
+    - "https://export.arxiv.org/api/"
+  authentication: "none"
+  requires_credentials: false
+  status: trial
+  capabilities: ["paper-search", "preprint-metadata"]
+  tags: ["literature", "preprints", "p2"]
+  notes: "Accessed via arxiv.py client; batch ingestion via S3 remains on the roadmap."
+  references:
+    - "https://github.com/lukasschwab/arxiv.py"
 
 - id: github_topics
   name: "GitHub Topics API"
   category: code
-  priority: P1
+  priority: P2
   description: "Curated tagging system for discovering sustainability-related repositories."
   protocols: ["REST"]
   base_urls:
@@ -126,10 +313,27 @@
   requires_credentials: false
   status: active
   capabilities: ["search-repositories", "list-topics"]
-  tags: ["code", "repository", "p1"]
+  tags: ["code", "repository", "p2"]
   notes: "GitHub recommends authenticated requests to increase rate limits."
   references:
     - "design.md §2.A.1"
+
+- id: kaggle
+  name: "Kaggle Datasets API"
+  category: datasets
+  priority: P2
+  description: "Crowdsourced dataset platform with sustainability and climate datasets."
+  protocols: ["REST", "CLI"]
+  base_urls:
+    - "https://www.kaggle.com/api/v1/"
+  authentication: "api-key"
+  requires_credentials: true
+  status: trial
+  capabilities: ["dataset-search", "dataset-download"]
+  tags: ["datasets", "p2", "bulk"]
+  notes: "Requires kaggle==1.7.4.5 with credentials via ~/.kaggle/kaggle.json or KAGGLE_USERNAME/KAGGLE_KEY."
+  references:
+    - "https://www.kaggle.com/docs/api"
 
 - id: osdg_api
   name: "OSDG SDG Classification API"
@@ -148,93 +352,163 @@
   references:
     - "design.md §2.A.2"
 
-- id: grid_intensity_cli
-  name: "Grid Intensity CLI"
-  category: environment
-  priority: P1
-  description: "Wrapper CLI that proxies WattTime and other carbon intensity providers."
-  protocols: ["CLI"]
-  base_urls: []
-  authentication: "external-cli"
-  requires_credentials: false
-  status: active
-  capabilities: ["carbon-intensity"]
-  tags: ["realtime", "carbon", "p1"]
-  notes: "Requires grid-intensity to be installed on PATH."
-  references:
-    - "design.md §2.5.2"
-
-- id: chart_mcp_server
-  name: "AntV MCP Chart Server"
-  category: visualization
-  priority: P2
-  description: "AntV Model Context Protocol server for chart rendering and data visualization."
-  protocols: ["MCP", "SSE", "HTTP"]
+- id: cdp_climate
+  name: "CDP Climate Disclosure Dashboard"
+  category: esg
+  priority: P3
+  description: "Corporate climate and water disclosures accessible via academic or commercial license."
+  protocols: ["REST", "CSV"]
   base_urls:
-    - "https://github.com/antvis/mcp-server-chart"
+    - "https://www.cdp.net/"
+  authentication: "api-key"
+  requires_credentials: true
+  status: trial
+  capabilities: ["corporate-disclosure", "climate-metrics"]
+  tags: ["esg", "corporate", "p3"]
+  notes: "Requires CDP credentials; surface dataset IDs in CLI guidance."
+  references:
+    - "https://www.cdp.net/en/research"
+
+- id: lseg_esg
+  name: "LSEG Refinitiv ESG Data"
+  category: esg
+  priority: P3
+  description: "Licensed ESG metrics and controversy scores from the London Stock Exchange Group."
+  protocols: ["REST", "Bulk"]
+  base_urls:
+    - "https://www.refinitiv.com/en"
+  authentication: "api-key"
+  requires_credentials: true
+  status: trial
+  capabilities: ["esg-metrics", "controversy-data"]
+  tags: ["esg", "corporate", "p3"]
+  notes: "Requires Refinitiv Workspace or Data Platform credentials."
+  references:
+    - "https://developers.refinitiv.com/en/api-catalog"
+
+- id: msci_esg
+  name: "MSCI ESG Research"
+  category: esg
+  priority: P3
+  description: "Licensed ESG ratings, controversies, and screening metrics."
+  protocols: ["Bulk", "API"]
+  base_urls:
+    - "https://www.msci.com/esg"
+  authentication: "api-key"
+  requires_credentials: true
+  status: trial
+  capabilities: ["esg-ratings", "controversy-data"]
+  tags: ["esg", "corporate", "p3"]
+  notes: "Requires enterprise contract; integrate via MSCI Data Explorer extracts."
+  references:
+    - "https://www.msci.com/documents/1296102/29355759/MSCI-ESG-Direct-Data-Feed.pdf"
+
+- id: sustainalytics
+  name: "Sustainalytics ESG Risk Ratings"
+  category: esg
+  priority: P3
+  description: "Company-level ESG risk scores and controversy assessments."
+  protocols: ["API", "Bulk"]
+  base_urls:
+    - "https://www.sustainalytics.com/"
+  authentication: "api-key"
+  requires_credentials: true
+  status: trial
+  capabilities: ["esg-ratings", "controversy-data"]
+  tags: ["esg", "corporate", "p3"]
+  notes: "Requires Sustainalytics Global Access credentials."
+  references:
+    - "https://connect.sustainalytics.com/"
+
+- id: sp_global_esg
+  name: "S&P Global Sustainable1"
+  category: esg
+  priority: P3
+  description: "S&P Global ESG scores, climate risk, and impact metrics."
+  protocols: ["API", "Bulk"]
+  base_urls:
+    - "https://www.spglobal.com/esg/"
+  authentication: "api-key"
+  requires_credentials: true
+  status: trial
+  capabilities: ["esg-scores", "climate-risk"]
+  tags: ["esg", "corporate", "p3"]
+  notes: "Requires Sustainable1 license; coordinate dataset extracts through client portal."
+  references:
+    - "https://www.spglobal.com/esg/solutions/data-intelligence"
+
+- id: iss_esg
+  name: "ISS ESG Data"
+  category: esg
+  priority: P3
+  description: "ISS ESG ratings, SDG solutions assessments, and norms-based screening."
+  protocols: ["API", "Bulk"]
+  base_urls:
+    - "https://www.issgovernance.com/esg/"
+  authentication: "api-key"
+  requires_credentials: true
+  status: trial
+  capabilities: ["esg-ratings", "screening"]
+  tags: ["esg", "corporate", "p3"]
+  notes: "Requires ISS ESG Gateway credentials."
+  references:
+    - "https://www.issgovernance.com/esg/data-solutions/"
+
+- id: gri_taxonomy
+  name: "GRI Taxonomy"
+  category: standards
+  priority: P4
+  description: "GRI digital taxonomy (XBRL schemas) for corporate sustainability reporting."
+  protocols: ["XBRL", "ZIP"]
+  base_urls:
+    - "https://www.globalreporting.org/how-to-use-the-gri-standards/gri-standards-english-language/"
   authentication: "none"
   requires_credentials: false
   status: trial
-  capabilities: ["chart-rendering", "visualization"]
-  tags: ["visualization", "mcp", "antv"]
-  notes: "Requires Node.js and a running server, e.g. `npx -y @antv/mcp-server-chart --transport streamable`."
+  capabilities: ["xbrl-schema", "gri-standards"]
+  tags: ["gri", "reporting", "p4"]
+  notes: "Parse via shared file ingestion pipeline prior to LLM assistance."
   references:
-    - "https://github.com/antvis/mcp-server-chart"
+    - "https://www.globalreporting.org/"
 
-- id: tavily_web_mcp
-  name: "Tavily Web Search MCP"
-  category: discovery
-  priority: P2
-  description: "Model Context Protocol gateway for Tavily's web and news search."
-  protocols: ["MCP", "streamable-http"]
+- id: ghg_protocol_workbooks
+  name: "GHG Protocol Calculation Workbooks"
+  category: standards
+  priority: P4
+  description: "Spreadsheet calculators and emission factors supporting GHG accounting."
+  protocols: ["XLSX"]
   base_urls:
-    - "https://github.com/tavily-ai/tavily-mcp"
-  authentication: "api-key"
-  requires_credentials: true
+    - "https://ghgprotocol.org/calculation-tools"
+  authentication: "none"
+  requires_credentials: false
   status: trial
-  capabilities: ["web-search", "news-search"]
-  tags: ["web", "search", "mcp"]
-  notes: "Configure credentials in .secrets under [tavily_web_mcp]; use Authorization: Bearer <API_KEY>."
+  capabilities: ["emission-factors", "calculation-methods"]
+  tags: ["ghg", "reporting", "p4"]
+  notes: "Integrate through deterministic spreadsheet parsers."
   references:
-    - "https://github.com/tavily-ai/tavily-mcp"
+    - "https://ghgprotocol.org/"
 
-- id: tiangong_ai_remote
-  name: "TianGong AI Remote MCP"
-  category: automation
-  priority: P0
-  description: "Managed MCP endpoint exposing curated TianGong automation tools."
-  protocols: ["MCP", "streamable-http"]
+- id: open_supply_hub
+  name: "Open Supply Hub API"
+  category: supply-chain
+  priority: P4
+  description: "Open global facility registry for supply chain transparency."
+  protocols: ["REST"]
   base_urls:
-    - "https://mcp.tiangong.earth/mcp"
-  authentication: "api-key"
-  requires_credentials: true
-  status: trial
-  capabilities: ["tool-dispatch", "automation"]
-  tags: ["mcp", "remote", "automation", "p0"]
-  notes: "Requires API key. Configure credentials in .secrets under [tiangong_ai_remote]."
-  references:
-    - "https://mcp.tiangong.earth/docs"
-
-- id: dify_knowledge_base_mcp
-  name: "Dify Knowledge Base MCP"
-  category: knowledge-base
-  priority: P0
-  description: "Personal curated Dify knowledge base exposed via MCP for high-priority sustainability evidence."
-  protocols: ["MCP", "streamable-http"]
-  base_urls: []
-  authentication: "api-key"
-  requires_credentials: true
+    - "https://api.opensupplyhub.org/"
+  authentication: "optional-api-key"
+  requires_credentials: false
   status: active
-  capabilities: ["knowledge-retrieval", "curated-content"]
-  tags: ["mcp", "knowledge-base", "p0"]
-  notes: "Configure credentials in .secrets under [dify_knowledge_base_mcp]; uses Authorization: Bearer <API_KEY> headers."
+  capabilities: ["facility-lookup", "geocoding"]
+  tags: ["supply-chain", "transparency", "p4"]
+  notes: "Unauthenticated calls allow limited paging; use API key for higher limits."
   references:
-    - "https://docs.dify.ai/"
+    - "https://info.opensupplyhub.org/api-documentation"
 
 - id: tiangong_lca_remote
   name: "TianGong LCA Remote MCP"
   category: automation
-  priority: P1
+  priority: P4
   description: "Remote MCP endpoint specialising in life-cycle assessment tooling."
   protocols: ["MCP", "streamable-http"]
   base_urls:
@@ -243,44 +517,27 @@
   requires_credentials: true
   status: trial
   capabilities: ["tool-dispatch", "lca", "automation"]
-  tags: ["mcp", "remote", "lca", "p1"]
+  tags: ["mcp", "remote", "lca", "p4"]
   notes: "Requires API key. Configure credentials in .secrets under [tiangong_lca_remote]."
   references:
     - "https://lcamcp.tiangong.earth/docs"
 
-- id: openai_deep_research
-  name: "OpenAI Deep Research"
-  category: analysis
-  priority: P2
-  description: "OpenAI Responses API workflow for guided multi-source synthesis."
-  protocols: ["OpenAI"]
+- id: tavily_web_mcp
+  name: "Tavily Web Search MCP"
+  category: discovery
+  priority: P4
+  description: "Model Context Protocol gateway for Tavily's web and news search."
+  protocols: ["MCP", "streamable-http"]
   base_urls:
-    - "https://platform.openai.com/docs/guides/deep-research"
+    - "https://github.com/tavily-ai/tavily-mcp"
   authentication: "api-key"
   requires_credentials: true
   status: trial
-  capabilities: ["research-synthesis", "question-decomposition"]
-  tags: ["openai", "llm", "synthesis"]
-  notes: "Requires OpenAI API key and deep_research_model configuration; falls back to o4-mini-deep-research."
+  capabilities: ["web-search", "news-search"]
+  tags: ["web", "search", "mcp", "p4"]
+  notes: "Configure credentials in .secrets under [tavily_web_mcp]; use Authorization: Bearer <API_KEY>."
   references:
-    - "https://platform.openai.com/docs/guides/deep-research"
-
-- id: scopus
-  name: "Scopus API"
-  category: academic
-  priority: P2
-  description: "Elsevier subscription API with curated SDG mapping queries."
-  protocols: ["REST"]
-  base_urls:
-    - "https://api.elsevier.com/"
-  authentication: "api-key"
-  requires_credentials: true
-  status: trial
-  capabilities: ["paper-search", "sdg-mapping", "citations"]
-  tags: ["literature", "sdg", "p2"]
-  notes: "Enable when Elsevier API keys are available; integrates with Elsevier SDG mapping queries."
-  references:
-    - "design.md §2.2.4"
+    - "https://github.com/tavily-ai/tavily-mcp"
 
 - id: google_scholar
   name: "Google Scholar"
@@ -298,3 +555,121 @@
   tags: ["restricted", "p4"]
   references:
     - "design.md §2.2.6"
+
+- id: acm_digital_library
+  name: "ACM Digital Library"
+  category: academic
+  priority: P5
+  description: "Computer science publications with metadata and full-text APIs for licensed users."
+  protocols: ["REST"]
+  base_urls:
+    - "https://dl.acm.org/api/"
+  authentication: "api-key"
+  requires_credentials: true
+  status: trial
+  capabilities: ["paper-search", "full-text"]
+  tags: ["literature", "domain-specific", "p5"]
+  notes: "Requires ACM Digital Library credentials; re-enabled for AI and software sustainability research."
+  references:
+    - "https://www.acm.org/publications/digital-library"
+
+- id: scopus
+  name: "Scopus API"
+  category: academic
+  priority: P5
+  description: "Elsevier subscription API with curated SDG mapping queries."
+  protocols: ["REST"]
+  base_urls:
+    - "https://api.elsevier.com/"
+  authentication: "api-key"
+  requires_credentials: true
+  status: trial
+  capabilities: ["paper-search", "sdg-mapping", "citations"]
+  tags: ["literature", "sdg", "p5"]
+  notes: "Enable when Elsevier API keys are available; integrates with Elsevier SDG mapping queries."
+  references:
+    - "design.md §2.2.4"
+
+- id: web_of_science
+  name: "Web of Science API"
+  category: academic
+  priority: P5
+  description: "Clarivate Web of Science premium bibliometrics service."
+  protocols: ["REST"]
+  base_urls:
+    - "https://developer.clarivate.com/apis/wos"
+  authentication: "api-key"
+  requires_credentials: true
+  status: trial
+  capabilities: ["paper-search", "citation-network"]
+  tags: ["literature", "domain-specific", "p5"]
+  notes: "Requires Clarivate subscription; use for benchmarking alongside open graphs."
+  references:
+    - "https://developer.clarivate.com/apis/wos"
+
+- id: chart_mcp_server
+  name: "AntV MCP Chart Server"
+  category: visualization
+  priority: P5
+  description: "AntV Model Context Protocol server for chart rendering and data visualization."
+  protocols: ["MCP", "SSE", "HTTP"]
+  base_urls:
+    - "https://github.com/antvis/mcp-server-chart"
+  authentication: "none"
+  requires_credentials: false
+  status: trial
+  capabilities: ["chart-rendering", "visualization"]
+  tags: ["visualization", "mcp", "antv", "p5"]
+  notes: "Requires Node.js and a running server, e.g. `npx -y @antv/mcp-server-chart --transport streamable`."
+  references:
+    - "https://github.com/antvis/mcp-server-chart"
+
+- id: openai_deep_research
+  name: "OpenAI Deep Research"
+  category: analysis
+  priority: P5
+  description: "OpenAI Responses API workflow for guided multi-source synthesis."
+  protocols: ["OpenAI"]
+  base_urls:
+    - "https://platform.openai.com/docs/guides/deep-research"
+  authentication: "api-key"
+  requires_credentials: true
+  status: trial
+  capabilities: ["research-synthesis", "question-decomposition"]
+  tags: ["openai", "llm", "synthesis", "p5"]
+  notes: "Requires OpenAI API key and deep_research_model configuration; falls back to o4-mini-deep-research."
+  references:
+    - "https://platform.openai.com/docs/guides/deep-research"
+
+- id: tiangong_ai_remote
+  name: "TianGong AI Remote MCP"
+  category: automation
+  priority: P_INT
+  description: "Managed MCP endpoint exposing curated TianGong automation tools."
+  protocols: ["MCP", "streamable-http"]
+  base_urls:
+    - "https://mcp.tiangong.earth/mcp"
+  authentication: "api-key"
+  requires_credentials: true
+  status: trial
+  capabilities: ["tool-dispatch", "automation"]
+  tags: ["mcp", "remote", "automation", "p-int"]
+  notes: "Requires API key. Configure credentials in .secrets under [tiangong_ai_remote]."
+  references:
+    - "https://mcp.tiangong.earth/docs"
+
+- id: dify_knowledge_base_mcp
+  name: "Dify Knowledge Base MCP"
+  category: knowledge-base
+  priority: P_INT
+  description: "Personal curated Dify knowledge base exposed via MCP for high-priority sustainability evidence."
+  protocols: ["MCP", "streamable-http"]
+  base_urls: []
+  authentication: "api-key"
+  requires_credentials: true
+  status: active
+  capabilities: ["knowledge-retrieval", "curated-content"]
+  tags: ["mcp", "knowledge-base", "p-int"]
+  notes: "Configure credentials in .secrets under [dify_knowledge_base_mcp]; uses Authorization: Bearer <API_KEY> headers."
+  references:
+    - "https://docs.dify.ai/"

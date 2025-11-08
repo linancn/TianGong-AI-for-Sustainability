@@ -108,7 +108,7 @@ class CrossrefAdapter(DataSourceAdapter):
                 details={"reason": "missing-mailto"},
             )
         try:
-            payload = self.client.get_work(_VERIFICATION_DOI)
+            payload = self.client.get_work(_VERIFICATION_DOI, select=["title", "issued"])
         except APIError as exc:
             return VerificationResult(success=False, message=f"Crossref API verification failed: {exc}")
 

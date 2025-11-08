@@ -7,12 +7,12 @@ def test_registry_load_core_sources(registry_file):
     registry = DataSourceRegistry.from_yaml(registry_file)
 
     un_sdg = registry.require("un_sdg_api")
-    assert un_sdg.priority == DataSourcePriority.P1
+    assert un_sdg.priority == DataSourcePriority.P0
     dify = registry.require("dify_knowledge_base_mcp")
-    assert dify.priority == DataSourcePriority.P0
+    assert dify.priority == DataSourcePriority.P_INT
     github = registry.require("github_topics")
     assert "repository" in github.tags
     crossref = registry.require("crossref")
-    assert crossref.priority == DataSourcePriority.P1
+    assert crossref.priority == DataSourcePriority.P2
     blocked = registry.require("google_scholar")
     assert blocked.status.name == "BLOCKED"

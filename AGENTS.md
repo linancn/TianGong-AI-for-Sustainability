@@ -68,12 +68,13 @@ Always consult these sources before planning or executing changes.
 
 | Priority | Examples | Status | Notes |
 |----------|----------|--------|-------|
-| **P0** | `tiangong_ai_remote` MCP knowledge base; `dify_knowledge_base_mcp` personal MCP corpus | Implemented | Primary corpora for sustainability research; query these first with comprehensive context before cascading to other sources. |
-| **P1** | UN SDG API, Semantic Scholar, Crossref, GitHub Topics, Kaggle Datasets API, Wikidata, grid-intensity CLI, `tiangong_lca_remote` MCP | Implemented | Provide core ontology, curated datasets, general retrieval, and micro-level LCA data when needed. |
-| **P1 (bulk)** | arXiv dumps / Kaggle mirrors | Partial | Kaggle API integration now enables authenticated dataset queries; bulk download and vector indexing remain planned. |
-| **P2** | Scopus, Web of Science, WattTime (via grid-intensity), AntV MCP chart server, Tavily Web MCP, OpenAI Deep Research | Conditional | Enable only when credentials, runtime dependencies (Node.js), or API quotas are available. |
-| **P3** | GRI taxonomy XLSX/XBRL, GHG protocol workbooks, Open Sustainable Tech CSV, life cycle assessment inventories (e.g., openLCA datasets) | Rolling | Parse via shared file ingestion layer. |
-| **P4** | Google Scholar, ACM Digital Library | Blocked | Enforce alternatives (Semantic Scholar, Crossref). |
+| **P0** | IPCC DDC; IPBES; World Bank (SDGs/WGI/ESG); ILOSTAT; IMF Climate Dashboard; Transparency International CPI; UN SDG API; Wikidata | Partial | Authoritative macro baselines (climate, biodiversity, governance) that ground deterministic reasoning. |
+| **P1** | Google Earth Engine; ESA Copernicus; NASA Earthdata; grid-intensity CLI | Planned | Remote sensing and observational validation used to corroborate disclosures. |
+| **P2** | OpenAlex; Dimensions.ai; Lens.org; Semantic Scholar; Crossref; arXiv; GitHub Topics; Kaggle API; OSDG API | Implemented | Bibliometrics and classification pipelines enabling research discovery and coding support. |
+| **P3** | CDP; LSEG Refinitiv; MSCI; Sustainalytics; S&P Global Sustainable1; ISS ESG | Planned | Licensed corporate ESG performance data; add adapters when credentials are available. |
+| **P4** | GRI Taxonomy (XBRL); GHG Protocol Workbooks; Open Supply Hub; `tiangong_lca_remote` MCP; Tavily Web MCP | Rolling | Source primary disclosures and supply-chain facilities to backfill P3 results. |
+| **P5** | ACM Digital Library; Scopus; Web of Science; AntV MCP chart server; OpenAI Deep Research | Conditional | High-threshold or optional services used for expert synthesis and visualization once dependencies are met. |
+| **P_INT** | `tiangong_ai_remote` MCP; `dify_knowledge_base_mcp` | Implemented | Project-specific RAG layer providing final contextualisation for automations. |
 
 #### Adapter Rules
 
@@ -83,7 +84,7 @@ Always consult these sources before planning or executing changes.
 4. Caching is deferred to services (e.g., storing SDG goals in DuckDB/Parquet) to keep adapters stateless.
 5. Kaggle dataset access relies on the official Kaggle SDK (1.7.4.5); surface clear credential requirements when `KAGGLE_USERNAME`/`KAGGLE_KEY` or `~/.kaggle/kaggle.json` are missing.
 
-> **MCP Usage Notes** — The `tiangong_ai_remote` MCP delivers the most authoritative sustainability literature coverage (≈70M chunks, 70B tokens). Always formulate queries with complete context so the hybrid retriever can yield high-quality passages. The `Search_*` tools (including `Search_Sci_Tool`) return a JSON string—decode it with `json.loads` before accessing fields and keep `topK` ≤ 50 to avoid oversized responses. Rate-limit follow-up enrichment calls (e.g., Semantic Scholar) or switch to `OpenAlex` when 429 throttling occurs. The `tiangong_lca_remote` MCP focuses on life-cycle assessment datasets; reserve it for micro-level LCA case studies or detailed footprint comparisons, and skip it for macro literature scans where `tiangong_ai_remote` and other P1 sources suffice. Use `tavily_web_mcp` when you need general web or news coverage that is outside the curated TianGong corpus, remembering that the Tavily server expects `Authorization: Bearer <API_KEY>`. When invoking TianGong search tools, set `extK` to control how many neighbouring chunks are returned (default `extK=2`, increase only when additional local context is required). Treat `openai_deep_research` as an analysis source triggered after deterministic evidence collection; ensure the OpenAI API key and the deep research model are configured before enabling it in workflows.
+> **MCP Usage Notes** — The `tiangong_ai_remote` and `dify_knowledge_base_mcp` sources form the **P_INT** RAG context layer; provide complete task intent so the hybrid retriever can return high-signal passages. The `Search_*` tools (including `Search_Sci_Tool`) return a JSON string—decode it with `json.loads` before accessing fields and keep `topK` ≤ 50 to avoid oversized responses. Rate-limit follow-up enrichment calls (e.g., Semantic Scholar) or switch to `OpenAlex` when 429 throttling occurs. The `tiangong_lca_remote` MCP (P4) focuses on life-cycle assessment datasets; reserve it for micro-level LCA case studies or detailed footprint comparisons, and skip it for macro literature scans where P0/P2 sources suffice. Use `tavily_web_mcp` (P4) when you need general web or news coverage outside the curated TianGong corpus, remembering that the Tavily server expects `Authorization: Bearer <API_KEY>`. Treat `openai_deep_research` (P5) as an analysis source triggered after deterministic evidence collection; ensure the OpenAI API key and the deep research model are configured before enabling it in workflows.
 
 ### Ontology & Data Models
 

@@ -68,12 +68,13 @@
 
 | 优先级 | 示例 | 状态 | 说明 |
 |--------|------|------|------|
-| **P0** | `tiangong_ai_remote` MCP 知识库；`dify_knowledge_base_mcp` 私有 MCP 语料库 | 已实现 | 可持续性研究的首选语料；优先查询这两项并提供完整上下文，再级联到其它数据源。 |
-| **P1** | UN SDG API、Semantic Scholar、Crossref、GitHub Topics、Kaggle 数据集 API、Wikidata、grid-intensity CLI、`tiangong_lca_remote` MCP | 已实现 | 构成本体、精选数据集与通用检索基础，同时按需提供细粒度 LCA 数据。 |
-| **P1（批量）** | arXiv 批量数据 / Kaggle 镜像 | 部分上线 | 已集成 Kaggle API，可进行鉴权后的数据集检索；批量下载与向量索引仍在规划中。 |
-| **P2** | Scopus、Web of Science、WattTime（通过 grid-intensity）、AntV MCP 图表服务器、Tavily Web MCP、OpenAI Deep Research | 视凭据/环境启用 | 需提供密钥、运行时依赖（如 Node.js）或足够的 API 配额。 |
-| **P3** | GRI taxonomy、GHG 工作簿、Open Sustainable Tech CSV、生命周期评估清单（如 openLCA 数据集） | 持续接入 | 通过统一的文件解析框架处理。 |
-| **P4** | Google Scholar、ACM Digital Library | 禁用 | 强制使用替代方案（如 Semantic Scholar、Crossref）。 |
+| **P0** | IPCC DDC；IPBES；世界银行（SDGs/WGI/ESG）；ILOSTAT；IMF 气候仪表板；透明国际 CPI；UN SDG API；Wikidata | 部分上线 | 气候、生物多样性、治理等权威宏观基线，作为确定性推理的“公理层”。 |
+| **P1** | Google Earth Engine；ESA Copernicus；NASA Earthdata；grid-intensity CLI | 规划中 | 遥感与观测验证层，用于佐证披露信息。 |
+| **P2** | OpenAlex；Dimensions.ai；Lens.org；Semantic Scholar；Crossref；arXiv；GitHub Topics；Kaggle API；OSDG API | 已实现 | 文献计量与分类管线，支撑研究发现与代码检索。 |
+| **P3** | CDP；LSEG Refinitiv；MSCI；Sustainalytics；S&P Global Sustainable1；ISS ESG | 规划中 | 需要许可的企业 ESG 绩效数据，凭证就绪后接入。 |
+| **P4** | GRI Taxonomy（XBRL）；GHG 工作簿；Open Supply Hub；`tiangong_lca_remote` MCP；Tavily Web MCP | 持续接入 | 回溯企业披露与供应链节点，用于反哺 P3 分析结果。 |
+| **P5** | ACM Digital Library；Scopus；Web of Science；AntV MCP 图表服务器；OpenAI Deep Research | 视凭据启用 | 高门槛/可选服务，满足依赖后用于专家级综合与可视化。 |
+| **P_INT** | `tiangong_ai_remote` MCP；`dify_knowledge_base_mcp` | 已实现 | 项目专属的 RAG 上下文层，为自动化提供最终背景。 |
 
 #### 适配器规则
 
@@ -83,7 +84,7 @@
 4. 缓存与持久化逻辑保留在服务层，保证适配器无状态。
 5. Kaggle 数据集适配器依赖官方 SDK（1.7.4.5 版）；若缺少 `KAGGLE_USERNAME`/`KAGGLE_KEY` 或 `~/.kaggle/kaggle.json`，需输出明确的凭证配置提示。
 
-> **MCP 使用提示**：`tiangong_ai_remote` MCP 覆盖最权威的可持续性文献语料（约 7000 万 chunks、700 亿 token），检索时务必提供信息完备的查询上下文，以充分发挥混合检索效果。所有 `Search_*` 工具（包括 `Search_Sci_Tool`）都会返回 JSON 字符串，需先通过 `json.loads` 解析，建议将 `topK` 控制在 50 以内以避免响应过大。补充检索（如 Semantic Scholar）需注意 429 节流；出现限频时可降速或改用 `OpenAlex` 数据。`tiangong_lca_remote` MCP 专注生命周期评估数据，适合微观 LCA 案例或细粒度排放比对，在宏观文献扫描时可优先使用 `tiangong_ai_remote` 及其它 P1 数据源。需要覆盖更广泛的站点或新闻源时，可启用 `tavily_web_mcp`（通过 `Authorization: Bearer <API_KEY>` 认证）。调用 TianGong 系列检索工具时，请显式设置 `extK` 参数以控制返回的邻近 chunk 数量（默认 `extK=2`），仅在确实需要更多局部上下文时再上调。同时将 `openai_deep_research` 视为高层综合分析的数据源，在确定性数据采集完成后再触发；请提前配置 OpenAI API Key 与 deep_research 模型。
+> **MCP 使用提示**：`tiangong_ai_remote` 与 `dify_knowledge_base_mcp` 属于 **P_INT** RAG 上下文层，查询时需提供完整的任务意图，以便混合检索返回高价值片段。所有 `Search_*` 工具（包括 `Search_Sci_Tool`）都会返回 JSON 字符串，需先通过 `json.loads` 解析，并将 `topK` 控制在 50 以内以避免响应过大。补充检索（如 Semantic Scholar）需注意 429 节流；出现限频时可降速或改用 `OpenAlex` 数据。`tiangong_lca_remote` MCP（P4）聚焦生命周期评估，适用于微观 LCA 案例或精细排放比对；宏观文献扫描场景应优先使用 P0/P2 数据源。若需涵盖更广泛的网站或新闻，可启用 `tavily_web_mcp`（P4，需要 `Authorization: Bearer <API_KEY>`）。`openai_deep_research`（P5）用于确定性证据收集后的综合分析，请提前配置 OpenAI API Key 与 deep_research 模型。
 
 ### 本体与数据模型
 
