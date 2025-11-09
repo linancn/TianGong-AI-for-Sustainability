@@ -14,7 +14,7 @@ from typing import Any, Dict, Mapping, Optional
 from ..base import DataSourceAdapter, VerificationResult
 from .base import APIError, BaseAPIClient
 
-DEFAULT_BASE_URL = "https://api.opensupplyhub.org"
+DEFAULT_BASE_URL = "https://opensupplyhub.org"
 
 
 class OpenSupplyHubClient(BaseAPIClient):
@@ -52,6 +52,17 @@ class OpenSupplyHubAdapter(DataSourceAdapter):
         try:
             payload = self.client.list_facilities(limit=1)
         except APIError as exc:
+            message = str(exc)
+            if "Authentication credentials were not provided" in message or "401" in message:
+                return VerificationResult(
+                    success=False,
+                    message=("Open Supply Hub verification failed: API token required. " "Add [open_supply_hub] api_key to .secrets/secrets.toml."),
+                )
+            if "Name or service not known" in message or "Temporary failure in name resolution" in message:
+                return VerificationResult(
+                    success=False,
+                    message=("Open Supply Hub verification failed: DNS lookup for opensupplyhub.org failed. " "Check network connectivity or corporate firewall settings."),
+                )
             return VerificationResult(
                 success=False,
                 message=f"Open Supply Hub verification failed: {exc}",

@@ -7,19 +7,17 @@
 #   PowerShell -ExecutionPolicy Bypass -File install_windows.ps1 [options]
 #
 # Options:
-#   -Full          Install all components (PDF, charts, carbon metrics)
+#   -Full          Install all components (PDF/DOCX export and charts)
 #   -Minimal       Install only core dependencies
 #   -WithPdf       Include Pandoc & MiKTeX for PDF/DOCX export
 #   -WithCharts    Include Node.js 22+ for chart workflows
-#   -WithCarbon    Include third-party research libraries
 #
 
 param(
     [switch]$Full,
     [switch]$Minimal,
     [switch]$WithPdf,
-    [switch]$WithCharts,
-    [switch]$WithCarbon
+    [switch]$WithCharts
 )
 
 # Require Administrator privileges
@@ -64,38 +62,16 @@ function Ask-YesNo {
 }
 
 # Global variables
-$UV_OPTIONAL_GROUPS_SELECTED = @()
 $INSTALL_MODE = "interactive"
 $INSTALL_PDF = $false
 $INSTALL_CHARTS = $false
 $PDF_INSTALL_PERFORMED = $false
-
-function Add-UvGroup {
-    param([string]$Group)
-    if ($UV_OPTIONAL_GROUPS_SELECTED -notcontains $Group) {
-        $script:UV_OPTIONAL_GROUPS_SELECTED += $Group
-    }
-}
-
-function Get-GroupDescription {
-    param([string]$Group)
-    switch ($Group) {
-        "3rd" { return "Third-party research libraries (uk-grid-intensity CLI for carbon metrics)" }
-        default { return "Optional dependency group '$Group'" }
-    }
-}
-
-function Test-GroupSelected {
-    param([string]$Group)
-    return $UV_OPTIONAL_GROUPS_SELECTED -contains $Group
-}
 
 # Parse command line arguments
 if ($Full) {
     $INSTALL_MODE = "full"
     $INSTALL_PDF = $true
     $INSTALL_CHARTS = $true
-    Add-UvGroup "3rd"
 }
 elseif ($Minimal) {
     $INSTALL_MODE = "minimal"
@@ -103,7 +79,6 @@ elseif ($Minimal) {
 
 if ($WithPdf) { $INSTALL_PDF = $true }
 if ($WithCharts) { $INSTALL_CHARTS = $true }
-if ($WithCarbon) { Add-UvGroup "3rd" }
 
 # Welcome message
 Print-Header "Welcome to TianGong AI for Sustainability Setup"
@@ -393,25 +368,6 @@ if ($INSTALL_MODE -ne "minimal" -or $INSTALL_PDF) {
     }
 }
 
-# Optional: third-party research libraries (uv groups)
-if ($INSTALL_MODE -ne "minimal" -or (Test-GroupSelected "3rd")) {
-    $GROUP_DESC = Get-GroupDescription "3rd"
-    Print-Header "Step 3c: Third-Party Research Libraries"
-    
-    if ($INSTALL_MODE -eq "interactive" -and -not (Test-GroupSelected "3rd")) {
-        if (Ask-YesNo "Install optional third-party packages via uv? ($GROUP_DESC)") {
-            Add-UvGroup "3rd"
-        }
-        else {
-            Print-Warning "Skipping optional third-party packages. You can install them later with: uv sync --group 3rd"
-        }
-    }
-
-    if (Test-GroupSelected "3rd") {
-        Print-Success "uv dependency group '3rd' scheduled ($GROUP_DESC)."
-    }
-}
-
 # Project setup
 Print-Header "Step 4: Setting up TianGong Project"
 
@@ -425,22 +381,11 @@ if (-not (Test-Path "pyproject.toml")) {
 # Refresh environment variables before running uv
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
 
-# Run uv sync (include optional groups if selected)
-$uvSyncArgs = @("sync")
-if ($UV_OPTIONAL_GROUPS_SELECTED.Count -gt 0) {
-    foreach ($group in $UV_OPTIONAL_GROUPS_SELECTED) {
-        $uvSyncArgs += "--group"
-        $uvSyncArgs += $group
-    }
-    $cmdDisplay = "uv " + ($uvSyncArgs -join " ")
-    Print-Warning "Running '$cmdDisplay' to install project dependencies..."
-}
-else {
-    Print-Warning "Running 'uv sync' to install project dependencies..."
-}
+# Run uv sync
+Print-Warning "Running 'uv sync' to install project dependencies..."
 
 try {
-    & uv @uvSyncArgs
+    uv sync
     if ($LASTEXITCODE -eq 0) {
         Print-Success "Project dependencies installed"
     }
@@ -452,16 +397,6 @@ catch {
     Print-Error "Failed to install project dependencies: $_"
     Write-Host "Please check the error messages above and try again." -ForegroundColor Yellow
     exit 1
-}
-
-if ($UV_OPTIONAL_GROUPS_SELECTED.Count -gt 0) {
-    $groupDir = ".tiangong"
-    if (-not (Test-Path $groupDir)) {
-        New-Item -ItemType Directory -Path $groupDir | Out-Null
-    }
-    $groupFile = Join-Path $groupDir "uv-groups.selected"
-    $UV_OPTIONAL_GROUPS_SELECTED | Sort-Object -Unique | Set-Content $groupFile
-    Print-Success "Optional uv groups recorded in $groupFile (reapply with 'uv sync --group <name>')."
 }
 
 # Verification
@@ -575,21 +510,6 @@ catch {
     }
 }
 
-if (Test-GroupSelected "3rd") {
-    try {
-        $gridTest = uv run --group 3rd uk-grid-intensity --help 2>$null
-        if ($LASTEXITCODE -eq 0) {
-            Print-Success "uk-grid-intensity CLI (via uv run): available"
-        }
-        else {
-            Print-Error "uk-grid-intensity not accessible via uv run. Re-run 'uv sync --group 3rd' or check installation."
-        }
-    }
-    catch {
-        Print-Error "uk-grid-intensity not accessible via uv run. Re-run 'uv sync --group 3rd' or check installation."
-    }
-}
-
 Write-Host ""
 
 # Final summary
@@ -611,6 +531,8 @@ Write-Host "   README.md - User guide" -ForegroundColor Blue
 Write-Host "   SETUP_GUIDE.md - Detailed installation guide" -ForegroundColor Blue
 Write-Host "   AGENTS.md - Architecture Blueprint" -ForegroundColor Blue
 Write-Host ""
+
+Print-Warning "Optional tooling: install the 'earthengine' CLI (pip install earthengine-api) and external carbon intensity CLIs as needed."
 
 if ($INSTALL_MODE -eq "interactive") {
     if (Ask-YesNo "Would you like to run the CLI help now?") {

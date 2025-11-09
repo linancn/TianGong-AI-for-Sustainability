@@ -58,9 +58,9 @@ class GridIntensityCLIAdapter(DataSourceAdapter):
                 success=False,
                 message=(
                     "grid-intensity CLI is not installed or discoverable on PATH. "
-                    "Install the official grid-intensity CLI, or run 'uv sync --group 3rd' to use the "
-                    "'uk-grid-intensity' fallback, then set GRID_INTENSITY_CLI or ensure the executable "
-                    "is available on PATH."
+                    "The CLI ships with project dependencies; rerun 'uv sync' or install the upstream "
+                    "tool (e.g. 'pipx install uk-grid-intensity'), then set GRID_INTENSITY_CLI or ensure "
+                    "the executable is available on PATH."
                 ),
             )
 
@@ -106,8 +106,9 @@ class GridIntensityCLIAdapter(DataSourceAdapter):
         if shutil.which(self.executable) is None:
             self.logger.error("grid-intensity CLI required but not installed", extra={"location": location, "provider": provider})
             raise AdapterError(
-                "grid-intensity CLI is required but not installed. Install the upstream CLI or run "
-                "'uv sync --group 3rd' (uk-grid-intensity) and set GRID_INTENSITY_CLI to the executable path."
+                "grid-intensity CLI is required but not installed. Reinstall project dependencies with 'uv sync' "
+                "or install the upstream CLI (e.g. 'pipx install uk-grid-intensity'), then set GRID_INTENSITY_CLI "
+                "to the executable path."
             )
 
         command = [self.executable, "--provider", provider, "--location", location, "--json"]

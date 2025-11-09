@@ -47,7 +47,7 @@ This template is the only prompt file that should be delivered to Codex. It prov
   - `uv run tiangong-research research map-sdg <PATH_OR_TEXT>`
   - `uv run tiangong-research research find-code "<KEYWORDS>"`
   - `uv run tiangong-research research find-papers "<QUERY>"`
-  - `uv run --group 3rd tiangong-research research get-carbon-intensity <GRID_ID>`
+  - `uv run tiangong-research research get-carbon-intensity <GRID_ID>` *(CLI ships with the project; verify via `uv run uk-grid-intensity --help` and set `GRID_INTENSITY_CLI` if you override the executable)*
   - `uv run tiangong-research research query-kg --query <PATH_OR_QUERY>` *(when available)*
 - Outputs: store JSON/Markdown under `.cache/tiangong/<STUDY_ID>/acquisition`.
 
@@ -119,7 +119,7 @@ This template is the only prompt file that should be delivered to Codex. It prov
 | `uv run tiangong-research research map-sdg <PATH_OR_TEXT>` | Map narratives to SDG taxonomy. | `--json`, optional `--prompt-language en`, `--prompt-variable key=value` |
 | `uv run tiangong-research research find-code "<KEYWORDS>"` | Discover implementation references. | `--limit <N>`, `--json`, `--topics-cache <PATH>` |
 | `uv run tiangong-research research find-papers "<QUERY>"` | Aggregate scholarly literature. | `--limit <N>`, `--openalex/--no-openalex`, `--citation-graph`, `--arxiv` |
-| `uv run --group 3rd tiangong-research research get-carbon-intensity <GRID_ID>` | Fetch carbon-intensity data. | `--json`, `--as-of <TIMESTAMP>`, `--timezone <TZ>` |
+| `uv run tiangong-research research get-carbon-intensity <GRID_ID>` | Fetch carbon-intensity data (bundled CLI; override with `GRID_INTENSITY_CLI` if needed). | `--json`, `--as-of <TIMESTAMP>`, `--timezone <TZ>`, verify with `uv run uk-grid-intensity --help`. |
 | `uv run tiangong-research research query-kg --query <PATH_OR_QUERY>` | Planned SPARQL/MCP query. | `--json`, custom headers when available. |
 | `uv run tiangong-research research synthesize "<QUESTION>"` | Generate evidence-backed synthesis. | `--prompt-template default`, optional `--prompt-language en`, repeatable `-P key=value`, `--deep-research`. |
 | `uv run tiangong-research research visuals verify` | Check AntV MCP chart readiness. | Pair with `npx -y @antv/mcp-server-chart --transport streamable --version` for diagnostics. |

@@ -68,7 +68,7 @@ RUN uv sync --frozen --group dev
 
 # Optional: install carbon intensity CLI extras
 RUN if [ "${INSTALL_GRID_INTENSITY}" = "true" ]; then \
-        uv sync --frozen --group 3rd; \
+        uv sync --frozen; \
     fi
 
 # Optional: install the Codex CLI (requires Node.js)

@@ -23,7 +23,8 @@
 | Node.js 22+ | 图表可视化 | ⭐ 可选 | 仅用于 AntV MCP 图表 |
 | Pandoc 3.0+ | 报告导出 | ⭐ 可选 | 用于 PDF/DOCX 输出 |
 | LaTeX (TeX Live) | PDF 生成 | ⭐ 可选 | 仅当需要 Pandoc + PDF |
-| `uk-grid-intensity` CLI | 碳排指标 | ⭐ 可选 | 建议执行 `uv sync --group 3rd` 安装；如需自定义可设置 `GRID_INTENSITY_CLI` |
+| Earth Engine CLI | 遥感工作流 | ⭐ 可选 | 可执行 `pipx install earthengine-api` 并运行 `earthengine authenticate` |
+| 碳强度 CLI（`grid-intensity`/`uk-grid-intensity`） | 碳排指标 | ⭐ 可选 | 已随项目依赖安装，可通过 `uv run uk-grid-intensity --help` 验证；如需自定义命令可设置 `GRID_INTENSITY_CLI` |
 
 ---
 
@@ -138,18 +139,12 @@ source ~/.zshrc
 pdflatex --version  # 应显示版本信息
 ```
 
-### 4. 可选：uk-grid-intensity CLI（用于碳排指标）
+### 4. 可选：碳强度 CLI
 
-推荐使用 uv 依赖组安装：
-
-```bash
-uv sync --group 3rd
-```
-
-验证 CLI：
+该 CLI 已随项目依赖安装，可在受管环境中验证：
 
 ```bash
-uv run --group 3rd uk-grid-intensity --help
+uv run uk-grid-intensity --help
 ```
 
 如需手动放置可执行文件，可安装上游 CLI 并设置 `GRID_INTENSITY_CLI` 环境变量指向实际命令。
@@ -289,16 +284,12 @@ sudo apt install -y texlive-latex-base texlive-latex-extra texlive-fonts-recomme
 pdflatex --version  # 应显示版本信息
 ```
 
-### 4. 可选：uk-grid-intensity CLI（用于碳排指标）
+### 4. 可选：碳强度 CLI
+
+CLI 随项目依赖安装，可使用 `uv run` 验证：
 
 ```bash
-uv sync --group 3rd
-```
-
-验证安装：
-
-```bash
-uv run --group 3rd uk-grid-intensity --help
+uv run uk-grid-intensity --help
 ```
 
 若需使用其他 CLI，可单独安装并设置 `GRID_INTENSITY_CLI` 环境变量。
@@ -382,11 +373,12 @@ pdflatex --version
 
 首次启动 MiKTeX 可能弹出 GUI 并提示按需下载宏包，保持默认选项即可。
 
-### 4. 可选：uk-grid-intensity CLI（碳排指标）
+### 4. 可选：碳强度 CLI（碳排指标）
+
+CLI 随项目依赖安装，可通过 uv 验证：
 
 ```powershell
-uv sync --group 3rd
-uv run --group 3rd uk-grid-intensity --help
+uv run uk-grid-intensity --help
 ```
 
 若使用自定义可执行文件，请设置 `GRID_INTENSITY_CLI` 环境变量。
@@ -440,7 +432,7 @@ pandoc --version
 pdflatex --version
 
 # 检查 uk-grid-intensity（如已安装）
-uv run --group 3rd uk-grid-intensity --help
+uk-grid-intensity --help
 
 # 验证 AntV 图表服务器（如已安装 Node.js）
 npx -y @antv/mcp-server-chart --transport streamable &
@@ -606,12 +598,11 @@ node --version  # 应为 22.x
 
 **解决方案：**
 
-```bash
-# 重新安装可选依赖组
-uv sync --group 3rd
+# Reinstall project dependencies（已包含 uk-grid-intensity）
+uv sync
 
-# 使用 uv 验证命令是否可用
-uv run --group 3rd uk-grid-intensity --help
+# 确认命令可用
+uv run uk-grid-intensity --help
 
 # 如需自定义可执行文件，可设置环境变量
 export GRID_INTENSITY_CLI=/path/to/custom/cli
@@ -660,7 +651,7 @@ npm install -g @antv/mcp-server-chart
 | Node.js | Homebrew | apt/NodeSource/nvm | 两者都很直接 |
 | Pandoc | Homebrew | apt | 两者官方仓库都有 |
 | LaTeX | MacTeX 或 BasicTeX | TeX Live | Linux 上 TeX Live 更小 |
-| `uk-grid-intensity` | uv(sync) | uv(sync) | 推荐使用 `uv sync --group 3rd` 安装 |
+| `uk-grid-intensity` | uv(sync) | uv(sync) | 随项目依赖安装；可用 `uv run uk-grid-intensity --help` 验证 |
 
 ---
 

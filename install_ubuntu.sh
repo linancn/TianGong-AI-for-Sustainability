@@ -5,7 +5,7 @@
 # This script automates the installation of all dependencies and project setup
 # on Ubuntu. It guides you through optional components with prompts.
 #
-# Usage: bash install.sh [--full] [--minimal] [--with-pdf] [--with-charts] [--with-carbon]
+# Usage: bash install.sh [--full] [--minimal] [--with-pdf] [--with-charts]
 #
 
 set -e
@@ -43,39 +43,6 @@ ask_yes_no() {
     [[ "$response" =~ ^[Yy]$ ]]
 }
 
-UV_OPTIONAL_GROUPS_SELECTED=()
-
-add_uv_group() {
-    local group="$1"
-    for existing in "${UV_OPTIONAL_GROUPS_SELECTED[@]}"; do
-        if [ "$existing" = "$group" ]; then
-            return
-        fi
-    done
-    UV_OPTIONAL_GROUPS_SELECTED+=("$group")
-}
-
-describe_uv_group() {
-    case "$1" in
-        "3rd")
-            echo "Third-party research libraries (uk-grid-intensity CLI for carbon metrics)"
-            ;;
-        *)
-            echo "Optional dependency group '$1'"
-            ;;
-    esac
-}
-
-group_selected() {
-    local target="$1"
-    for existing in "${UV_OPTIONAL_GROUPS_SELECTED[@]}"; do
-        if [ "$existing" = "$target" ]; then
-            return 0
-        fi
-    done
-    return 1
-}
-
 # Parse command line arguments
 INSTALL_MODE="interactive"
 INSTALL_PDF=false
@@ -88,7 +55,6 @@ while [[ $# -gt 0 ]]; do
             INSTALL_MODE="full"
             INSTALL_PDF=true
             INSTALL_CHARTS=true
-            add_uv_group "3rd"
             shift
             ;;
         --minimal)
@@ -101,10 +67,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --with-charts)
             INSTALL_CHARTS=true
-            shift
-            ;;
-        --with-carbon)
-            add_uv_group "3rd"
             shift
             ;;
         *)
@@ -312,23 +274,6 @@ if [ "$INSTALL_MODE" != "minimal" ] || [ "$INSTALL_PDF" = true ]; then
     fi
 fi
 
-# Optional: third-party research libraries (uv groups)
-if [ "$INSTALL_MODE" != "minimal" ] || group_selected "3rd"; then
-    GROUP_DESC="$(describe_uv_group "3rd")"
-    print_header "Step 3c: Third-Party Research Libraries"
-    if [ "$INSTALL_MODE" = "interactive" ] && ! group_selected "3rd"; then
-        if ask_yes_no "Install optional third-party packages via uv? (${GROUP_DESC})"; then
-            add_uv_group "3rd"
-        else
-            print_warning "Skipping optional third-party packages. You can install them later with: uv sync --group 3rd"
-        fi
-    fi
-
-    if group_selected "3rd"; then
-        print_success "uv dependency group '3rd' scheduled (${GROUP_DESC})."
-    fi
-fi
-
 # Project setup
 print_header "Step 4: Setting up TianGong Project"
 
@@ -344,26 +289,10 @@ if [ -f ~/.bashrc ]; then
     source ~/.bashrc
 fi
 
-# Run uv sync (include optional groups if selected)
-UV_SYNC_CMD=("uv" "sync")
-if [ "${#UV_OPTIONAL_GROUPS_SELECTED[@]}" -gt 0 ]; then
-    for group in "${UV_OPTIONAL_GROUPS_SELECTED[@]}"; do
-        UV_SYNC_CMD+=("--group" "$group")
-    done
-    CMD_DISPLAY=$(printf "%q " "${UV_SYNC_CMD[@]}")
-    print_warning "Running '${CMD_DISPLAY}' to install project dependencies..."
-else
-    print_warning "Running 'uv sync' to install project dependencies..."
-fi
-"${UV_SYNC_CMD[@]}"
+# Run uv sync
+print_warning "Running 'uv sync' to install project dependencies..."
+uv sync
 print_success "Project dependencies installed"
-
-if [ "${#UV_OPTIONAL_GROUPS_SELECTED[@]}" -gt 0 ]; then
-    mkdir -p .tiangong
-    GROUP_FILE=".tiangong/uv-groups.selected"
-    printf "%s\n" "${UV_OPTIONAL_GROUPS_SELECTED[@]}" | sort -u > "$GROUP_FILE"
-    print_success "Optional uv groups recorded in $GROUP_FILE (reapply with 'uv sync --group <name>')."
-fi
 
 # Verification
 print_header "Step 5: Verification"
@@ -425,14 +354,6 @@ else
     fi
 fi
 
-if group_selected "3rd"; then
-    if uv run --group 3rd uk-grid-intensity --help &> /dev/null; then
-        print_success "uk-grid-intensity CLI (via uv run): available"
-    else
-        print_error "uk-grid-intensity not accessible via uv run. Re-run 'uv sync --group 3rd' or check installation."
-    fi
-fi
-
 echo ""
 
 # Final summary
@@ -454,6 +375,8 @@ printf "   %bREADME.md%b - User guide\n" "$BLUE" "$NC"
 printf "   %bSETUP_GUIDE.md%b - Detailed installation guide\n" "$BLUE" "$NC"
 printf "   %bAGENTS.md%b - Architecture Blueprint\n" "$BLUE" "$NC"
 echo ""
+
+print_warning "Optional tooling: install the 'earthengine' CLI (pip install earthengine-api) and external carbon intensity CLIs as needed."
 
 if [ "$INSTALL_MODE" = "interactive" ]; then
     if ask_yes_no "Would you like to run the CLI help now?"; then

@@ -23,7 +23,8 @@
 | Node.js 22+ | Chart visualization | ⭐ Optional | Only for AntV MCP charts |
 | Pandoc 3.0+ | Report export | ⭐ Optional | For PDF/DOCX output |
 | LaTeX (TeX Live) | PDF generation | ⭐ Optional | Only if Pandoc + PDF needed |
-| `uk-grid-intensity` CLI | Carbon metrics | ⭐ Optional | Install via `uv sync --group 3rd`; set `GRID_INTENSITY_CLI` to override executable |
+| Earth Engine CLI | Remote sensing workflows | ⭐ Optional | Install via `pipx install earthengine-api` and run `earthengine authenticate` |
+| Carbon CLI (`grid-intensity`/`uk-grid-intensity`) | Carbon metrics | ⭐ Optional | Installed with project dependencies; verify via `uv run uk-grid-intensity --help`; set `GRID_INTENSITY_CLI` if you use a custom executable |
 
 ---
 
@@ -138,18 +139,12 @@ Verify LaTeX installation:
 pdflatex --version  # Should print version info
 ```
 
-### 4. Optional: uk-grid-intensity CLI (for carbon metrics)
+### 4. Optional: Carbon Intensity CLI
 
-Recommended install:
-
-```bash
-uv sync --group 3rd
-```
-
-Verify availability:
+The CLI is installed alongside project dependencies. Verify it with:
 
 ```bash
-uv run --group 3rd uk-grid-intensity --help
+uv run uk-grid-intensity --help
 ```
 
 Need a different executable? Install it manually and point `GRID_INTENSITY_CLI` to the command path.
@@ -289,16 +284,12 @@ Verify LaTeX installation:
 pdflatex --version  # Should print version info
 ```
 
-### 4. Optional: uk-grid-intensity CLI (for carbon metrics)
+### 4. Optional: Carbon Intensity CLI
+
+The CLI ships with the project dependencies. Verify it inside the managed environment:
 
 ```bash
-uv sync --group 3rd
-```
-
-Verify installation:
-
-```bash
-uv run --group 3rd uk-grid-intensity --help
+uv run uk-grid-intensity --help
 ```
 
 If you must use a different CLI wrapper, install it manually and set `GRID_INTENSITY_CLI`.
@@ -382,11 +373,12 @@ pdflatex --version
 
 MiKTeX may open a GUI installer and prompt for package downloads on first use—accept the defaults.
 
-### 4. Optional: uk-grid-intensity CLI (carbon metrics)
+### 4. Optional: Carbon Intensity CLI (carbon metrics)
+
+The CLI is installed with project dependencies. Run it via uv to confirm:
 
 ```powershell
-uv sync --group 3rd
-uv run --group 3rd uk-grid-intensity --help
+uv run uk-grid-intensity --help
 ```
 
 Set the `GRID_INTENSITY_CLI` environment variable if you rely on a custom executable.
@@ -440,7 +432,7 @@ pandoc --version
 pdflatex --version
 
 # Check uk-grid-intensity (if installed)
-uv run --group 3rd uk-grid-intensity --help
+uv run uk-grid-intensity --help
 
 # Verify AntV chart server (if Node.js installed)
 npx -y @antv/mcp-server-chart --transport streamable &
@@ -607,11 +599,11 @@ node --version  # Should be 22.x
 **Solution:**
 
 ```bash
-# Reinstall optional dependency group
-uv sync --group 3rd
+# Reinstall project dependencies (includes uk-grid-intensity)
+uv sync
 
-# Verify the CLI via uv
-uv run --group 3rd uk-grid-intensity --help
+# Verify the CLI within the managed environment
+uv run uk-grid-intensity --help
 
 # Override the executable if using a custom binary
 export GRID_INTENSITY_CLI=/path/to/custom/cli
@@ -660,7 +652,7 @@ npm install -g @antv/mcp-server-chart
 | Node.js | Homebrew | apt/NodeSource/nvm | Both straightforward |
 | Pandoc | Homebrew | apt | Both official repos have it |
 | LaTeX | MacTeX or BasicTeX | TeX Live | TeX Live on Linux is smaller |
-| `uk-grid-intensity` | uv(sync) | uv(sync) | Install with `uv sync --group 3rd`; use `GRID_INTENSITY_CLI` for overrides |
+| `uk-grid-intensity` | uv(sync) | uv(sync) | Bundled with project dependencies; verify using `uv run uk-grid-intensity --help` |
 
 ---
 

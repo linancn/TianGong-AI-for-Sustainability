@@ -9,7 +9,7 @@ reports the first dataset identifier to confirm availability.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, List, Mapping, Optional
+from typing import Any, Dict, List, Mapping, Optional
 
 from ..base import DataSourceAdapter, VerificationResult
 from .base import APIError, BaseAPIClient
@@ -20,15 +20,37 @@ DEFAULT_BASE_URL = "https://www.ilo.org/ilostat/sdmx/ws/public/sdmxapi/rest/v2"
 class ILOSTATClient(BaseAPIClient):
     """Client for the ILOSTAT SDMX REST API."""
 
-    def __init__(self, *, base_url: str = DEFAULT_BASE_URL, timeout: float = 30.0) -> None:
+    def __init__(
+        self,
+        *,
+        base_url: str = DEFAULT_BASE_URL,
+        timeout: float = 30.0,
+        cookies: Optional[Mapping[str, str]] = None,
+    ) -> None:
         headers = {
             "Accept": "application/json",
             "User-Agent": "tiangong-ai-sustainability-cli",
         }
         super().__init__(base_url=base_url, timeout=timeout, default_headers=headers)
+        self.cookies: Optional[Dict[str, str]] = dict(cookies) if cookies else None
 
     def list_datasets(self) -> List[Mapping[str, Any]]:
-        response = self._request("GET", "/catalogue/datasets", params={"format": "json"})
+        try:
+            response = self._request(
+                "GET",
+                "/catalogue/datasets",
+                params={"format": "json"},
+                cookies=self.cookies,
+            )
+        except APIError as exc:
+            message = str(exc)
+            if "403" in message or "Cloudflare" in message or "Just a moment" in message:
+                raise APIError(
+                    "ILOSTAT catalogue request was blocked by Cloudflare. Provide clearance cookies via "
+                    "secrets.ilostat.cf_clearance / secrets.ilostat.session or access the API from an approved network."
+                ) from exc
+            raise
+
         try:
             payload = response.json()
         except ValueError as exc:

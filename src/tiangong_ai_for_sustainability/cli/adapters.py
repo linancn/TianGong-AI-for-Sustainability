@@ -136,6 +136,19 @@ def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataS
         if isinstance(key_value, str) and key_value:
             kaggle_key = key_value
 
+    ilostat_cookies: Optional[dict[str, str]] = None
+    ilostat_section = secrets.get("ilostat")
+    if isinstance(ilostat_section, dict):
+        cookies: dict[str, str] = {}
+        cf_clearance = ilostat_section.get("cf_clearance")
+        if isinstance(cf_clearance, str) and cf_clearance:
+            cookies["cf_clearance"] = cf_clearance
+        session_token = ilostat_section.get("session") or ilostat_section.get("ilostat_session")
+        if isinstance(session_token, str) and session_token:
+            cookies["session"] = session_token
+        if cookies:
+            ilostat_cookies = cookies
+
     dimensions_key = get_api_key("dimensions_ai", "TIANGONG_DIMENSIONS_API_KEY")
     lens_key = get_api_key("lens_org_api", "TIANGONG_LENS_API_KEY")
     cdp_key = get_api_key("cdp_climate", "TIANGONG_CDP_API_KEY")
@@ -157,7 +170,7 @@ def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataS
         UNSDGAdapter(client=UNSDGClient()),
         SemanticScholarAdapter(client=SemanticScholarClient(api_key=semantic_key)),
         OpenAlexAdapter(client=OpenAlexClient(mailto=openalex_mailto)),
-        ILOSTATAdapter(client=ILOSTATClient()),
+        ILOSTATAdapter(client=ILOSTATClient(cookies=ilostat_cookies)),
         IMFClimateAdapter(client=IMFClimateClient()),
         TransparencyCPIAdapter(client=TransparencyCPIClient()),
         WikidataAdapter(client=WikidataClient()),

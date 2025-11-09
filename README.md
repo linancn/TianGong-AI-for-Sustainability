@@ -54,7 +54,8 @@ If you enabled charts, start the AntV MCP chart server before running workflows 
 
 - Charts: `node --version` and `npx -y @antv/mcp-server-chart --transport streamable --version`
 - PDF export: `pandoc --version` and `pdflatex --version`
-- Carbon metrics: `uv run --group 3rd uk-grid-intensity --help`
+- Earth Engine: `earthengine --help` (install via `pipx install earthengine-api` and run `earthengine authenticate`)
+- Carbon metrics: `uv run uk-grid-intensity --help` (CLI ships with the project; set `GRID_INTENSITY_CLI` to override the executable).
 
 Missing a feature? Just re-run your installer (`install_macos.sh`, `install_ubuntu.sh`, or `install_windows.ps1`) with the matching `--with-*` flag.
 
@@ -89,7 +90,7 @@ Export `TIANGONG_CHART_MCP_ENDPOINT=http://127.0.0.1:1122/mcp` so the CLI can fi
 - `uv run tiangong-research research find-code "<topic>" --limit 5 --json` — discover sustainability repositories.
 - `uv run tiangong-research research map-sdg <file>` — align a document with SDG goals (requires OSDG access).
 - `uv run tiangong-research research find-papers "<keywords>" --openalex --arxiv --scopus --citation-graph --limit 10 --json` — aggregate Semantic Scholar plus optional OpenAlex/arXiv/Scopus enrichment.
-- `uv run --group 3rd tiangong-research research get-carbon-intensity <location>` — fetch grid intensity metrics (set the `GRID_INTENSITY_CLI` env var if you use a non-default executable).
+- `uv run tiangong-research research get-carbon-intensity <location>` — fetch grid intensity metrics (CLI ships with the project; set the `GRID_INTENSITY_CLI` env var if you use a non-default executable).
 - `uv run tiangong-research research synthesize "<question>" --output reports/synthesis.md` — orchestrate SDG, code, literature, carbon checks, then compile an LLM-guided summary.
 - `uv run tiangong-research research visuals verify` — make sure the AntV MCP chart server is reachable.
 
