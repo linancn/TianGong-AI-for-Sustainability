@@ -29,6 +29,7 @@ from .ipcc import IPCCDDCAdapter
 from .kaggle import KaggleAdapter, KaggleAPIError, KaggleClient
 from .lens import LensOrgAdapter, LensOrgClient
 from .nasa_earthdata import NasaEarthdataAdapter, NasaEarthdataClient
+from .open_supply_hub import OpenSupplyHubAdapter, OpenSupplyHubClient
 from .openalex import OpenAlexAdapter, OpenAlexClient
 from .osdg import OSDGAdapter, OSDGClient
 from .semantic_scholar import SemanticScholarAdapter, SemanticScholarClient
@@ -71,6 +72,8 @@ __all__ = [
     "NasaEarthdataClient",
     "OpenAlexAdapter",
     "OpenAlexClient",
+    "OpenSupplyHubAdapter",
+    "OpenSupplyHubClient",
     "OSDGAdapter",
     "OSDGClient",
     "SpGlobalESGAdapter",

@@ -21,6 +21,7 @@ from tiangong_ai_for_sustainability.adapters.api.ipcc import IPCCDDCAdapter
 from tiangong_ai_for_sustainability.adapters.api.kaggle import KaggleAdapter
 from tiangong_ai_for_sustainability.adapters.api.lens import LensOrgAdapter
 from tiangong_ai_for_sustainability.adapters.api.nasa_earthdata import NasaEarthdataAdapter
+from tiangong_ai_for_sustainability.adapters.api.open_supply_hub import OpenSupplyHubAdapter
 from tiangong_ai_for_sustainability.adapters.api.openalex import OpenAlexAdapter
 from tiangong_ai_for_sustainability.adapters.api.transparency import TransparencyCPIAdapter
 from tiangong_ai_for_sustainability.adapters.api.wikidata import WikidataAdapter
@@ -135,6 +136,20 @@ def test_resolve_adapter_lens(tmp_path):
     assert isinstance(adapter, LensOrgAdapter)
     assert adapter.client is client_instance
     mock_client.assert_called_once_with(api_key="lens-token")
+
+
+def test_resolve_adapter_open_supply_hub(tmp_path):
+    context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
+    context.secrets.data.setdefault("open_supply_hub", {})["api_key"] = "osh-token"
+
+    with patch("tiangong_ai_for_sustainability.cli.adapters.OpenSupplyHubClient") as mock_client:
+        client_instance = object()
+        mock_client.return_value = client_instance
+        adapter = resolve_adapter("open_supply_hub", context)
+
+    assert isinstance(adapter, OpenSupplyHubAdapter)
+    assert adapter.client is client_instance
+    mock_client.assert_called_once_with(api_key="osh-token")
 
 
 def test_resolve_adapter_msci_esg(tmp_path):

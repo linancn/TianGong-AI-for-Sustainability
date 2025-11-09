@@ -37,6 +37,8 @@ from ..adapters.api import (
     NasaEarthdataClient,
     OpenAlexAdapter,
     OpenAlexClient,
+    OpenSupplyHubAdapter,
+    OpenSupplyHubClient,
     OSDGAdapter,
     OSDGClient,
     SemanticScholarAdapter,
@@ -137,6 +139,7 @@ def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataS
     sustainalytics_key = get_api_key("sustainalytics", "TIANGONG_SUSTAINALYTICS_API_KEY")
     spglobal_key = get_api_key("sp_global_esg", "TIANGONG_SPGLOBAL_API_KEY")
     iss_key = get_api_key("iss_esg", "TIANGONG_ISS_API_KEY")
+    open_supply_key = get_api_key("open_supply_hub", "TIANGONG_OPEN_SUPPLY_HUB_API_KEY")
 
     adapters = (
         GridIntensityCLIAdapter(),
@@ -158,6 +161,7 @@ def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataS
         KaggleAdapter(client=KaggleClient(username=kaggle_username, key=kaggle_key)),
         DimensionsAIAdapter(client=DimensionsAIClient(api_key=dimensions_key)),
         LensOrgAdapter(client=LensOrgClient(api_key=lens_key)),
+        OpenSupplyHubAdapter(client=OpenSupplyHubClient(api_key=open_supply_key)),
         CdpClimateAdapter(api_key=cdp_key),
         LsegESGAdapter(api_key=lseg_key),
         MsciESGAdapter(api_key=msci_key),
