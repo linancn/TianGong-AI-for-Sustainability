@@ -4,11 +4,13 @@ from unittest.mock import patch
 
 from tiangong_ai_for_sustainability.adapters.api.arxiv import ArxivAdapter
 from tiangong_ai_for_sustainability.adapters.api.crossref import CrossrefAdapter
+from tiangong_ai_for_sustainability.adapters.api.esa_copernicus import CopernicusDataspaceAdapter
 from tiangong_ai_for_sustainability.adapters.api.ilostat import ILOSTATAdapter
 from tiangong_ai_for_sustainability.adapters.api.imf import IMFClimateAdapter
 from tiangong_ai_for_sustainability.adapters.api.ipbes import IPBESAdapter
 from tiangong_ai_for_sustainability.adapters.api.ipcc import IPCCDDCAdapter
 from tiangong_ai_for_sustainability.adapters.api.kaggle import KaggleAdapter
+from tiangong_ai_for_sustainability.adapters.api.nasa_earthdata import NasaEarthdataAdapter
 from tiangong_ai_for_sustainability.adapters.api.openalex import OpenAlexAdapter
 from tiangong_ai_for_sustainability.adapters.api.transparency import TransparencyCPIAdapter
 from tiangong_ai_for_sustainability.adapters.api.wikidata import WikidataAdapter
@@ -48,6 +50,32 @@ def test_resolve_adapter_kaggle(tmp_path):
     assert isinstance(adapter, KaggleAdapter)
     assert adapter.client is client_instance
     mock_client.assert_called_once_with(username="researcher", key="secret")
+
+
+def test_resolve_adapter_copernicus(tmp_path):
+    context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
+
+    with patch("tiangong_ai_for_sustainability.cli.adapters.CopernicusDataspaceClient") as mock_client:
+        client_instance = object()
+        mock_client.return_value = client_instance
+        adapter = resolve_adapter("esa_copernicus", context)
+
+    assert isinstance(adapter, CopernicusDataspaceAdapter)
+    assert adapter.client is client_instance
+    mock_client.assert_called_once_with()
+
+
+def test_resolve_adapter_nasa_earthdata(tmp_path):
+    context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
+
+    with patch("tiangong_ai_for_sustainability.cli.adapters.NasaEarthdataClient") as mock_client:
+        client_instance = object()
+        mock_client.return_value = client_instance
+        adapter = resolve_adapter("nasa_earthdata", context)
+
+    assert isinstance(adapter, NasaEarthdataAdapter)
+    assert adapter.client is client_instance
+    mock_client.assert_called_once_with()
 
 
 def test_resolve_adapter_world_bank(tmp_path):

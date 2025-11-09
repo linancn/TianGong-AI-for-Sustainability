@@ -11,12 +11,14 @@ Each submodule exposes two layers:
 from .arxiv import ArxivAdapter, ArxivAPIError, ArxivClient
 from .base import APIError, BaseAPIClient
 from .crossref import CrossrefAdapter, CrossrefClient
+from .esa_copernicus import CopernicusDataspaceAdapter, CopernicusDataspaceClient
 from .github_topics import GitHubTopicsAdapter, GitHubTopicsClient
 from .ilostat import ILOSTATAdapter, ILOSTATClient
 from .imf import IMFClimateAdapter, IMFClimateClient
 from .ipbes import IPBESAdapter
 from .ipcc import IPCCDDCAdapter
 from .kaggle import KaggleAdapter, KaggleAPIError, KaggleClient
+from .nasa_earthdata import NasaEarthdataAdapter, NasaEarthdataClient
 from .openalex import OpenAlexAdapter, OpenAlexClient
 from .osdg import OSDGAdapter, OSDGClient
 from .semantic_scholar import SemanticScholarAdapter, SemanticScholarClient
@@ -40,11 +42,15 @@ __all__ = [
     "ILOSTATClient",
     "IPBESAdapter",
     "IPCCDDCAdapter",
+    "CopernicusDataspaceAdapter",
+    "CopernicusDataspaceClient",
     "GitHubTopicsAdapter",
     "GitHubTopicsClient",
     "KaggleAdapter",
     "KaggleAPIError",
     "KaggleClient",
+    "NasaEarthdataAdapter",
+    "NasaEarthdataClient",
     "OpenAlexAdapter",
     "OpenAlexClient",
     "OSDGAdapter",

@@ -11,6 +11,8 @@ from ..adapters import ChartMCPAdapter, DataSourceAdapter
 from ..adapters.api import (
     ArxivAdapter,
     ArxivClient,
+    CopernicusDataspaceAdapter,
+    CopernicusDataspaceClient,
     CrossrefAdapter,
     CrossrefClient,
     GitHubTopicsAdapter,
@@ -23,6 +25,8 @@ from ..adapters.api import (
     IPCCDDCAdapter,
     KaggleAdapter,
     KaggleClient,
+    NasaEarthdataAdapter,
+    NasaEarthdataClient,
     OpenAlexAdapter,
     OpenAlexClient,
     OSDGAdapter,
@@ -121,6 +125,8 @@ def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataS
         OSDGAdapter(client=OSDGClient(api_token=osdg_token)),
         CrossrefAdapter(client=CrossrefClient(mailto=crossref_mailto)),
         KaggleAdapter(client=KaggleClient(username=kaggle_username, key=kaggle_key)),
+        CopernicusDataspaceAdapter(client=CopernicusDataspaceClient()),
+        NasaEarthdataAdapter(client=NasaEarthdataClient()),
         ChartMCPAdapter(),
         OpenAIDeepResearchAdapter(settings=context.secrets.openai),
     )
