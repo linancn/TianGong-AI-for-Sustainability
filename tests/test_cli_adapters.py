@@ -15,6 +15,7 @@ from tiangong_ai_for_sustainability.adapters.api.openalex import OpenAlexAdapter
 from tiangong_ai_for_sustainability.adapters.api.transparency import TransparencyCPIAdapter
 from tiangong_ai_for_sustainability.adapters.api.wikidata import WikidataAdapter
 from tiangong_ai_for_sustainability.adapters.api.world_bank import WorldBankAdapter
+from tiangong_ai_for_sustainability.adapters.environment import GoogleEarthEngineCLIAdapter
 from tiangong_ai_for_sustainability.cli.adapters import resolve_adapter
 from tiangong_ai_for_sustainability.core.context import ExecutionContext
 
@@ -76,6 +77,14 @@ def test_resolve_adapter_nasa_earthdata(tmp_path):
     assert isinstance(adapter, NasaEarthdataAdapter)
     assert adapter.client is client_instance
     mock_client.assert_called_once_with()
+
+
+def test_resolve_adapter_google_earth_engine(tmp_path):
+    context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
+
+    adapter = resolve_adapter("google_earth_engine", context)
+
+    assert isinstance(adapter, GoogleEarthEngineCLIAdapter)
 
 
 def test_resolve_adapter_world_bank(tmp_path):

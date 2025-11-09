@@ -43,7 +43,7 @@ from ..adapters.api import (
     WorldBankClient,
     ZenodoCommunityClient,
 )
-from ..adapters.environment import GridIntensityCLIAdapter
+from ..adapters.environment import GoogleEarthEngineCLIAdapter, GridIntensityCLIAdapter
 from ..adapters.tools import OpenAIDeepResearchAdapter, RemoteMCPAdapter
 from ..core.context import ExecutionContext
 from ..core.mcp_config import load_mcp_server_configs
@@ -110,6 +110,7 @@ def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataS
 
     adapters = (
         GridIntensityCLIAdapter(),
+        GoogleEarthEngineCLIAdapter(),
         IPCCDDCAdapter(client=ZenodoCommunityClient()),
         IPBESAdapter(client=ZenodoCommunityClient()),
         UNSDGAdapter(client=UNSDGClient()),

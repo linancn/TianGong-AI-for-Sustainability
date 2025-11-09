@@ -69,7 +69,7 @@
 | 优先级 | 示例 | 状态 | 说明 |
 |--------|------|------|------|
 | **P0** | IPCC DDC；IPBES；世界银行（SDGs/WGI/ESG）；ILOSTAT；IMF 气候仪表板；透明国际 CPI；UN SDG API；Wikidata | 部分上线 | 气候、生物多样性、治理等权威宏观基线，作为确定性推理的“公理层”。 |
-| **P1** | Google Earth Engine；ESA Copernicus；NASA Earthdata；grid-intensity CLI | 规划中 | 遥感与观测验证层，用于佐证披露信息。 |
+| **P1** | Google Earth Engine；ESA Copernicus；NASA Earthdata；grid-intensity CLI | 部分上线 | 遥感与观测验证层，用于佐证披露信息。已实现 Copernicus Dataspace 与 NASA Earthdata 元数据适配器，并提供 grid-intensity 与 Earth Engine CLI 可用性检测；需要凭据的完整流程仍在路线图中。 |
 | **P2** | OpenAlex；Dimensions.ai；Lens.org；Semantic Scholar；Crossref；arXiv；GitHub Topics；Kaggle API；OSDG API | 已实现 | 文献计量与分类管线，支撑研究发现与代码检索。 |
 | **P3** | CDP；LSEG Refinitiv；MSCI；Sustainalytics；S&P Global Sustainable1；ISS ESG | 规划中 | 需要许可的企业 ESG 绩效数据，凭证就绪后接入。 |
 | **P4** | GRI Taxonomy（XBRL）；GHG 工作簿；Open Supply Hub；`tiangong_lca_remote` MCP；Tavily Web MCP | 持续接入 | 回溯企业披露与供应链节点，用于反哺 P3 分析结果。 |
@@ -148,6 +148,7 @@
 - 已完成注册表、执行上下文与数据源验证命令。
 - Phase 1 命令 `research map-sdg`、`research find-code`、`research get-carbon-intensity` 已上线。
 - Phase 1 命令 `research find-papers` 已可用，可汇总 Semantic Scholar 结果并按需启用 OpenAlex/Citation Graph 输出。
+- P1 遥感数据现已覆盖 Copernicus Dataspace、NASA Earthdata 元数据适配器，并加入 Earth Engine CLI 可用性检测，便于提示安装与认证步骤。
 - `uv run pytest` 覆盖核心模块与 CLI 操作。
 - Phase 3 的 `research synthesize` 已上线，并支持提示模版驱动的 LLM 综合分析。
 - 下一步重点：摄取 SDG/GRI 本体数据、完善其余 Phase 1 命令，并扩展引文/图谱工具。

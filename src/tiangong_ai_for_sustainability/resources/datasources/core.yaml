@@ -151,21 +151,23 @@
     - "https://developers.google.com/earth-engine"
 
 - id: esa_copernicus
-  name: "ESA Copernicus Open Access Hub"
+  name: "Copernicus Data Space Ecosystem"
   category: earth-observation
   priority: P1
   description: "Sentinel imagery catalogue and APIs operated by the European Space Agency."
   protocols: ["REST", "OpenSearch"]
   base_urls:
-    - "https://scihub.copernicus.eu/"
+    - "https://dataspace.copernicus.eu/"
+    - "https://catalogue.dataspace.copernicus.eu/resto/"
   authentication: "user-pass"
   requires_credentials: true
   status: trial
   capabilities: ["satellite-imagery", "download"]
   tags: ["earth-observation", "validation", "p1"]
-  notes: "Requires Copernicus SciHub credentials; supports deterministic searches via the OData API."
+  notes: "Metadata queries use the Data Space RESTO API without credentials; product downloads still require Copernicus login."
   references:
-    - "https://scihub.copernicus.eu/userguide/"
+    - "https://dataspace.copernicus.eu/"
+    - "https://documentation.dataspace.copernicus.eu/APIs/REACT.html"
 
 - id: nasa_earthdata
   name: "NASA Earthdata"
@@ -175,12 +177,13 @@
   protocols: ["REST", "OPeNDAP"]
   base_urls:
     - "https://earthdata.nasa.gov/"
+    - "https://cmr.earthdata.nasa.gov/"
   authentication: "user-pass"
   requires_credentials: true
   status: trial
   capabilities: ["satellite-imagery", "remote-sensing"]
   tags: ["earth-observation", "validation", "p1"]
-  notes: "Requires Earthdata Login credentials; leverage DAAC-specific APIs for targeted products."
+  notes: "CMR metadata search is publicly accessible; authenticated Earthdata Login credentials are required for product downloads."
   references:
     - "https://urs.earthdata.nasa.gov/documentation"
 
