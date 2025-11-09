@@ -15,6 +15,8 @@ from ..adapters.api import (
     CopernicusDataspaceClient,
     CrossrefAdapter,
     CrossrefClient,
+    DimensionsAIAdapter,
+    DimensionsAIClient,
     GitHubTopicsAdapter,
     GitHubTopicsClient,
     ILOSTATAdapter,
@@ -25,6 +27,8 @@ from ..adapters.api import (
     IPCCDDCAdapter,
     KaggleAdapter,
     KaggleClient,
+    LensOrgAdapter,
+    LensOrgClient,
     NasaEarthdataAdapter,
     NasaEarthdataClient,
     OpenAlexAdapter,
@@ -108,6 +112,28 @@ def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataS
         if isinstance(key_value, str) and key_value:
             kaggle_key = key_value
 
+    dimensions_key: Optional[str] = None
+    dimensions_section = secrets.get("dimensions_ai")
+    if isinstance(dimensions_section, dict):
+        value = dimensions_section.get("api_key")
+        if isinstance(value, str) and value:
+            dimensions_key = value
+    if not dimensions_key:
+        env_dimensions = os.getenv("TIANGONG_DIMENSIONS_API_KEY")
+        if env_dimensions:
+            dimensions_key = env_dimensions
+
+    lens_key: Optional[str] = None
+    lens_section = secrets.get("lens_org_api")
+    if isinstance(lens_section, dict):
+        value = lens_section.get("api_key")
+        if isinstance(value, str) and value:
+            lens_key = value
+    if not lens_key:
+        env_lens = os.getenv("TIANGONG_LENS_API_KEY")
+        if env_lens:
+            lens_key = env_lens
+
     adapters = (
         GridIntensityCLIAdapter(),
         GoogleEarthEngineCLIAdapter(),
@@ -126,6 +152,8 @@ def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataS
         OSDGAdapter(client=OSDGClient(api_token=osdg_token)),
         CrossrefAdapter(client=CrossrefClient(mailto=crossref_mailto)),
         KaggleAdapter(client=KaggleClient(username=kaggle_username, key=kaggle_key)),
+        DimensionsAIAdapter(client=DimensionsAIClient(api_key=dimensions_key)),
+        LensOrgAdapter(client=LensOrgClient(api_key=lens_key)),
         CopernicusDataspaceAdapter(client=CopernicusDataspaceClient()),
         NasaEarthdataAdapter(client=NasaEarthdataClient()),
         ChartMCPAdapter(),

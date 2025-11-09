@@ -4,12 +4,14 @@ from unittest.mock import patch
 
 from tiangong_ai_for_sustainability.adapters.api.arxiv import ArxivAdapter
 from tiangong_ai_for_sustainability.adapters.api.crossref import CrossrefAdapter
+from tiangong_ai_for_sustainability.adapters.api.dimensions import DimensionsAIAdapter
 from tiangong_ai_for_sustainability.adapters.api.esa_copernicus import CopernicusDataspaceAdapter
 from tiangong_ai_for_sustainability.adapters.api.ilostat import ILOSTATAdapter
 from tiangong_ai_for_sustainability.adapters.api.imf import IMFClimateAdapter
 from tiangong_ai_for_sustainability.adapters.api.ipbes import IPBESAdapter
 from tiangong_ai_for_sustainability.adapters.api.ipcc import IPCCDDCAdapter
 from tiangong_ai_for_sustainability.adapters.api.kaggle import KaggleAdapter
+from tiangong_ai_for_sustainability.adapters.api.lens import LensOrgAdapter
 from tiangong_ai_for_sustainability.adapters.api.nasa_earthdata import NasaEarthdataAdapter
 from tiangong_ai_for_sustainability.adapters.api.openalex import OpenAlexAdapter
 from tiangong_ai_for_sustainability.adapters.api.transparency import TransparencyCPIAdapter
@@ -66,6 +68,20 @@ def test_resolve_adapter_copernicus(tmp_path):
     mock_client.assert_called_once_with()
 
 
+def test_resolve_adapter_dimensions(tmp_path):
+    context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
+    context.secrets.data.setdefault("dimensions_ai", {})["api_key"] = "dim-token"
+
+    with patch("tiangong_ai_for_sustainability.cli.adapters.DimensionsAIClient") as mock_client:
+        client_instance = object()
+        mock_client.return_value = client_instance
+        adapter = resolve_adapter("dimensions_ai", context)
+
+    assert isinstance(adapter, DimensionsAIAdapter)
+    assert adapter.client is client_instance
+    mock_client.assert_called_once_with(api_key="dim-token")
+
+
 def test_resolve_adapter_nasa_earthdata(tmp_path):
     context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
 
@@ -77,6 +93,20 @@ def test_resolve_adapter_nasa_earthdata(tmp_path):
     assert isinstance(adapter, NasaEarthdataAdapter)
     assert adapter.client is client_instance
     mock_client.assert_called_once_with()
+
+
+def test_resolve_adapter_lens(tmp_path):
+    context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
+    context.secrets.data.setdefault("lens_org_api", {})["api_key"] = "lens-token"
+
+    with patch("tiangong_ai_for_sustainability.cli.adapters.LensOrgClient") as mock_client:
+        client_instance = object()
+        mock_client.return_value = client_instance
+        adapter = resolve_adapter("lens_org_api", context)
+
+    assert isinstance(adapter, LensOrgAdapter)
+    assert adapter.client is client_instance
+    mock_client.assert_called_once_with(api_key="lens-token")
 
 
 def test_resolve_adapter_google_earth_engine(tmp_path):

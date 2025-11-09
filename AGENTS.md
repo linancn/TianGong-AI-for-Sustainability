@@ -70,7 +70,7 @@ Always consult these sources before planning or executing changes.
 |----------|----------|--------|-------|
 | **P0** | IPCC DDC; IPBES; World Bank (SDGs/WGI/ESG); ILOSTAT; IMF Climate Dashboard; Transparency International CPI; UN SDG API; Wikidata | Partial | Authoritative macro baselines (climate, biodiversity, governance) that ground deterministic reasoning. |
 | **P1** | Google Earth Engine; ESA Copernicus; NASA Earthdata; grid-intensity CLI | Partial | Remote sensing and observational validation used to corroborate disclosures. Metadata adapters now cover Copernicus Dataspace and NASA Earthdata, with CLI availability checks for grid-intensity and Earth Engine; full credentialled workflows remain on the roadmap. |
-| **P2** | OpenAlex; Dimensions.ai; Lens.org; Semantic Scholar; Crossref; arXiv; GitHub Topics; Kaggle API; OSDG API | Implemented | Bibliometrics and classification pipelines enabling research discovery and coding support. |
+| **P2** | OpenAlex; Dimensions.ai; Lens.org; Semantic Scholar; Crossref; arXiv; GitHub Topics; Kaggle API; OSDG API | Implemented | Bibliometrics and classification pipelines enabling research discovery and coding support. Adapters now include credential-aware verification for Dimensions.ai and Lens.org. |
 | **P3** | CDP; LSEG Refinitiv; MSCI; Sustainalytics; S&P Global Sustainable1; ISS ESG | Planned | Licensed corporate ESG performance data; add adapters when credentials are available. |
 | **P4** | GRI Taxonomy (XBRL); GHG Protocol Workbooks; Open Supply Hub; `tiangong_lca_remote` MCP; Tavily Web MCP | Rolling | Source primary disclosures and supply-chain facilities to backfill P3 results. |
 | **P5** | ACM Digital Library; Scopus; Web of Science; AntV MCP chart server; OpenAI Deep Research | Conditional | High-threshold or optional services used for expert synthesis and visualization once dependencies are met. |
@@ -149,6 +149,7 @@ Phase progression must honour dependencies encoded in `tasks/blueprint.yaml`.
 - Implemented Phase 1 commands: `research map-sdg`, `research find-code`, `research get-carbon-intensity`.
 - Phase 1 `research find-papers` now aggregates Semantic Scholar with optional OpenAlex enrichment and citation graph export.
 - Remote-sensing P1 coverage now includes Copernicus Dataspace and NASA Earthdata metadata adapters plus Earth Engine CLI availability checks to surface install/auth guidance.
+- Subscription bibliometrics (Dimensions.ai, Lens.org) expose adapters that validate API key configuration and perform lightweight sample queries.
 - Test suite (`uv run pytest`) covers core modules and CLI operations.
 - Next priorities: ingest SDG/GRI ontologies into structured storage, implement remaining Phase 1 commands, and broaden citation/graph tooling.
 - Phase 3 synthesis command now available with prompt template support.
