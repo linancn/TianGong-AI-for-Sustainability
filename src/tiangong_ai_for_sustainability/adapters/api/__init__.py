@@ -32,11 +32,12 @@ from .nasa_earthdata import NasaEarthdataAdapter, NasaEarthdataClient
 from .open_supply_hub import OpenSupplyHubAdapter, OpenSupplyHubClient
 from .openalex import OpenAlexAdapter, OpenAlexClient
 from .osdg import OSDGAdapter, OSDGClient
-from .premium_literature import AcmDigitalLibraryAdapter, ScopusAdapter, WebOfScienceAdapter
+from .premium_literature import AcmDigitalLibraryAdapter, ScopusAdapter
 from .semantic_scholar import SemanticScholarAdapter, SemanticScholarClient
 from .standards import GhgProtocolWorkbooksAdapter, GriTaxonomyAdapter
 from .transparency import TransparencyCPIAdapter, TransparencyCPIClient
 from .un_sdg import UNSDGAdapter, UNSDGClient
+from .web_of_science import WebOfScienceAdapter, WebOfScienceClient
 from .wikidata import WikidataAdapter, WikidataClient
 from .world_bank import WorldBankAdapter, WorldBankClient
 from .zenodo import ZenodoCommunityClient, extract_record_doi
@@ -89,6 +90,7 @@ __all__ = [
     "SustainalyticsAdapter",
     "ScopusAdapter",
     "WebOfScienceAdapter",
+    "WebOfScienceClient",
     "UNSDGAdapter",
     "UNSDGClient",
     "WikidataAdapter",

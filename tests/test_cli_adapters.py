@@ -23,16 +23,13 @@ from tiangong_ai_for_sustainability.adapters.api.lens import LensOrgAdapter
 from tiangong_ai_for_sustainability.adapters.api.nasa_earthdata import NasaEarthdataAdapter
 from tiangong_ai_for_sustainability.adapters.api.open_supply_hub import OpenSupplyHubAdapter
 from tiangong_ai_for_sustainability.adapters.api.openalex import OpenAlexAdapter
-from tiangong_ai_for_sustainability.adapters.api.premium_literature import (
-    AcmDigitalLibraryAdapter,
-    ScopusAdapter,
-    WebOfScienceAdapter,
-)
+from tiangong_ai_for_sustainability.adapters.api.premium_literature import AcmDigitalLibraryAdapter, ScopusAdapter
 from tiangong_ai_for_sustainability.adapters.api.standards import (
     GhgProtocolWorkbooksAdapter,
     GriTaxonomyAdapter,
 )
 from tiangong_ai_for_sustainability.adapters.api.transparency import TransparencyCPIAdapter
+from tiangong_ai_for_sustainability.adapters.api.web_of_science import WebOfScienceAdapter
 from tiangong_ai_for_sustainability.adapters.api.wikidata import WikidataAdapter
 from tiangong_ai_for_sustainability.adapters.api.world_bank import WorldBankAdapter
 from tiangong_ai_for_sustainability.adapters.environment import GoogleEarthEngineCLIAdapter
@@ -241,10 +238,14 @@ def test_resolve_adapter_web_of_science(tmp_path):
     context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
     context.secrets.data.setdefault("web_of_science", {})["api_key"] = "wos-token"
 
-    adapter = resolve_adapter("web_of_science", context)
+    with patch("tiangong_ai_for_sustainability.cli.adapters.WebOfScienceClient") as mock_client:
+        client_instance = object()
+        mock_client.return_value = client_instance
+        adapter = resolve_adapter("web_of_science", context)
 
     assert isinstance(adapter, WebOfScienceAdapter)
-    assert adapter.api_key == "wos-token"
+    assert adapter.client is client_instance
+    mock_client.assert_called_once_with(api_key="wos-token")
 
 
 def test_resolve_adapter_gri_taxonomy(tmp_path):

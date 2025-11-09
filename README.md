@@ -59,6 +59,12 @@ If you enabled charts, start the AntV MCP chart server before running workflows 
 
 Missing a feature? Just re-run your installer (`install_macos.sh`, `install_ubuntu.sh`, or `install_windows.ps1`) with the matching `--with-*` flag.
 
+### Web of Science Starter API (Optional)
+
+- `uv sync` pulls the Clarivate Web of Science Starter Python client (`clarivate-wos-starter-python-client`) so the CLI can talk to the premium API.
+- Add your Clarivate key under `[web_of_science]` in `.secrets/secrets.toml` (or export `TIANGONG_WOS_API_KEY`).
+- Verify connectivity any time with `uv run tiangong-research sources verify web_of_science`; a passing check echoes a sample title/UID so you know credentials are working.
+
 ### Start the MCP Chart Server with PM2
 
 Keep the AntV MCP chart server running in the background with `pm2`:

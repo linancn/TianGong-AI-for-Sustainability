@@ -59,6 +59,12 @@ uv run tiangong-research research workflow simple --topic "生命周期评估"
 
 缺少某项功能时，重新运行对应的安装脚本（`install_macos.sh`、`install_ubuntu.sh`、`install_windows.ps1`），并选择合适的 `--with-*` 选项即可。
 
+### Web of Science Starter API（可选）
+
+- 同步仓库后执行 `uv sync` 会自动安装 Clarivate 官方的 Web of Science Starter Python SDK（`clarivate-wos-starter-python-client`），无需手动 pip。
+- 将 Clarivate 提供的密钥写入 `.secrets/secrets.toml` 的 `[web_of_science]` 区块（或导出 `TIANGONG_WOS_API_KEY` 环境变量）。
+- 随时通过 `uv run tiangong-research sources verify web_of_science` 检查连通性；若成功，CLI 会返回示例文章标题与 UID，方便确认凭据已生效。
+
 ### 使用 PM2 启动 MCP 图表服务器
 
 可以用 `pm2` 将 AntV MCP 图表服务器常驻后台：

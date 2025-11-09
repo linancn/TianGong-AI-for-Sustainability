@@ -14,6 +14,7 @@ dependencies = [
     "pandas>=2.3.3",
     "pydantic>=2.9.2",
     "pyyaml>=6.0.2",
+    "clarivate-wos-starter-python-client @ git+https://github.com/clarivate/wosstarter_python_client@8a726fb3b436297c246eda265bd644c03f4aa704",
     "scipy>=1.16.3",
     "seaborn>=0.13.2",
     "tenacity>=9.0.0",
@@ -42,6 +43,9 @@ packages = ["src/tiangong_ai_for_sustainability"]
 
 [tool.hatch.build.targets.sdist]
 include = ["src/tiangong_ai_for_sustainability", "README.md", "pyproject.toml"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [project.scripts]
 tiangong-research = "tiangong_ai_for_sustainability.cli.main:app"

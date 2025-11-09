@@ -60,6 +60,7 @@ from ..adapters.api import (
     WorldBankClient,
     ZenodoCommunityClient,
 )
+from ..adapters.api.web_of_science import WebOfScienceClient
 from ..adapters.environment import GoogleEarthEngineCLIAdapter, GridIntensityCLIAdapter
 from ..adapters.tools import OpenAIDeepResearchAdapter, RemoteMCPAdapter
 from ..core.context import ExecutionContext
@@ -191,7 +192,7 @@ def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataS
         IssESGAdapter(api_key=iss_key),
         AcmDigitalLibraryAdapter(api_key=acm_key),
         ScopusAdapter(api_key=scopus_key),
-        WebOfScienceAdapter(api_key=wos_key),
+        WebOfScienceAdapter(client=WebOfScienceClient(api_key=wos_key)),
         GriTaxonomyAdapter(),
         GhgProtocolWorkbooksAdapter(),
         CopernicusDataspaceAdapter(client=CopernicusDataspaceClient()),

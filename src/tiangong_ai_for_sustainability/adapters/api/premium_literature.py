@@ -46,9 +46,3 @@ class ScopusAdapter(CredentialPresenceAdapter):
     source_id = "scopus"
     display_name = "Elsevier Scopus"
     env_var = "TIANGONG_SCOPUS_API_KEY"
-
-
-class WebOfScienceAdapter(CredentialPresenceAdapter):
-    source_id = "web_of_science"
-    display_name = "Web of Science"
-    env_var = "TIANGONG_WOS_API_KEY"
