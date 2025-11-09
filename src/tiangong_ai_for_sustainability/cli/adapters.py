@@ -11,6 +11,7 @@ from ..adapters import ChartMCPAdapter, DataSourceAdapter
 from ..adapters.api import (
     ArxivAdapter,
     ArxivClient,
+    CdpClimateAdapter,
     CopernicusDataspaceAdapter,
     CopernicusDataspaceClient,
     CrossrefAdapter,
@@ -25,10 +26,13 @@ from ..adapters.api import (
     IMFClimateClient,
     IPBESAdapter,
     IPCCDDCAdapter,
+    IssESGAdapter,
     KaggleAdapter,
     KaggleClient,
     LensOrgAdapter,
     LensOrgClient,
+    LsegESGAdapter,
+    MsciESGAdapter,
     NasaEarthdataAdapter,
     NasaEarthdataClient,
     OpenAlexAdapter,
@@ -37,6 +41,8 @@ from ..adapters.api import (
     OSDGClient,
     SemanticScholarAdapter,
     SemanticScholarClient,
+    SpGlobalESGAdapter,
+    SustainalyticsAdapter,
     TransparencyCPIAdapter,
     TransparencyCPIClient,
     UNSDGAdapter,
@@ -59,6 +65,17 @@ def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataS
     """
 
     secrets = context.secrets.data
+
+    def get_api_key(section_name: str, env_var: str) -> Optional[str]:
+        section = secrets.get(section_name)
+        if isinstance(section, dict):
+            value = section.get("api_key")
+            if isinstance(value, str) and value:
+                return value
+        env_value = os.getenv(env_var)
+        if env_value:
+            return env_value
+        return None
 
     semantic_key: Optional[str] = None
     semantic_section = secrets.get("semantic_scholar")
@@ -112,27 +129,14 @@ def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataS
         if isinstance(key_value, str) and key_value:
             kaggle_key = key_value
 
-    dimensions_key: Optional[str] = None
-    dimensions_section = secrets.get("dimensions_ai")
-    if isinstance(dimensions_section, dict):
-        value = dimensions_section.get("api_key")
-        if isinstance(value, str) and value:
-            dimensions_key = value
-    if not dimensions_key:
-        env_dimensions = os.getenv("TIANGONG_DIMENSIONS_API_KEY")
-        if env_dimensions:
-            dimensions_key = env_dimensions
-
-    lens_key: Optional[str] = None
-    lens_section = secrets.get("lens_org_api")
-    if isinstance(lens_section, dict):
-        value = lens_section.get("api_key")
-        if isinstance(value, str) and value:
-            lens_key = value
-    if not lens_key:
-        env_lens = os.getenv("TIANGONG_LENS_API_KEY")
-        if env_lens:
-            lens_key = env_lens
+    dimensions_key = get_api_key("dimensions_ai", "TIANGONG_DIMENSIONS_API_KEY")
+    lens_key = get_api_key("lens_org_api", "TIANGONG_LENS_API_KEY")
+    cdp_key = get_api_key("cdp_climate", "TIANGONG_CDP_API_KEY")
+    lseg_key = get_api_key("lseg_esg", "TIANGONG_LSEG_API_KEY")
+    msci_key = get_api_key("msci_esg", "TIANGONG_MSCI_API_KEY")
+    sustainalytics_key = get_api_key("sustainalytics", "TIANGONG_SUSTAINALYTICS_API_KEY")
+    spglobal_key = get_api_key("sp_global_esg", "TIANGONG_SPGLOBAL_API_KEY")
+    iss_key = get_api_key("iss_esg", "TIANGONG_ISS_API_KEY")
 
     adapters = (
         GridIntensityCLIAdapter(),
@@ -154,6 +158,12 @@ def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataS
         KaggleAdapter(client=KaggleClient(username=kaggle_username, key=kaggle_key)),
         DimensionsAIAdapter(client=DimensionsAIClient(api_key=dimensions_key)),
         LensOrgAdapter(client=LensOrgClient(api_key=lens_key)),
+        CdpClimateAdapter(api_key=cdp_key),
+        LsegESGAdapter(api_key=lseg_key),
+        MsciESGAdapter(api_key=msci_key),
+        SustainalyticsAdapter(api_key=sustainalytics_key),
+        SpGlobalESGAdapter(api_key=spglobal_key),
+        IssESGAdapter(api_key=iss_key),
         CopernicusDataspaceAdapter(client=CopernicusDataspaceClient()),
         NasaEarthdataAdapter(client=NasaEarthdataClient()),
         ChartMCPAdapter(),

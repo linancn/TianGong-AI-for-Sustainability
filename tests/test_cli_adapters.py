@@ -6,6 +6,14 @@ from tiangong_ai_for_sustainability.adapters.api.arxiv import ArxivAdapter
 from tiangong_ai_for_sustainability.adapters.api.crossref import CrossrefAdapter
 from tiangong_ai_for_sustainability.adapters.api.dimensions import DimensionsAIAdapter
 from tiangong_ai_for_sustainability.adapters.api.esa_copernicus import CopernicusDataspaceAdapter
+from tiangong_ai_for_sustainability.adapters.api.esg import (
+    CdpClimateAdapter,
+    IssESGAdapter,
+    LsegESGAdapter,
+    MsciESGAdapter,
+    SpGlobalESGAdapter,
+    SustainalyticsAdapter,
+)
 from tiangong_ai_for_sustainability.adapters.api.ilostat import ILOSTATAdapter
 from tiangong_ai_for_sustainability.adapters.api.imf import IMFClimateAdapter
 from tiangong_ai_for_sustainability.adapters.api.ipbes import IPBESAdapter
@@ -82,6 +90,16 @@ def test_resolve_adapter_dimensions(tmp_path):
     mock_client.assert_called_once_with(api_key="dim-token")
 
 
+def test_resolve_adapter_cdp_climate(tmp_path):
+    context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
+    context.secrets.data.setdefault("cdp_climate", {})["api_key"] = "cdp-token"
+
+    adapter = resolve_adapter("cdp_climate", context)
+
+    assert isinstance(adapter, CdpClimateAdapter)
+    assert adapter.api_key == "cdp-token"
+
+
 def test_resolve_adapter_nasa_earthdata(tmp_path):
     context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
 
@@ -93,6 +111,16 @@ def test_resolve_adapter_nasa_earthdata(tmp_path):
     assert isinstance(adapter, NasaEarthdataAdapter)
     assert adapter.client is client_instance
     mock_client.assert_called_once_with()
+
+
+def test_resolve_adapter_lseg_esg(tmp_path):
+    context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
+    context.secrets.data.setdefault("lseg_esg", {})["api_key"] = "lseg-token"
+
+    adapter = resolve_adapter("lseg_esg", context)
+
+    assert isinstance(adapter, LsegESGAdapter)
+    assert adapter.api_key == "lseg-token"
 
 
 def test_resolve_adapter_lens(tmp_path):
@@ -109,6 +137,26 @@ def test_resolve_adapter_lens(tmp_path):
     mock_client.assert_called_once_with(api_key="lens-token")
 
 
+def test_resolve_adapter_msci_esg(tmp_path):
+    context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
+    context.secrets.data.setdefault("msci_esg", {})["api_key"] = "msci-token"
+
+    adapter = resolve_adapter("msci_esg", context)
+
+    assert isinstance(adapter, MsciESGAdapter)
+    assert adapter.api_key == "msci-token"
+
+
+def test_resolve_adapter_sustainalytics(tmp_path):
+    context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
+    context.secrets.data.setdefault("sustainalytics", {})["api_key"] = "susta-token"
+
+    adapter = resolve_adapter("sustainalytics", context)
+
+    assert isinstance(adapter, SustainalyticsAdapter)
+    assert adapter.api_key == "susta-token"
+
+
 def test_resolve_adapter_google_earth_engine(tmp_path):
     context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
 
@@ -123,6 +171,26 @@ def test_resolve_adapter_world_bank(tmp_path):
     adapter = resolve_adapter("world_bank_sustainability", context)
 
     assert isinstance(adapter, WorldBankAdapter)
+
+
+def test_resolve_adapter_sp_global_esg(tmp_path):
+    context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
+    context.secrets.data.setdefault("sp_global_esg", {})["api_key"] = "spg-token"
+
+    adapter = resolve_adapter("sp_global_esg", context)
+
+    assert isinstance(adapter, SpGlobalESGAdapter)
+    assert adapter.api_key == "spg-token"
+
+
+def test_resolve_adapter_iss_esg(tmp_path):
+    context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
+    context.secrets.data.setdefault("iss_esg", {})["api_key"] = "iss-token"
+
+    adapter = resolve_adapter("iss_esg", context)
+
+    assert isinstance(adapter, IssESGAdapter)
+    assert adapter.api_key == "iss-token"
 
 
 def test_resolve_adapter_openalex(tmp_path):

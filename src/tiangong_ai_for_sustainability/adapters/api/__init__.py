@@ -13,6 +13,14 @@ from .base import APIError, BaseAPIClient
 from .crossref import CrossrefAdapter, CrossrefClient
 from .dimensions import DimensionsAIAdapter, DimensionsAIClient
 from .esa_copernicus import CopernicusDataspaceAdapter, CopernicusDataspaceClient
+from .esg import (
+    CdpClimateAdapter,
+    IssESGAdapter,
+    LsegESGAdapter,
+    MsciESGAdapter,
+    SpGlobalESGAdapter,
+    SustainalyticsAdapter,
+)
 from .github_topics import GitHubTopicsAdapter, GitHubTopicsClient
 from .ilostat import ILOSTATAdapter, ILOSTATClient
 from .imf import IMFClimateAdapter, IMFClimateClient
@@ -38,6 +46,7 @@ __all__ = [
     "BaseAPIClient",
     "CrossrefAdapter",
     "CrossrefClient",
+    "CdpClimateAdapter",
     "DimensionsAIAdapter",
     "DimensionsAIClient",
     "IMFClimateAdapter",
@@ -50,9 +59,12 @@ __all__ = [
     "CopernicusDataspaceClient",
     "GitHubTopicsAdapter",
     "GitHubTopicsClient",
+    "IssESGAdapter",
+    "LsegESGAdapter",
     "KaggleAdapter",
     "KaggleAPIError",
     "KaggleClient",
+    "MsciESGAdapter",
     "LensOrgAdapter",
     "LensOrgClient",
     "NasaEarthdataAdapter",
@@ -61,10 +73,12 @@ __all__ = [
     "OpenAlexClient",
     "OSDGAdapter",
     "OSDGClient",
+    "SpGlobalESGAdapter",
     "SemanticScholarAdapter",
     "SemanticScholarClient",
     "TransparencyCPIAdapter",
     "TransparencyCPIClient",
+    "SustainalyticsAdapter",
     "UNSDGAdapter",
     "UNSDGClient",
     "WikidataAdapter",
