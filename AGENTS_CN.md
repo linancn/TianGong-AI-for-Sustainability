@@ -73,7 +73,7 @@
 | **P2** | OpenAlex；Dimensions.ai；Lens.org；Semantic Scholar；Crossref；arXiv；GitHub Topics；Kaggle API；OSDG API | 已实现 | 文献计量与分类管线，支撑研究发现与代码检索。Dimensions.ai 与 Lens.org 已提供识别 API 凭据的验证适配器。 |
 | **P3** | CDP；LSEG Refinitiv；MSCI；Sustainalytics；S&P Global Sustainable1；ISS ESG | 部分上线 | 需要许可的企业 ESG 绩效数据，当前已提供识别 API Key 的验证适配器并给出接入指引，完整数据摄取将在凭证落地后开启。 |
 | **P4** | GRI Taxonomy（XBRL）；GHG 工作簿；Open Supply Hub；`tiangong_lca_remote` MCP；Tavily Web MCP | 持续接入 | 回溯企业披露与供应链节点，用于反哺 P3 分析结果。Open Supply Hub 已提供元数据适配器，并支持可选 API Token。 |
-| **P5** | ACM Digital Library；Scopus；Web of Science；AntV MCP 图表服务器；OpenAI Deep Research | 视凭据启用 | 高门槛/可选服务，满足依赖后用于专家级综合与可视化。 |
+| **P5** | ACM Digital Library；Scopus；Web of Science；AntV MCP 图表服务器；OpenAI Deep Research | 视凭据启用 | 高门槛/可选服务，满足依赖后用于专家级综合与可视化。现已新增 API Key 检测，便于在获取许可后快速启用连接。 |
 | **P_INT** | `tiangong_ai_remote` MCP；`dify_knowledge_base_mcp` | 已实现 | 项目专属的 RAG 上下文层，为自动化提供最终背景。 |
 
 #### 适配器规则
@@ -152,6 +152,7 @@
 - 针对 Dimensions.ai、Lens.org 的订阅型文献服务新增适配器，可验证 API Key 配置并执行轻量级示例查询。
 - P3 企业 ESG 数据源已支持凭证检测，持证后即可按路线图推进批量摄取。
 - P4 供应链领域新增 Open Supply Hub 适配器，兼容可选 API Token，用于设施元数据获取。
+- P5 高门槛文献服务（ACM、Scopus、Web of Science）已支持凭证探测，待授权后即可扩展接入。
 - `uv run pytest` 覆盖核心模块与 CLI 操作。
 - Phase 3 的 `research synthesize` 已上线，并支持提示模版驱动的 LLM 综合分析。
 - 下一步重点：摄取 SDG/GRI 本体数据、完善其余 Phase 1 命令，并扩展引文/图谱工具。

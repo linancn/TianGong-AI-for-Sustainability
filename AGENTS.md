@@ -73,7 +73,7 @@ Always consult these sources before planning or executing changes.
 | **P2** | OpenAlex; Dimensions.ai; Lens.org; Semantic Scholar; Crossref; arXiv; GitHub Topics; Kaggle API; OSDG API | Implemented | Bibliometrics and classification pipelines enabling research discovery and coding support. Adapters now include credential-aware verification for Dimensions.ai and Lens.org. |
 | **P3** | CDP; LSEG Refinitiv; MSCI; Sustainalytics; S&P Global Sustainable1; ISS ESG | Partial | Licensed corporate ESG performance data; credential-aware adapters now verify API key configuration and surface onboarding guidance while deeper ingestion remains pending. |
 | **P4** | GRI Taxonomy (XBRL); GHG Protocol Workbooks; Open Supply Hub; `tiangong_lca_remote` MCP; Tavily Web MCP | Rolling | Source primary disclosures and supply-chain facilities to backfill P3 results. Open Supply Hub now has a metadata adapter with optional API token support. |
-| **P5** | ACM Digital Library; Scopus; Web of Science; AntV MCP chart server; OpenAI Deep Research | Conditional | High-threshold or optional services used for expert synthesis and visualization once dependencies are met. |
+| **P5** | ACM Digital Library; Scopus; Web of Science; AntV MCP chart server; OpenAI Deep Research | Conditional | High-threshold or optional services used for expert synthesis and visualization once dependencies are met. Premium literature adapters now confirm API credential presence ahead of licensed ingestion. |
 | **P_INT** | `tiangong_ai_remote` MCP; `dify_knowledge_base_mcp` | Implemented | Project-specific RAG layer providing final contextualisation for automations. |
 
 #### Adapter Rules
@@ -152,6 +152,7 @@ Phase progression must honour dependencies encoded in `tasks/blueprint.yaml`.
 - Subscription bibliometrics (Dimensions.ai, Lens.org) expose adapters that validate API key configuration and perform lightweight sample queries.
 - P3 ESG providers expose credential presence checks so licensed datasets can be staged once contractual access is in place.
 - Supply-chain P4 scope now includes an Open Supply Hub adapter with optional API token support for facility metadata.
+- Premium P5 bibliometrics (ACM, Scopus, Web of Science) surface credential checks so licensed connectors can be enabled once access is provisioned.
 - Test suite (`uv run pytest`) covers core modules and CLI operations.
 - Next priorities: ingest SDG/GRI ontologies into structured storage, implement remaining Phase 1 commands, and broaden citation/graph tooling.
 - Phase 3 synthesis command now available with prompt template support.

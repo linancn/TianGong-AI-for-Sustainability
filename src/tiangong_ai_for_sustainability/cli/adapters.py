@@ -9,6 +9,7 @@ from typing import Optional
 
 from ..adapters import ChartMCPAdapter, DataSourceAdapter
 from ..adapters.api import (
+    AcmDigitalLibraryAdapter,
     ArxivAdapter,
     ArxivClient,
     CdpClimateAdapter,
@@ -18,8 +19,10 @@ from ..adapters.api import (
     CrossrefClient,
     DimensionsAIAdapter,
     DimensionsAIClient,
+    GhgProtocolWorkbooksAdapter,
     GitHubTopicsAdapter,
     GitHubTopicsClient,
+    GriTaxonomyAdapter,
     ILOSTATAdapter,
     ILOSTATClient,
     IMFClimateAdapter,
@@ -41,6 +44,7 @@ from ..adapters.api import (
     OpenSupplyHubClient,
     OSDGAdapter,
     OSDGClient,
+    ScopusAdapter,
     SemanticScholarAdapter,
     SemanticScholarClient,
     SpGlobalESGAdapter,
@@ -49,6 +53,7 @@ from ..adapters.api import (
     TransparencyCPIClient,
     UNSDGAdapter,
     UNSDGClient,
+    WebOfScienceAdapter,
     WikidataAdapter,
     WikidataClient,
     WorldBankAdapter,
@@ -140,6 +145,9 @@ def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataS
     spglobal_key = get_api_key("sp_global_esg", "TIANGONG_SPGLOBAL_API_KEY")
     iss_key = get_api_key("iss_esg", "TIANGONG_ISS_API_KEY")
     open_supply_key = get_api_key("open_supply_hub", "TIANGONG_OPEN_SUPPLY_HUB_API_KEY")
+    acm_key = get_api_key("acm_digital_library", "TIANGONG_ACM_API_KEY")
+    scopus_key = get_api_key("scopus", "TIANGONG_SCOPUS_API_KEY")
+    wos_key = get_api_key("web_of_science", "TIANGONG_WOS_API_KEY")
 
     adapters = (
         GridIntensityCLIAdapter(),
@@ -168,6 +176,11 @@ def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataS
         SustainalyticsAdapter(api_key=sustainalytics_key),
         SpGlobalESGAdapter(api_key=spglobal_key),
         IssESGAdapter(api_key=iss_key),
+        AcmDigitalLibraryAdapter(api_key=acm_key),
+        ScopusAdapter(api_key=scopus_key),
+        WebOfScienceAdapter(api_key=wos_key),
+        GriTaxonomyAdapter(),
+        GhgProtocolWorkbooksAdapter(),
         CopernicusDataspaceAdapter(client=CopernicusDataspaceClient()),
         NasaEarthdataAdapter(client=NasaEarthdataClient()),
         ChartMCPAdapter(),

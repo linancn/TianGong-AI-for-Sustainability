@@ -32,7 +32,9 @@ from .nasa_earthdata import NasaEarthdataAdapter, NasaEarthdataClient
 from .open_supply_hub import OpenSupplyHubAdapter, OpenSupplyHubClient
 from .openalex import OpenAlexAdapter, OpenAlexClient
 from .osdg import OSDGAdapter, OSDGClient
+from .premium_literature import AcmDigitalLibraryAdapter, ScopusAdapter, WebOfScienceAdapter
 from .semantic_scholar import SemanticScholarAdapter, SemanticScholarClient
+from .standards import GhgProtocolWorkbooksAdapter, GriTaxonomyAdapter
 from .transparency import TransparencyCPIAdapter, TransparencyCPIClient
 from .un_sdg import UNSDGAdapter, UNSDGClient
 from .wikidata import WikidataAdapter, WikidataClient
@@ -62,6 +64,7 @@ __all__ = [
     "GitHubTopicsClient",
     "IssESGAdapter",
     "LsegESGAdapter",
+    "AcmDigitalLibraryAdapter",
     "KaggleAdapter",
     "KaggleAPIError",
     "KaggleClient",
@@ -77,11 +80,15 @@ __all__ = [
     "OSDGAdapter",
     "OSDGClient",
     "SpGlobalESGAdapter",
+    "GriTaxonomyAdapter",
+    "GhgProtocolWorkbooksAdapter",
     "SemanticScholarAdapter",
     "SemanticScholarClient",
     "TransparencyCPIAdapter",
     "TransparencyCPIClient",
     "SustainalyticsAdapter",
+    "ScopusAdapter",
+    "WebOfScienceAdapter",
     "UNSDGAdapter",
     "UNSDGClient",
     "WikidataAdapter",

@@ -23,6 +23,15 @@ from tiangong_ai_for_sustainability.adapters.api.lens import LensOrgAdapter
 from tiangong_ai_for_sustainability.adapters.api.nasa_earthdata import NasaEarthdataAdapter
 from tiangong_ai_for_sustainability.adapters.api.open_supply_hub import OpenSupplyHubAdapter
 from tiangong_ai_for_sustainability.adapters.api.openalex import OpenAlexAdapter
+from tiangong_ai_for_sustainability.adapters.api.premium_literature import (
+    AcmDigitalLibraryAdapter,
+    ScopusAdapter,
+    WebOfScienceAdapter,
+)
+from tiangong_ai_for_sustainability.adapters.api.standards import (
+    GhgProtocolWorkbooksAdapter,
+    GriTaxonomyAdapter,
+)
 from tiangong_ai_for_sustainability.adapters.api.transparency import TransparencyCPIAdapter
 from tiangong_ai_for_sustainability.adapters.api.wikidata import WikidataAdapter
 from tiangong_ai_for_sustainability.adapters.api.world_bank import WorldBankAdapter
@@ -206,6 +215,52 @@ def test_resolve_adapter_iss_esg(tmp_path):
 
     assert isinstance(adapter, IssESGAdapter)
     assert adapter.api_key == "iss-token"
+
+
+def test_resolve_adapter_acm(tmp_path):
+    context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
+    context.secrets.data.setdefault("acm_digital_library", {})["api_key"] = "acm-token"
+
+    adapter = resolve_adapter("acm_digital_library", context)
+
+    assert isinstance(adapter, AcmDigitalLibraryAdapter)
+    assert adapter.api_key == "acm-token"
+
+
+def test_resolve_adapter_scopus(tmp_path):
+    context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
+    context.secrets.data.setdefault("scopus", {})["api_key"] = "scopus-token"
+
+    adapter = resolve_adapter("scopus", context)
+
+    assert isinstance(adapter, ScopusAdapter)
+    assert adapter.api_key == "scopus-token"
+
+
+def test_resolve_adapter_web_of_science(tmp_path):
+    context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
+    context.secrets.data.setdefault("web_of_science", {})["api_key"] = "wos-token"
+
+    adapter = resolve_adapter("web_of_science", context)
+
+    assert isinstance(adapter, WebOfScienceAdapter)
+    assert adapter.api_key == "wos-token"
+
+
+def test_resolve_adapter_gri_taxonomy(tmp_path):
+    context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
+
+    adapter = resolve_adapter("gri_taxonomy", context)
+
+    assert isinstance(adapter, GriTaxonomyAdapter)
+
+
+def test_resolve_adapter_ghg_workbooks(tmp_path):
+    context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
+
+    adapter = resolve_adapter("ghg_protocol_workbooks", context)
+
+    assert isinstance(adapter, GhgProtocolWorkbooksAdapter)
 
 
 def test_resolve_adapter_openalex(tmp_path):
