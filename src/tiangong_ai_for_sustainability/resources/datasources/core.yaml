@@ -627,6 +627,24 @@
   references:
     - "https://platform.openai.com/docs/guides/deep-research"
 
+- id: gemini_deep_research
+  name: "Gemini Deep Research"
+  category: analysis
+  priority: P5
+  description: "Gemini Interactions API workflow for guided Deep Research synthesis."
+  protocols: ["REST"]
+  base_urls:
+    - "https://ai.google.dev/api/interactions"
+  authentication: "api-key"
+  requires_credentials: true
+  status: trial
+  capabilities: ["research-synthesis", "question-decomposition"]
+  tags: ["gemini", "llm", "synthesis", "p5"]
+  notes: "Requires Google AI Studio API key and Deep Research agent (default 'deep-research-pro-preview-12-2025'); enable thinking summaries for resumable runs."
+  references:
+    - "https://ai.google.dev/gemini-api/docs/deep-research"
+    - "https://ai.google.dev/api/interactions"
+
 - id: tiangong_ai_remote
   name: "TianGong AI Remote MCP"
   category: automation

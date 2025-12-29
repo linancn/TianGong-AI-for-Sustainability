@@ -62,7 +62,7 @@ from ..adapters.api import (
 )
 from ..adapters.api.web_of_science import WebOfScienceClient
 from ..adapters.environment import GoogleEarthEngineCLIAdapter, GridIntensityCLIAdapter
-from ..adapters.tools import OpenAIDeepResearchAdapter, RemoteMCPAdapter
+from ..adapters.tools import GeminiDeepResearchAdapter, OpenAIDeepResearchAdapter, RemoteMCPAdapter
 from ..core.context import ExecutionContext
 from ..core.mcp_config import load_mcp_server_configs
 
@@ -199,6 +199,7 @@ def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataS
         NasaEarthdataAdapter(client=NasaEarthdataClient()),
         ChartMCPAdapter(),
         OpenAIDeepResearchAdapter(settings=context.secrets.openai),
+        GeminiDeepResearchAdapter(settings=context.secrets.gemini),
     )
     for adapter in adapters:
         if source_id == adapter.source_id:

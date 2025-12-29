@@ -107,6 +107,7 @@ Export `TIANGONG_CHART_MCP_ENDPOINT=http://127.0.0.1:1122/mcp` so the CLI can fi
 - Copy the default prompt scaffold at `specs/prompts/default.md` (AI-facing, English) and customise it before briefing Codex; use `specs/prompts/default_CN.md` only as a human-readable translation.
 - Follow the CLI-first rule: run `uv run tiangong-research …` subcommands before reading or writing Python. Escalate only when a capability lacks a CLI wrapper.
 - Templates accept simple placeholders such as `{{topic}}`; combine multiple `--prompt-variable` arguments to substitute values.
+- Gemini Deep Research (Google AI Interactions API) is available as a P5 source. Configure `[gemini]` in `.secrets/secrets.toml` or export `GOOGLE_API_KEY`, verify with `uv run tiangong-research sources verify gemini_deep_research`, and use `GeminiDeepResearchClient` for launch/poll helpers.
 - Example:
   ```bash
   uv run tiangong-research --prompt-template default --prompt-variable topic="urban climate resilience" research workflow deep-report --profile lca --years 3

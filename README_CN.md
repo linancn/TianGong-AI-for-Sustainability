@@ -107,6 +107,7 @@ pm2 start "npx --no-install -p @antv/mcp-server-chart mcp-server-chart --transpo
 - `specs/prompts/default.md` 是提供给 Codex 的英文提示骨架；`specs/prompts/default_CN.md` 为人工翻译版，勿直接发送给 Codex。
 - 遵循 CLI 优先原则：先运行 `uv run tiangong-research …` 子命令，只有在确认缺失对应子命令时才考虑阅读或编写 Python 代码。
 - 模版支持 `{{topic}}` 等占位符，可多次使用 `--prompt-variable` 按键值对替换内容。
+- Gemini Deep Research（Google AI Interactions API）已作为 P5 数据源提供，可在 `.secrets/secrets.toml` 的 [gemini] 段配置或设置 `GOOGLE_API_KEY`，并通过 `uv run tiangong-research sources verify gemini_deep_research` 校验；自动化可调用 `GeminiDeepResearchClient` 启动/轮询。
 - 示例：
   ```bash
   uv run tiangong-research --prompt-template default --prompt-variable topic="城市气候韧性" research workflow deep-report --profile lca --years 3

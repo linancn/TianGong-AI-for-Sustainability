@@ -33,6 +33,7 @@ from tiangong_ai_for_sustainability.adapters.api.web_of_science import WebOfScie
 from tiangong_ai_for_sustainability.adapters.api.wikidata import WikidataAdapter
 from tiangong_ai_for_sustainability.adapters.api.world_bank import WorldBankAdapter
 from tiangong_ai_for_sustainability.adapters.environment import GoogleEarthEngineCLIAdapter
+from tiangong_ai_for_sustainability.adapters.tools import GeminiDeepResearchAdapter
 from tiangong_ai_for_sustainability.cli.adapters import resolve_adapter
 from tiangong_ai_for_sustainability.core.context import ExecutionContext
 
@@ -320,3 +321,12 @@ def test_resolve_adapter_wikidata(tmp_path):
     adapter = resolve_adapter("wikidata", context)
 
     assert isinstance(adapter, WikidataAdapter)
+
+
+def test_resolve_adapter_gemini_deep_research(tmp_path):
+    context = ExecutionContext.build_default(cache_dir=tmp_path / "cache")
+    context.secrets.gemini.api_key = "gemini-key"
+
+    adapter = resolve_adapter("gemini_deep_research", context)
+
+    assert isinstance(adapter, GeminiDeepResearchAdapter)

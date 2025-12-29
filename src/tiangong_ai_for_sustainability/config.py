@@ -16,9 +16,12 @@ from __future__ import annotations
 
 import os
 import tomllib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Iterable, Optional
+
+DEFAULT_GEMINI_AGENT = "deep-research-pro-preview-12-2025"
+DEFAULT_GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com"
 
 
 @dataclass(slots=True)
@@ -40,12 +43,27 @@ class OpenAISettings:
 
 
 @dataclass(slots=True)
+class GeminiSettings:
+    """Credential and endpoint information for Gemini Deep Research."""
+
+    api_key: Optional[str] = None
+    agent: str = DEFAULT_GEMINI_AGENT
+    api_endpoint: Optional[str] = None
+
+    def resolve_agent(self) -> str:
+        """Return the configured agent with a sensible fallback."""
+
+        return self.agent or DEFAULT_GEMINI_AGENT
+
+
+@dataclass(slots=True)
 class SecretsBundle:
     """Lightweight container for parsed secret values."""
 
     source_path: Optional[Path]
     data: Dict[str, Dict[str, object]]
     openai: OpenAISettings
+    gemini: GeminiSettings = field(default_factory=GeminiSettings)
 
 
 def _discover_project_root() -> Optional[Path]:
@@ -107,6 +125,21 @@ def _extract_openai_settings(raw: Dict[str, Dict[str, object]]) -> OpenAISetting
     )
 
 
+def _extract_gemini_settings(raw: Dict[str, Dict[str, object]]) -> GeminiSettings:
+    section = raw.get("gemini", {}) if isinstance(raw, dict) else {}
+    if not isinstance(section, dict):
+        section = {}
+
+    def _extract(key: str) -> Optional[str]:
+        value = section.get(key)
+        return str(value) if isinstance(value, str) and value else None
+
+    api_key = _extract("api_key")
+    agent = _extract("agent") or DEFAULT_GEMINI_AGENT
+    api_endpoint = _extract("api_endpoint")
+    return GeminiSettings(api_key=api_key, agent=agent, api_endpoint=api_endpoint)
+
+
 def load_secrets(strict: bool = False) -> SecretsBundle:
     """
     Attempt to load secrets from the configured locations.
@@ -121,9 +154,14 @@ def load_secrets(strict: bool = False) -> SecretsBundle:
     for path in _candidate_paths():
         if path.is_file():
             data = _load_toml(path)
-            return SecretsBundle(source_path=path, data=data, openai=_extract_openai_settings(data))
+            return SecretsBundle(
+                source_path=path,
+                data=data,
+                openai=_extract_openai_settings(data),
+                gemini=_extract_gemini_settings(data),
+            )
 
     if strict:
         raise FileNotFoundError("No secrets file found. Configure TIANGONG_SECRETS_PATH or .secrets/secret.toml.")
 
-    return SecretsBundle(source_path=None, data={}, openai=OpenAISettings())
+    return SecretsBundle(source_path=None, data={}, openai=OpenAISettings(), gemini=GeminiSettings())
