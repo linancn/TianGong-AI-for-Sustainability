@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from tiangong_ai_for_sustainability.adapters.api.arxiv import ArxivAdapter
 from tiangong_ai_for_sustainability.adapters.api.crossref import CrossrefAdapter
+from tiangong_ai_for_sustainability.adapters.api.dify import DifyKnowledgeBaseAdapter
 from tiangong_ai_for_sustainability.adapters.api.dimensions import DimensionsAIAdapter
 from tiangong_ai_for_sustainability.adapters.api.esa_copernicus import CopernicusDataspaceAdapter
 from tiangong_ai_for_sustainability.adapters.api.esg import (
@@ -35,6 +36,7 @@ from tiangong_ai_for_sustainability.adapters.api.world_bank import WorldBankAdap
 from tiangong_ai_for_sustainability.adapters.environment import GoogleEarthEngineCLIAdapter
 from tiangong_ai_for_sustainability.adapters.tools import GeminiDeepResearchAdapter
 from tiangong_ai_for_sustainability.cli.adapters import resolve_adapter
+from tiangong_ai_for_sustainability.config import GeminiSettings, OpenAISettings, SecretsBundle
 from tiangong_ai_for_sustainability.core.context import ExecutionContext
 
 
@@ -321,6 +323,26 @@ def test_resolve_adapter_wikidata(tmp_path):
     adapter = resolve_adapter("wikidata", context)
 
     assert isinstance(adapter, WikidataAdapter)
+
+
+def test_resolve_adapter_dify_rest(tmp_path):
+    secrets = SecretsBundle(source_path=None, data={}, openai=OpenAISettings(), gemini=GeminiSettings())
+    context = ExecutionContext.build_default(cache_dir=tmp_path / "cache", secrets=secrets)
+    dify_section = context.secrets.data.setdefault("dify_knowledge", {})
+    dify_section["api_key"] = "dify-token"
+    dify_section["dataset_id"] = "dataset-123"
+    dify_section["api_base_url"] = "https://example.dify.ai/v1"
+    dify_section["test_query"] = "energy transition"
+    dify_section["retrieval_model"] = {"top_k": 3}
+
+    adapter = resolve_adapter("dify_knowledge", context)
+
+    assert isinstance(adapter, DifyKnowledgeBaseAdapter)
+    assert adapter.dataset_id == "dataset-123"
+    assert adapter.test_query == "energy transition"
+    assert adapter.retrieval_model == {"top_k": 3}
+    assert adapter.client.base_url == "https://example.dify.ai/v1"
+    assert adapter.client.api_key == "dify-token"
 
 
 def test_resolve_adapter_gemini_deep_research(tmp_path):

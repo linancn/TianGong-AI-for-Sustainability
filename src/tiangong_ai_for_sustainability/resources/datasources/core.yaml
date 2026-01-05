@@ -662,18 +662,19 @@
   references:
     - "https://mcp.tiangong.earth/docs"
 
-- id: dify_knowledge_base_mcp
-  name: "Dify Knowledge Base MCP"
+- id: dify_knowledge
+  name: "Dify Knowledge Base API"
   category: knowledge-base
   priority: P_INT
-  description: "Personal curated Dify knowledge base exposed via MCP for high-priority sustainability evidence."
-  protocols: ["MCP", "streamable-http"]
-  base_urls: []
+  description: "Personal curated Dify knowledge base accessed via REST for high-priority sustainability evidence retrieval."
+  protocols: ["REST"]
+  base_urls:
+    - "https://api.dify.ai/v1"
   authentication: "api-key"
   requires_credentials: true
   status: active
   capabilities: ["knowledge-retrieval", "curated-content"]
-  tags: ["mcp", "knowledge-base", "p-int"]
-  notes: "Configure credentials in .secrets under [dify_knowledge_base_mcp]; uses Authorization: Bearer <API_KEY> headers."
+  tags: ["knowledge-base", "rest", "p-int"]
+  notes: "Configure API key, dataset_id, and optional retrieval_model in .secrets under [dify_knowledge]; calls POST /datasets/{dataset_id}/retrieve with Authorization: Bearer <API_KEY>."
   references:
     - "https://docs.dify.ai/"

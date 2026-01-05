@@ -17,6 +17,8 @@ from ..adapters.api import (
     CopernicusDataspaceClient,
     CrossrefAdapter,
     CrossrefClient,
+    DifyKnowledgeBaseAdapter,
+    DifyKnowledgeBaseClient,
     DimensionsAIAdapter,
     DimensionsAIClient,
     GhgProtocolWorkbooksAdapter,
@@ -83,6 +85,18 @@ def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataS
         env_value = os.getenv(env_var)
         if env_value:
             return env_value
+        return None
+
+    def get_string(section_name: str, key: str, env_var: Optional[str] = None) -> Optional[str]:
+        section = secrets.get(section_name)
+        if isinstance(section, dict):
+            value = section.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+        if env_var:
+            env_value = os.getenv(env_var)
+            if env_value:
+                return env_value
         return None
 
     semantic_key: Optional[str] = None
@@ -162,6 +176,17 @@ def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataS
     acm_key = get_api_key("acm_digital_library", "TIANGONG_ACM_API_KEY")
     scopus_key = get_api_key("scopus", "TIANGONG_SCOPUS_API_KEY")
     wos_key = get_api_key("web_of_science", "TIANGONG_WOS_API_KEY")
+    dify_api_key = get_api_key("dify_knowledge", "TIANGONG_DIFY_API_KEY")
+
+    dify_dataset_id = get_string("dify_knowledge", "dataset_id", "TIANGONG_DIFY_DATASET_ID")
+    dify_base_url = get_string("dify_knowledge", "api_base_url", "TIANGONG_DIFY_API_BASE_URL") or DifyKnowledgeBaseClient.DEFAULT_BASE_URL
+    dify_test_query = get_string("dify_knowledge", "test_query", "TIANGONG_DIFY_TEST_QUERY") or "sustainability research evidence"
+    dify_retrieval_model = None
+    dify_section = secrets.get("dify_knowledge")
+    if isinstance(dify_section, dict):
+        raw_model = dify_section.get("retrieval_model")
+        if isinstance(raw_model, dict):
+            dify_retrieval_model = raw_model
 
     adapters = (
         GridIntensityCLIAdapter(),
@@ -197,6 +222,12 @@ def resolve_adapter(source_id: str, context: ExecutionContext) -> Optional[DataS
         GhgProtocolWorkbooksAdapter(),
         CopernicusDataspaceAdapter(client=CopernicusDataspaceClient()),
         NasaEarthdataAdapter(client=NasaEarthdataClient()),
+        DifyKnowledgeBaseAdapter(
+            client=DifyKnowledgeBaseClient(api_key=dify_api_key, base_url=dify_base_url),
+            dataset_id=dify_dataset_id,
+            test_query=dify_test_query,
+            retrieval_model=dify_retrieval_model,
+        ),
         ChartMCPAdapter(),
         OpenAIDeepResearchAdapter(settings=context.secrets.openai),
         GeminiDeepResearchAdapter(settings=context.secrets.gemini),

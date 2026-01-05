@@ -8,7 +8,7 @@ def test_registry_load_core_sources(registry_file):
 
     un_sdg = registry.require("un_sdg_api")
     assert un_sdg.priority == DataSourcePriority.P0
-    dify = registry.require("dify_knowledge_base_mcp")
+    dify = registry.require("dify_knowledge")
     assert dify.priority == DataSourcePriority.P_INT
     github = registry.require("github_topics")
     assert "repository" in github.tags

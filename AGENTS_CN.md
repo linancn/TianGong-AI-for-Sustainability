@@ -74,7 +74,7 @@
 | **P3** | CDP；LSEG Refinitiv；MSCI；Sustainalytics；S&P Global Sustainable1；ISS ESG | 部分上线 | 需要许可的企业 ESG 绩效数据，当前已提供识别 API Key 的验证适配器并给出接入指引，完整数据摄取将在凭证落地后开启。 |
 | **P4** | GRI Taxonomy（XBRL）；GHG 工作簿；Open Supply Hub；`tiangong_lca_remote` MCP；Tavily Web MCP | 持续接入 | 回溯企业披露与供应链节点，用于反哺 P3 分析结果。Open Supply Hub 已提供元数据适配器，并支持可选 API Token。 |
 | **P5** | ACM Digital Library；Scopus；Web of Science；AntV MCP 图表服务器；OpenAI Deep Research；Gemini Deep Research | 视凭据启用 | 高门槛/可选服务，满足依赖后用于专家级综合与可视化。现已新增 API Key 检测，便于在获取许可后快速启用连接。 |
-| **P_INT** | `tiangong_ai_remote` MCP；`dify_knowledge_base_mcp` | 已实现 | 项目专属的 RAG 上下文层，为自动化提供最终背景。 |
+| **P_INT** | `tiangong_ai_remote` MCP；`dify_knowledge` REST API | 已实现 | 项目专属的 RAG 上下文层，为自动化提供最终背景。 |
 
 #### 适配器规则
 
@@ -84,7 +84,7 @@
 4. 缓存与持久化逻辑保留在服务层，保证适配器无状态。
 5. Kaggle 数据集适配器依赖官方 SDK（1.7.4.5 版）；若缺少 `KAGGLE_USERNAME`/`KAGGLE_KEY` 或 `~/.kaggle/kaggle.json`，需输出明确的凭证配置提示。
 
-> **MCP 使用提示**：`tiangong_ai_remote` 与 `dify_knowledge_base_mcp` 属于 **P_INT** RAG 上下文层，查询时需提供完整的任务意图，以便混合检索返回高价值片段。所有 `Search_*` 工具（包括 `Search_Sci_Tool`）都会返回 JSON 字符串，需先通过 `json.loads` 解析，并将 `topK` 控制在 50 以内以避免响应过大。补充检索（如 Semantic Scholar）需注意 429 节流；出现限频时可降速或改用 `OpenAlex` 数据。`tiangong_lca_remote` MCP（P4）聚焦生命周期评估，适用于微观 LCA 案例或精细排放比对；宏观文献扫描场景应优先使用 P0/P2 数据源。若需涵盖更广泛的网站或新闻，可启用 `tavily_web_mcp`（P4，需要 `Authorization: Bearer <API_KEY>`）。`openai_deep_research`（P5）用于确定性证据收集后的综合分析，请提前配置 OpenAI API Key 与 deep_research 模型。Gemini Deep Research 依赖 Google AI Interactions API，请在 [gemini] 段配置 API Key/agent 后再启用。
+> **检索使用提示**：`tiangong_ai_remote` 继续作为 MCP 自动化端点，`dify_knowledge` 通过 Dify 知识库 REST 接口 `POST /datasets/{dataset_id}/retrieve`（使用 `Authorization: Bearer <API_KEY>` 且需配置 `dataset_id`）调用；提交完整任务意图，并按需传入 `retrieval_model` 参数（如 `search_method`、`top_k`、元数据过滤）以获得高价值片段。所有 `Search_*` 工具（包括 `Search_Sci_Tool`）都会返回 JSON 字符串，需先通过 `json.loads` 解析，并将 `topK` 控制在 50 以内以避免响应过大。补充检索（如 Semantic Scholar）需注意 429 节流；出现限频时可降速或改用 `OpenAlex` 数据。`tiangong_lca_remote` MCP（P4）聚焦生命周期评估，适用于微观 LCA 案例或精细排放比对；宏观文献扫描场景应优先使用 P0/P2 数据源。若需涵盖更广泛的网站或新闻，可启用 `tavily_web_mcp`（P4，需要 `Authorization: Bearer <API_KEY>`）。`openai_deep_research`（P5）用于确定性证据收集后的综合分析，请提前配置 OpenAI API Key 与 deep_research 模型。Gemini Deep Research 依赖 Google AI Interactions API，请在 [gemini] 段配置 API Key/agent 后再启用。
 
 ### 本体与数据模型
 

@@ -11,6 +11,7 @@ Each submodule exposes two layers:
 from .arxiv import ArxivAdapter, ArxivAPIError, ArxivClient
 from .base import APIError, BaseAPIClient
 from .crossref import CrossrefAdapter, CrossrefClient
+from .dify import DifyKnowledgeBaseAdapter, DifyKnowledgeBaseClient
 from .dimensions import DimensionsAIAdapter, DimensionsAIClient
 from .esa_copernicus import CopernicusDataspaceAdapter, CopernicusDataspaceClient
 from .esg import (
@@ -51,6 +52,8 @@ __all__ = [
     "CrossrefAdapter",
     "CrossrefClient",
     "CdpClimateAdapter",
+    "DifyKnowledgeBaseAdapter",
+    "DifyKnowledgeBaseClient",
     "DimensionsAIAdapter",
     "DimensionsAIClient",
     "IMFClimateAdapter",
